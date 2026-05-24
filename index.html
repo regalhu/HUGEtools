@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>胡哥餐饮工具箱</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">MVP1 · 小餐饮老板马上能用</p>
+          <h1>胡哥餐饮工具箱</h1>
+          <p class="tagline">给不会用大系统的小餐饮老板，用得起、看得懂、马上能用的经营工具。</p>
+        </div>
+        <div class="brand-note">不做大系统，只解决今天的问题</div>
+      </header>
+
+      <section class="risk-banner" aria-label="使用边界">
+        本工具为本地浏览器计算器，不采集、不上传、不保存你的门店数据；平台费率和测算结果仅用于经营估算，请以商家后台账单、合同和实际采购价为准。
+      </section>
+
+      <section class="tool-layout">
+        <nav class="tool-nav" aria-label="工具列表">
+          <button class="tool-tab active" type="button" data-tool="margin">菜品毛利计算器</button>
+          <button class="tool-tab" type="button" data-tool="deal">团购套餐利润测算器</button>
+          <button class="tool-tab" type="button" data-tool="loss">门店损耗记录工具</button>
+          <button class="tool-tab" type="button" data-tool="xiaohongshu">小红书餐饮图文生成器</button>
+          <button class="tool-tab" type="button" data-tool="schedule">单店排班工具</button>
+        </nav>
+
+        <section class="tool-panel active" id="tool-margin">
+          <div class="tool-heading">
+            <div>
+              <p class="eyebrow">成本利润工具</p>
+              <h2>菜品毛利计算器</h2>
+            </div>
+            <button class="ghost-button" type="button" id="exportCostCardBtn">导出成本卡</button>
+          </div>
+
+          <div class="mode-strip" role="group" aria-label="毛利模式">
+            <button class="mode-button active" type="button" data-margin-mode="simple">极简模式</button>
+            <button class="mode-button" type="button" data-margin-mode="advanced">高级成本卡</button>
+          </div>
+
+          <section class="margin-section">
+            <div class="section-title">
+              <h3>菜品主数据</h3>
+              <span>多渠道、可批量、可模拟</span>
+            </div>
+            <div class="form-grid">
+              <label>菜品名称<input id="marginName" value="牛肉米粉"></label>
+              <label>菜品分类<input id="dishCategory" value="粉面小吃"></label>
+              <label>销售规格
+                <select id="dishSpec">
+                  <option>基准份</option>
+                  <option>小份</option>
+                  <option>大份</option>
+                  <option>套餐</option>
+                </select>
+              </label>
+              <label>售价<input id="marginPrice" type="number" min="0" step="0.01" value="28"></label>
+              <label>制作模式
+                <select id="cookMode">
+                  <option value="single">单份制作</option>
+                  <option value="batch">成批制作</option>
+                </select>
+              </label>
+              <label>整锅出餐份数<input id="batchServings" type="number" min="1" step="1" value="20"></label>
+              <label>毛利红线 %<input id="marginFloor" type="number" min="0" max="100" step="1" value="55"></label>
+              <label>售价模拟 +元<input id="priceDelta" type="range" min="-5" max="8" step="0.5" value="0"></label>
+            </div>
+          </section>
+
+          <section class="margin-section advanced-only">
+            <div class="section-title">
+              <h3>原料库</h3>
+              <span>采购价、出成率、损耗率会自动换算成有效单价</span>
+            </div>
+            <div class="ingredient-editor">
+              <div class="form-grid compact-grid">
+                <label>名称<input id="ingredientName" value="鲜牛肉"></label>
+                <label>类别
+                  <select id="ingredientType">
+                    <option>主料</option>
+                    <option>辅料</option>
+                    <option>调料</option>
+                    <option>包装</option>
+                    <option>半成品</option>
+                  </select>
+                </label>
+                <label>供应商<input id="supplierName" value="默认供应商"></label>
+                <label>采购总量<input id="purchaseQty" type="number" min="0" step="0.01" value="1"></label>
+                <label>采购单位
+                  <select id="purchaseUnit">
+                    <option value="kg">kg</option>
+                    <option value="g">g</option>
+                    <option value="jin">斤</option>
+                    <option value="L">L</option>
+                    <option value="mL">mL</option>
+                    <option value="piece">个</option>
+                  </select>
+                </label>
+                <label>采购总价<input id="purchasePrice" type="number" min="0" step="0.01" value="42"></label>
+                <label>出成率 %<input id="yieldRate" type="number" min="1" max="100" step="1" value="85"></label>
+                <label>熟成率 %<input id="cookYieldRate" type="number" min="1" max="100" step="1" value="100"></label>
+                <label>损耗率 %<input id="wasteRate" type="number" min="0" max="90" step="0.5" value="3"></label>
+                <label>密度 g/mL<input id="density" type="number" min="0.1" step="0.01" value="1"></label>
+              </div>
+              <button class="primary-button" type="button" id="addIngredientBtn">加入原料库</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>原料</th><th>类别</th><th>采购规格</th><th>出成/损耗</th><th>有效单价</th><th>价格时间戳</th></tr>
+                </thead>
+                <tbody id="ingredientRows"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="margin-section">
+            <div class="section-title">
+              <h3>菜品用料清单</h3>
+              <span>支持半成品、成批制作和三种调料模式</span>
+            </div>
+            <div class="form-grid compact-grid advanced-only">
+              <label>原料/半成品
+                <select id="bomIngredient"></select>
+              </label>
+              <label>用量<input id="bomQty" type="number" min="0" step="0.01" value="120"></label>
+              <label>用量单位
+                <select id="bomUnit">
+                  <option value="g">g</option>
+                  <option value="kg">kg</option>
+                  <option value="jin">斤</option>
+                  <option value="mL">mL</option>
+                  <option value="L">L</option>
+                  <option value="piece">个</option>
+                  <option value="tbsp">汤匙</option>
+                </select>
+              </label>
+              <label>工序备注<input id="bomNote" value="出餐前加入"></label>
+              <button class="primary-button inline-button" type="button" id="addBomBtn">加入配方</button>
+            </div>
+            <div class="simple-cost-row" id="simpleMarginInputs">
+              <div class="form-grid">
+                <label>主料成本<input id="mainCost" type="number" min="0" step="0.01" value="7.5"></label>
+                <label>辅料成本<input id="sideCost" type="number" min="0" step="0.01" value="2"></label>
+                <label>包材成本<input id="packCost" type="number" min="0" step="0.01" value="1"></label>
+                <label>调料固定成本<input id="simpleSeasoningCost" type="number" min="0" step="0.01" value="0.5"></label>
+              </div>
+            </div>
+            <div class="form-grid compact-grid">
+              <label>调料模式
+                <select id="seasoningMode">
+                  <option value="fixed">固定金额</option>
+                  <option value="ratio">比例模式</option>
+                  <option value="precise">精确模式</option>
+                </select>
+              </label>
+              <label>调料比例 %<input id="seasoningRatio" type="number" min="0" step="0.1" value="5"></label>
+              <label>调料固定金额<input id="seasoningFixed" type="number" min="0" step="0.01" value="0.5"></label>
+              <label>牛肉涨价模拟 %<input id="beefInflation" type="range" min="-20" max="40" step="5" value="0"></label>
+            </div>
+            <div class="table-wrap advanced-only">
+              <table>
+                <thead>
+                  <tr><th>原料</th><th>类别</th><th>用量</th><th>单份成本</th><th>备注</th></tr>
+                </thead>
+                <tbody id="bomRows"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="margin-section">
+            <div class="section-title">
+              <h3>渠道费用模板</h3>
+              <span>区分标准材料毛利、渠道毛利和完全成本毛利</span>
+            </div>
+            <div class="form-grid">
+              <label>销售渠道
+                <select id="salesChannel">
+                  <option value="dineIn">堂食</option>
+                  <option value="meituan">美团外卖</option>
+                  <option value="taobao">淘宝闪购</option>
+                  <option value="jd">京东外卖</option>
+                </select>
+              </label>
+              <label>技术服务费/佣金 %<input id="platformRate" type="number" min="0" step="0.1" value="8"></label>
+              <label>保底扣费<input id="minCommission" type="number" min="0" step="0.01" value="0"></label>
+              <label>履约配送费<input id="fulfillmentFee" type="number" min="0" step="0.01" value="4.5"></label>
+              <label>包装套件<input id="packKitCost" type="number" min="0" step="0.01" value="1.5"></label>
+              <label>活动折扣率 %<input id="discountRate" type="number" min="0" max="100" step="0.1" value="8"></label>
+              <label>推广费率 %<input id="promotionRate" type="number" min="0" max="100" step="0.1" value="3"></label>
+              <label>活动均摊<input id="activityCost" type="number" min="0" step="0.01" value="2"></label>
+              <label>推广/配送补贴<input id="otherChannelCost" type="number" min="0" step="0.01" value="0.8"></label>
+              <label>房租人工水电分摊<input id="overheadCost" type="number" min="0" step="0.01" value="3"></label>
+            </div>
+            <div class="advice-box platform-note" id="platformRuleNote"></div>
+          </section>
+
+          <section class="margin-section advanced-only">
+            <div class="section-title">
+              <h3>出成率测试</h3>
+              <span>称毛料和净料，反推自己的真实出成率</span>
+            </div>
+            <div class="form-grid compact-grid">
+              <label>毛料总重 g<input id="grossWeight" type="number" min="0" step="1" value="1000"></label>
+              <label>净料总重 g<input id="netWeight" type="number" min="0" step="1" value="850"></label>
+              <label>测试对象
+                <select id="yieldIngredient"></select>
+              </label>
+              <button class="ghost-button inline-button" type="button" id="applyYieldBtn">更新出成率</button>
+            </div>
+            <div class="advice-box" id="yieldToolResult"></div>
+          </section>
+          <div class="result-grid" id="marginResult"></div>
+          <div class="advice-box" id="marginAdvice"></div>
+        </section>
+
+        <section class="tool-panel" id="tool-deal">
+          <div class="tool-heading">
+            <div>
+              <p class="eyebrow">本地生活工具</p>
+              <h2>团购套餐利润测算器</h2>
+            </div>
+            <button class="ghost-button" type="button" id="exportDealBtn">导出测算表</button>
+          </div>
+
+          <section class="margin-section">
+            <div class="section-title">
+              <h3>套餐基础</h3>
+              <span>先判断引流品本身是否亏损</span>
+            </div>
+            <div class="form-grid">
+              <label>套餐名称<input id="dealName" value="牛肉米粉单人餐"></label>
+              <label>平台
+                <select id="dealPlatform">
+                  <option value="douyin">抖音团购</option>
+                  <option value="meituan">美团团购</option>
+                  <option value="dianping">大众点评团购</option>
+                </select>
+              </label>
+              <label>套餐原价<input id="dealOriginal" type="number" min="0" step="0.01" value="39"></label>
+              <label>团购价<input id="dealPrice" type="number" min="0" step="0.01" value="29.9"></label>
+              <label>食材成本<input id="dealFoodCost" type="number" min="0" step="0.01" value="12"></label>
+              <label>包材/耗材<input id="dealPackCost" type="number" min="0" step="0.01" value="1"></label>
+              <label>人工变动成本<input id="dealLaborCost" type="number" min="0" step="0.01" value="2"></label>
+              <label>其他单份成本<input id="dealOtherCost" type="number" min="0" step="0.01" value="0.5"></label>
+            </div>
+          </section>
+
+          <section class="margin-section">
+            <div class="section-title">
+              <h3>平台与达人费用</h3>
+              <span>把平台扣点、达人佣金和补贴拆开看</span>
+            </div>
+            <div class="form-grid">
+              <label>平台技术服务费 %<input id="dealPlatformRate" type="number" min="0" step="0.1" value="6"></label>
+              <label>达人佣金 %<input id="dealCreatorRate" type="number" min="0" step="0.1" value="8"></label>
+              <label>支付/结算费 %<input id="dealPaymentRate" type="number" min="0" step="0.1" value="0.6"></label>
+              <label>商家补贴<input id="dealSubsidy" type="number" min="0" step="0.01" value="1"></label>
+              <label>退款率 %<input id="refundRate" type="number" min="0" max="100" step="0.1" value="3"></label>
+              <label>过期未核销率 %<input id="breakageRate" type="number" min="0" max="100" step="0.1" value="6"></label>
+              <label>预计售出份数<input id="soldCount" type="number" min="0" step="1" value="380"></label>
+              <label>预计核销份数<input id="dealCount" type="number" min="0" step="1" value="300"></label>
+            </div>
+          </section>
+
+          <section class="margin-section">
+            <div class="section-title">
+              <h3>到店加购</h3>
+              <span>测算引流套餐能否靠二次消费回血</span>
+            </div>
+            <div class="form-grid">
+              <label>到店转化加购 %<input id="addOnRate" type="number" min="0" step="0.1" value="20"></label>
+              <label>加购客单<input id="addOnValue" type="number" min="0" step="0.01" value="12"></label>
+              <label>加购毛利率 %<input id="addOnMarginRate" type="number" min="0" max="100" step="0.1" value="60"></label>
+              <label>复购转化 %<input id="repeatRate" type="number" min="0" max="100" step="0.1" value="8"></label>
+              <label>复购客单<input id="repeatValue" type="number" min="0" step="0.01" value="35"></label>
+              <label>复购毛利率 %<input id="repeatMarginRate" type="number" min="0" max="100" step="0.1" value="55"></label>
+            </div>
+          </section>
+
+          <section class="margin-section">
+            <div class="section-title">
+              <h3>套餐结构</h3>
+              <span>看成本是否被高成本单品拖垮</span>
+            </div>
+            <div class="form-grid compact-grid">
+              <label>主食成本<input id="stapleCost" type="number" min="0" step="0.01" value="7"></label>
+              <label>小吃成本<input id="snackCost" type="number" min="0" step="0.01" value="3"></label>
+              <label>饮品成本<input id="drinkCost" type="number" min="0" step="0.01" value="1.5"></label>
+              <label>赠品成本<input id="giftCost" type="number" min="0" step="0.01" value="0.5"></label>
+              <label>建议毛利红线 %<input id="dealMarginFloor" type="number" min="0" max="100" step="1" value="35"></label>
+            </div>
+            <div class="structure-bars" id="dealStructure"></div>
+          </section>
+
+          <div class="result-grid" id="dealResult"></div>
+          <div class="advice-box" id="dealAdvice"></div>
+        </section>
+
+        <section class="tool-panel" id="tool-loss">
+          <div class="tool-heading">
+            <div>
+              <p class="eyebrow">门店经营基础工具</p>
+              <h2>门店损耗记录工具</h2>
+            </div>
+            <button class="primary-button" type="button" id="addLossBtn">新增损耗</button>
+          </div>
+          <div class="form-grid">
+            <label>日期<input id="lossDate" type="date"></label>
+            <label>损耗品项<input id="lossItem" value="牛肉"></label>
+            <label>损耗数量<input id="lossQty" type="number" min="0" step="0.01" value="2"></label>
+            <label>单位<input id="lossUnit" value="斤"></label>
+            <label>单位成本<input id="lossUnitCost" type="number" min="0" step="0.01" value="38"></label>
+            <label>损耗原因
+              <select id="lossReason">
+                <option>备货过量</option>
+                <option>操作失误</option>
+                <option>过期</option>
+                <option>退单</option>
+                <option>出品失败</option>
+              </select>
+            </label>
+            <label>责任归类
+              <select id="lossOwner">
+                <option>预估问题</option>
+                <option>训练问题</option>
+                <option>保存问题</option>
+                <option>供应问题</option>
+              </select>
+            </label>
+          </div>
+          <div class="result-grid" id="lossSummary"></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>日期</th><th>品项</th><th>数量</th><th>金额</th><th>原因</th><th>归类</th></tr>
+              </thead>
+              <tbody id="lossRows"></tbody>
+            </table>
+          </div>
+          <div class="advice-box" id="lossAdvice"></div>
+        </section>
+
+        <section class="tool-panel" id="tool-xiaohongshu">
+          <div class="tool-heading">
+            <div>
+              <p class="eyebrow">内容营销工具</p>
+              <h2>小红书餐饮图文生成器</h2>
+            </div>
+            <button class="ghost-button" type="button" id="copyPostBtn">复制文案</button>
+          </div>
+          <div class="form-grid">
+            <label>门店品类<input id="xhsCategory" value="生烫牛肉米粉"></label>
+            <label>城市<input id="xhsCity" value="杭州"></label>
+            <label>卖点<input id="xhsSellingPoints" value="草本汤底、新鲜现烫、自选菜品"></label>
+            <label>目标人群<input id="xhsAudience" value="上班族、女生、夜宵人群"></label>
+            <label>风格
+              <select id="xhsStyle">
+                <option>种草</option>
+                <option>探店</option>
+                <option>老板自述</option>
+                <option>避坑科普</option>
+              </select>
+            </label>
+            <label>门店地址<input id="xhsAddress" value="写字楼附近"></label>
+          </div>
+          <div class="content-output">
+            <h3>标题</h3>
+            <div class="chips" id="xhsTitles"></div>
+            <h3>正文</h3>
+            <textarea id="xhsBody" rows="8"></textarea>
+            <h3>标签</h3>
+            <div class="chips" id="xhsTags"></div>
+            <h3>封面文案与拍摄建议</h3>
+            <div class="advice-box" id="xhsVisual"></div>
+          </div>
+        </section>
+
+        <section class="tool-panel" id="tool-schedule">
+          <div class="tool-heading">
+            <div>
+              <p class="eyebrow">门店经营基础工具</p>
+              <h2>单店排班工具</h2>
+            </div>
+            <button class="ghost-button" type="button" id="exportScheduleBtn">导出 CSV</button>
+          </div>
+          <div class="form-grid">
+            <label>营业开始<input id="openTime" type="time" value="10:00"></label>
+            <label>营业结束<input id="closeTime" type="time" value="22:00"></label>
+            <label>员工名单<textarea id="employeeList" rows="3">店长,小王,小李,小张,兼职A</textarea></label>
+            <label>岗位<textarea id="roleList" rows="3">收银,出餐,后厨,洗消,店长</textarea></label>
+            <label>高峰时段<textarea id="peakTimes" rows="3">11:30-13:30,17:30-20:00</textarea></label>
+            <label>每人每日工时<input id="dailyHours" type="number" min="1" max="12" step="0.5" value="8"></label>
+            <label>每周休息天数<input id="restDays" type="number" min="0" max="3" step="1" value="1"></label>
+            <label>是否有兼职
+              <select id="hasPartTime"><option>有</option><option>无</option></select>
+            </label>
+          </div>
+          <div class="result-grid" id="scheduleSummary"></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>星期</th><th>早班</th><th>中峰</th><th>晚峰</th><th>收尾</th><th>休息</th></tr>
+              </thead>
+              <tbody id="scheduleRows"></tbody>
+            </table>
+          </div>
+          <div class="advice-box" id="scheduleAdvice"></div>
+        </section>
+      </section>
+
+      <footer class="site-footer">
+        <span>安全边界：纯静态网页，无登录、无后台、无自动采集。</span>
+        <span>费率、利润和建议仅供测算参考，不构成财务、法律或平台招商承诺。</span>
+      </footer>
+    </main>
+
+    <script src="./app.js?v=deal-audit-1"></script>
+  </body>
+</html>
