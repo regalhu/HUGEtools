@@ -69,7 +69,7 @@
               </label>
               <label>整锅出餐份数<input id="batchServings" type="number" min="1" step="1" value="20"></label>
               <label>毛利红线 %<input id="marginFloor" type="number" min="0" max="100" step="1" value="55"></label>
-              <label>售价模拟 +元<input id="priceDelta" type="range" min="-5" max="8" step="0.5" value="0"></label>
+              <label class="range-label">售价模拟 <span id="priceDeltaValue">0 元</span><input id="priceDelta" type="range" min="-5" max="8" step="0.5" value="0"></label>
             </div>
           </section>
 
@@ -162,7 +162,7 @@
               </label>
               <label>调料比例 %<input id="seasoningRatio" type="number" min="0" step="0.1" value="5"></label>
               <label>调料固定金额<input id="seasoningFixed" type="number" min="0" step="0.01" value="0.5"></label>
-              <label>牛肉涨价模拟 %<input id="beefInflation" type="range" min="-20" max="40" step="5" value="0"></label>
+              <label class="range-label">牛肉涨价模拟 <span id="beefInflationValue">0%</span><input id="beefInflation" type="range" min="-20" max="40" step="5" value="0"></label>
             </div>
             <div class="table-wrap advanced-only">
               <table>
@@ -188,14 +188,14 @@
                   <option value="jd">京东外卖</option>
                 </select>
               </label>
-              <label>技术服务费/佣金 %<input id="platformRate" type="number" min="0" step="0.1" value="8"></label>
+              <label>技术服务费/佣金 %<input id="platformRate" type="number" min="0" step="0.1" value="0"></label>
               <label>保底扣费<input id="minCommission" type="number" min="0" step="0.01" value="0"></label>
-              <label>履约配送费<input id="fulfillmentFee" type="number" min="0" step="0.01" value="4.5"></label>
-              <label>包装套件<input id="packKitCost" type="number" min="0" step="0.01" value="1.5"></label>
-              <label>活动折扣率 %<input id="discountRate" type="number" min="0" max="100" step="0.1" value="8"></label>
-              <label>推广费率 %<input id="promotionRate" type="number" min="0" max="100" step="0.1" value="3"></label>
-              <label>活动均摊<input id="activityCost" type="number" min="0" step="0.01" value="2"></label>
-              <label>推广/配送补贴<input id="otherChannelCost" type="number" min="0" step="0.01" value="0.8"></label>
+              <label>履约配送费<input id="fulfillmentFee" type="number" min="0" step="0.01" value="0"></label>
+              <label>包装套件<input id="packKitCost" type="number" min="0" step="0.01" value="0.2"></label>
+              <label>活动折扣率 %<input id="discountRate" type="number" min="0" max="100" step="0.1" value="0"></label>
+              <label>推广费率 %<input id="promotionRate" type="number" min="0" max="100" step="0.1" value="0"></label>
+              <label>活动均摊<input id="activityCost" type="number" min="0" step="0.01" value="0"></label>
+              <label>推广/配送补贴<input id="otherChannelCost" type="number" min="0" step="0.01" value="0"></label>
               <label>房租人工水电分摊<input id="overheadCost" type="number" min="0" step="0.01" value="3"></label>
             </div>
             <div class="advice-box platform-note" id="platformRuleNote"></div>
@@ -421,6 +421,7 @@
       </footer>
     </main>
 
-    <script src="./app.js?v=deal-audit-1"></script>
+    <script src="./app.js?v=margin-sliders-1"></script>
+    <script src="./slider-fix.js?v=1"></script>
   </body>
 </html>
