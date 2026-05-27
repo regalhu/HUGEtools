@@ -49,6 +49,20 @@
     style.id = "margin-list-patch-style";
     style.textContent = `
       .table-actions { display: flex; justify-content: flex-end; }
+      .unified-hidden { display: none !important; }
+      .merged-deal-section { display: none; }
+      body[data-profit-scene="groupbuy"] .merged-deal-section { display: block; }
+      body[data-profit-scene="groupbuy"] #tool-margin > .mode-strip,
+      body[data-profit-scene="groupbuy"] #tool-margin > .margin-section:not(.unified-stage):not(.merged-deal-section):not(.saved-list-section),
+      body[data-profit-scene="groupbuy"] #marginResult,
+      body[data-profit-scene="groupbuy"] #addDishResultBtn,
+      body[data-profit-scene="groupbuy"] #marginAdvice { display: none; }
+      body[data-profit-item-type="single"] #tool-margin .combo-only,
+      body[data-profit-item-type="single"] #tool-margin .gift-only,
+      body[data-profit-item-type="combo"] #tool-margin .single-only,
+      body[data-profit-item-type="combo"] #tool-margin .gift-only,
+      body[data-profit-item-type="gift"] #tool-margin .single-only,
+      body[data-profit-item-type="gift"] #tool-margin .combo-only { display: none; }
       .mini-button {
         min-height: 30px;
         border: 1px solid var(--line);
@@ -60,6 +74,79 @@
       }
     `;
     document.head.appendChild(style);
+  }
+
+  function ensureUnifiedStage() {
+    if (get("profitScene")) return;
+    const modeStrip = document.querySelector("#tool-margin .mode-strip");
+    if (!modeStrip) return;
+    const section = document.createElement("section");
+    section.className = "margin-section unified-stage";
+    section.innerHTML = `
+      <div class="section-title">
+        <h3>第一阶段：选择测算场景</h3>
+        <span>先选经营场景和菜品类型，下面只显示匹配字段</span>
+      </div>
+      <div class="form-grid">
+        <label>场景
+          <select id="profitScene">
+            <option value="dineIn">堂食</option>
+            <option value="takeout">外带</option>
+            <option value="delivery">外卖</option>
+            <option value="groupbuy">团购</option>
+          </select>
+        </label>
+        <label>菜品类型
+          <select id="profitItemType">
+            <option value="single">单品</option>
+            <option value="combo">套餐</option>
+            <option value="gift">礼品</option>
+          </select>
+        </label>
+      </div>
+    `;
+    modeStrip.insertAdjacentElement("beforebegin", section);
+    get("profitScene")?.addEventListener("change", applyUnifiedContext);
+    get("profitItemType")?.addEventListener("change", applyUnifiedContext);
+  }
+
+  function tagUnifiedSections() {
+    [...document.querySelectorAll("#tool-margin > .margin-section")].forEach((section) => {
+      const title = section.querySelector(".section-title h3")?.textContent || "";
+      if (/第一阶段/.test(title)) section.classList.add("unified-stage");
+      if (/菜品主数据|原料库|菜品用料清单|渠道费用模板|出成率测试/.test(title)) section.classList.add("single-only");
+      if (/套餐毛利测算/.test(title)) section.classList.add("combo-only");
+      if (/礼品毛利测算/.test(title)) section.classList.add("gift-only");
+      if (/已添加测算清单/.test(title)) section.classList.add("saved-list-section");
+    });
+    ["marginResult", "addDishResultBtn", "marginAdvice"].forEach((id) => get(id)?.classList.add("single-only"));
+  }
+
+  function mergeDealCalculator() {
+    const dealTab = document.querySelector('[data-tool="deal"]');
+    if (dealTab) dealTab.classList.add("unified-hidden");
+    const dealPanel = get("tool-deal");
+    const marginPanel = get("tool-margin");
+    if (!dealPanel || !marginPanel || dealPanel.dataset.merged === "1") return;
+    dealPanel.dataset.merged = "1";
+    dealPanel.classList.remove("tool-panel");
+    dealPanel.classList.add("margin-section", "merged-deal-section");
+    marginPanel.insertBefore(dealPanel, get("marginResult"));
+  }
+
+  function applyUnifiedContext() {
+    const scene = get("profitScene")?.value || "dineIn";
+    const itemType = get("profitItemType")?.value || "single";
+    document.body.dataset.profitScene = scene;
+    document.body.dataset.profitItemType = itemType;
+    const channelMap = { dineIn: "dineIn", takeout: "dineIn", delivery: "meituan", groupbuy: "dineIn" };
+    const salesChannel = get("salesChannel");
+    if (salesChannel && salesChannel.value !== channelMap[scene]) {
+      salesChannel.value = channelMap[scene];
+      salesChannel.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    setLabel("marginName", itemType === "gift" ? "礼品名称" : "菜品名称");
+    setLabel("marginPrice", "售价（元）");
   }
 
   function metric(label, value, type = "") {
@@ -124,6 +211,59 @@
     renderComboMargin();
   }
 
+  function calculateGiftMargin() {
+    const price = num("giftPrice");
+    const cost = num("giftBaseCost") + num("giftPackCost") + num("giftOtherCost");
+    const profit = Math.round((price - cost) * 100) / 100;
+    const rate = price ? profit / price * 100 : 0;
+    return { price, cost, profit, rate };
+  }
+
+  function renderGiftMargin() {
+    if (!get("giftMarginResult")) return;
+    const result = calculateGiftMargin();
+    const level = result.profit >= 5 ? "good" : result.profit >= 0 ? "warn" : "bad";
+    get("giftMarginResult").innerHTML = [
+      metric("礼品总成本", money(result.cost), result.cost > result.price ? "bad" : "good"),
+      metric("礼品毛利", `${money(result.profit)} / ${result.rate.toFixed(1)}%`, level),
+      metric("礼品售价", money(result.price), "good"),
+      metric("建议", result.profit >= 0 ? "可销售" : "需调价", level)
+    ].join("");
+    get("giftMarginAdvice").innerHTML = `<p>${result.profit < 0 ? "当前礼品为亏损，建议提高售价、降低采购成本，或只作为营销赠品。" : "当前礼品毛利为正，可继续结合套餐或加价购场景测试。"}</p>`;
+  }
+
+  function ensureGiftSection() {
+    if (get("giftMarginResult")) {
+      renderGiftMargin();
+      return;
+    }
+    const comboSection = [...document.querySelectorAll("#tool-margin > .margin-section")]
+      .find((section) => section.innerText.includes("套餐毛利测算"));
+    if (!comboSection) return;
+    const section = document.createElement("section");
+    section.className = "margin-section gift-only";
+    section.innerHTML = `
+      <div class="section-title">
+        <h3>礼品毛利测算</h3>
+        <span>适合玩具、周边、赠品加价购等简单测算</span>
+      </div>
+      <div class="form-grid compact-grid">
+        <label>礼品名称<input id="giftName" value="儿童玩具"></label>
+        <label>售价（元）<input id="giftPrice" type="number" min="0" step="0.01" value="9.9"></label>
+        <label>采购/制作成本（元）<input id="giftBaseCost" type="number" min="0" step="0.01" value="3.5"></label>
+        <label>包装成本（元）<input id="giftPackCost" type="number" min="0" step="0.01" value="0.5"></label>
+        <label>其他成本（元）<input id="giftOtherCost" type="number" min="0" step="0.01" value="0"></label>
+      </div>
+      <div class="result-grid compact-result" id="giftMarginResult"></div>
+      <button class="primary-button" type="button" id="addGiftResultBtn">添加当前礼品</button>
+      <div class="advice-box" id="giftMarginAdvice"></div>
+    `;
+    comboSection.insertAdjacentElement("afterend", section);
+    section.querySelectorAll("input").forEach((input) => input.addEventListener("input", renderGiftMargin));
+    get("addGiftResultBtn")?.addEventListener("click", addGiftResult);
+    renderGiftMargin();
+  }
+
   const savedItems = [];
   let savedId = 1;
 
@@ -169,6 +309,21 @@
     get("addComboResultBtn")?.addEventListener("click", addComboResult);
     get("clearMarginListBtn")?.addEventListener("click", clearSavedList);
     get("marginListRows")?.addEventListener("click", deleteSavedItem);
+    renderSavedList();
+  }
+
+  function addGiftResult() {
+    const gift = calculateGiftMargin();
+    savedItems.push({
+      id: savedId++,
+      type: "礼品",
+      name: get("giftName")?.value || "未命名礼品",
+      spec: "-",
+      price: gift.price,
+      profit: gift.profit,
+      rate: gift.rate,
+      note: `礼品总成本 ${money(gift.cost)}`
+    });
     renderSavedList();
   }
 
@@ -335,14 +490,20 @@
 
   function bind() {
     injectListStyles();
+    ensureUnifiedStage();
     patchRemovedFields();
     ensureComboSection();
+    ensureGiftSection();
+    mergeDealCalculator();
+    tagUnifiedSections();
     ensureSavedListSection();
+    applyUnifiedContext();
     appendBenchmarkAdvice();
     patchExport();
     document.addEventListener("input", () => {
       setTimeout(() => {
         renderComboMargin();
+        renderGiftMargin();
         appendBenchmarkAdvice();
       }, 0);
     });
