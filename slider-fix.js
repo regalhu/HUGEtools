@@ -43,6 +43,25 @@
     if (bomSub) bomSub.textContent = "支持半成品、单份用量和固定调料成本";
   }
 
+  function injectListStyles() {
+    if (document.getElementById("margin-list-patch-style")) return;
+    const style = document.createElement("style");
+    style.id = "margin-list-patch-style";
+    style.textContent = `
+      .table-actions { display: flex; justify-content: flex-end; }
+      .mini-button {
+        min-height: 30px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: #fff;
+        color: var(--ink);
+        padding: 0 10px;
+        font-weight: 800;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   function metric(label, value, type = "") {
     return `<article class="metric ${type}"><span>${label}</span><strong>${value}</strong></article>`;
   }
@@ -105,9 +124,126 @@
     renderComboMargin();
   }
 
+  const savedItems = [];
+  let savedId = 1;
+
+  function ensureButtonAfter(targetId, buttonId, text) {
+    if (get(buttonId)) return;
+    const target = get(targetId);
+    if (!target) return;
+    const button = document.createElement("button");
+    button.className = "primary-button";
+    button.type = "button";
+    button.id = buttonId;
+    button.textContent = text;
+    target.insertAdjacentElement("afterend", button);
+  }
+
+  function ensureSavedListSection() {
+    if (get("marginListRows")) return;
+    ensureButtonAfter("marginResult", "addDishResultBtn", "添加当前菜品");
+    ensureButtonAfter("comboMarginResult", "addComboResultBtn", "添加当前套餐");
+    const marginAdvice = get("marginAdvice");
+    if (!marginAdvice) return;
+    const section = document.createElement("section");
+    section.className = "margin-section";
+    section.innerHTML = `
+      <div class="section-title">
+        <h3>已添加测算清单</h3>
+        <span>按添加顺序记录本次测算的菜品和套餐</span>
+      </div>
+      <div class="table-actions">
+        <button class="ghost-button" type="button" id="clearMarginListBtn">清空表格</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>序号</th><th>类型</th><th>名称</th><th>规格</th><th>售价</th><th>毛利</th><th>毛利率</th><th>备注</th><th>操作</th></tr>
+          </thead>
+          <tbody id="marginListRows"></tbody>
+        </table>
+      </div>
+    `;
+    marginAdvice.insertAdjacentElement("afterend", section);
+    get("addDishResultBtn")?.addEventListener("click", addDishResult);
+    get("addComboResultBtn")?.addEventListener("click", addComboResult);
+    get("clearMarginListBtn")?.addEventListener("click", clearSavedList);
+    get("marginListRows")?.addEventListener("click", deleteSavedItem);
+    renderSavedList();
+  }
+
   function metricText(label) {
     const item = [...document.querySelectorAll("#marginResult .metric")].find((node) => node.innerText.includes(label));
     return item ? item.innerText.replace(label, "").trim() : "";
+  }
+
+  function parseMoney(text) {
+    const match = String(text || "").match(/-?\d+(?:\.\d+)?/);
+    return match ? Number(match[0]) : 0;
+  }
+
+  function addDishResult() {
+    savedItems.push({
+      id: savedId++,
+      type: "菜品",
+      name: get("marginName")?.value || "未命名菜品",
+      spec: get("dishSpec")?.value || "-",
+      price: num("marginPrice"),
+      profit: parseMoney(metricText("标准材料毛利")),
+      rate: percent("标准材料毛利"),
+      note: `原料成本 ${metricText("直接原料成本")}，渠道到手 ${metricText("渠道到手毛利")}`
+    });
+    renderSavedList();
+  }
+
+  function addComboResult() {
+    const combo = calculateComboMargin();
+    savedItems.push({
+      id: savedId++,
+      type: "套餐",
+      name: get("comboName")?.value || "未命名套餐",
+      spec: "-",
+      price: combo.comboPrice,
+      profit: combo.comboProfit,
+      rate: combo.comboRate,
+      note: `单品毛利合计 ${money(combo.itemProfitTotal)}，额外成本 ${money(combo.extraCost)}`
+    });
+    renderSavedList();
+  }
+
+  function deleteSavedItem(event) {
+    const button = event.target.closest("[data-delete-saved-item]");
+    if (!button) return;
+    const index = savedItems.findIndex((item) => item.id === Number(button.dataset.deleteSavedItem));
+    if (index >= 0) savedItems.splice(index, 1);
+    renderSavedList();
+  }
+
+  function clearSavedList() {
+    savedItems.splice(0, savedItems.length);
+    renderSavedList();
+  }
+
+  function safeText(value) {
+    return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function renderSavedList() {
+    const rows = get("marginListRows");
+    if (!rows) return;
+    rows.innerHTML = savedItems.map((item, index) => `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${safeText(item.type)}</td>
+        <td>${safeText(item.name)}</td>
+        <td>${safeText(item.spec)}</td>
+        <td>${money(item.price)}</td>
+        <td>${money(item.profit)}</td>
+        <td>${Number(item.rate || 0).toFixed(1)}%</td>
+        <td>${safeText(item.note)}</td>
+        <td><button class="mini-button" type="button" data-delete-saved-item="${item.id}">删除</button></td>
+      </tr>
+    `).join("") || `<tr><td colspan="9">还没有添加菜品或套餐。算好后点击上方按钮，就会按顺序记录在这里。</td></tr>`;
   }
 
   function percent(label) {
@@ -198,8 +334,10 @@
   }
 
   function bind() {
+    injectListStyles();
     patchRemovedFields();
     ensureComboSection();
+    ensureSavedListSection();
     appendBenchmarkAdvice();
     patchExport();
     document.addEventListener("input", () => {
