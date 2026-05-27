@@ -57,6 +57,8 @@
       body[data-profit-scene="groupbuy"] #marginResult,
       body[data-profit-scene="groupbuy"] #addDishResultBtn,
       body[data-profit-scene="groupbuy"] #marginAdvice { display: none; }
+      body[data-profit-scene="dineIn"] #tool-margin .channel-only,
+      body[data-profit-scene="takeout"] #tool-margin .channel-only { display: none; }
       body[data-profit-item-type="single"] #tool-margin .combo-only,
       body[data-profit-item-type="single"] #tool-margin .gift-only,
       body[data-profit-item-type="combo"] #tool-margin .single-only,
@@ -114,7 +116,8 @@
     [...document.querySelectorAll("#tool-margin > .margin-section")].forEach((section) => {
       const title = section.querySelector(".section-title h3")?.textContent || "";
       if (/第一阶段/.test(title)) section.classList.add("unified-stage");
-      if (/菜品主数据|原料库|菜品用料清单|渠道费用模板|出成率测试/.test(title)) section.classList.add("single-only");
+      if (/菜品主数据|原料库|菜品用料清单|出成率测试/.test(title)) section.classList.add("single-only");
+      if (/渠道费用模板/.test(title)) section.classList.add("single-only", "channel-only");
       if (/套餐毛利测算/.test(title)) section.classList.add("combo-only");
       if (/礼品毛利测算/.test(title)) section.classList.add("gift-only");
       if (/已添加测算清单/.test(title)) section.classList.add("saved-list-section");
