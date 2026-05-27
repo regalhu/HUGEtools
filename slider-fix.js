@@ -491,6 +491,310 @@
     }, true);
   }
 
+  let xhsPatchImage = null;
+  let xhsPatchFilename = "";
+
+  function ensureXhsImageTool() {
+    const visual = get("xhsVisual");
+    if (!visual || get("generateXhsImageBtn")) return;
+    const section = document.createElement("div");
+    section.className = "xhs-cover-tool";
+    section.innerHTML = `
+      <div class="section-title">
+        <h3>图片生成工具</h3>
+        <span id="xhsImageStatus">未上传产品图时，会自动生成简易海报图。</span>
+      </div>
+      <div class="form-grid compact-grid">
+        <label>产品实拍图<input id="xhsProductImage" type="file" accept="image/*"></label>
+        <label>封面版式<select id="xhsImageLayout"><option>产品大图</option><option>文字海报</option><option>门店场景</option></select></label>
+        <label>画面色调<select id="xhsImageTone"><option>暖食欲</option><option>清爽干净</option><option>夜宵氛围</option><option>高质感</option></select></label>
+        <label>滤镜<select id="xhsImageFilter"><option>自然提亮</option><option>暖黄胶片</option><option>高对比鲜明</option><option>柔和奶油</option></select></label>
+        <button class="primary-button inline-button" type="button" id="generateXhsImageBtn">生成图片</button>
+      </div>
+      <div class="xhs-cover-layout">
+        <canvas id="xhsCoverCanvas" width="1080" height="1440" aria-label="小红书封面图预览"></canvas>
+        <div class="xhs-image-actions">
+          <button class="ghost-button" type="button" id="downloadXhsCoverBtn">下载 PNG</button>
+          <div class="advice-box xhs-cover-notes">
+            <p>竖版 3:4 图片，适合小红书封面。上传产品图后会把实拍图、标题、卖点和标签合成一张图。</p>
+            <p>没有产品图时，工具会生成一张简易产品海报，适合先做选题测试或发给店员照着拍。</p>
+          </div>
+        </div>
+      </div>
+    `;
+    visual.insertAdjacentElement("afterend", section);
+    get("generateXhsImageBtn")?.addEventListener("click", generateXhsImage);
+    get("downloadXhsCoverBtn")?.addEventListener("click", downloadXhsCover);
+    get("xhsProductImage")?.addEventListener("change", handleXhsImageUpload);
+    ["xhsImageLayout", "xhsImageTone", "xhsImageFilter"].forEach((id) => get(id)?.addEventListener("change", generateXhsImage));
+    patchXhsAdvice();
+    generateXhsImage();
+  }
+
+  function injectXhsStyles() {
+    if (document.getElementById("xhs-image-patch-style")) return;
+    const style = document.createElement("style");
+    style.id = "xhs-image-patch-style";
+    style.textContent = `
+      .xhs-cover-tool { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 10px; }
+      .xhs-cover-layout { display: grid; grid-template-columns: minmax(260px, 360px) minmax(220px, 1fr); gap: 16px; align-items: start; margin-top: 16px; }
+      #xhsCoverCanvas { width: 100%; max-width: 360px; aspect-ratio: 3 / 4; border: 1px solid var(--line); border-radius: 8px; background: #fff7ee; box-shadow: 0 12px 28px rgba(30, 42, 34, 0.11); }
+      .xhs-image-actions { display: grid; gap: 12px; align-content: start; }
+      .xhs-cover-notes { margin-top: 0; }
+      #xhsImageStatus { color: var(--muted); font-size: 12px; font-weight: 800; }
+      #xhsProductImage { min-height: 41px; padding: 8px 10px; }
+      @media (max-width: 720px) { .xhs-cover-layout { grid-template-columns: 1fr; } #xhsCoverCanvas { max-width: 100%; } }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function patchXhsAdvice() {
+    const visual = get("xhsVisual");
+    if (!visual) return;
+    const category = get("xhsCategory")?.value.trim() || "招牌菜";
+    const city = get("xhsCity")?.value.trim() || "本地";
+    const point = splitList(get("xhsSellingPoints")?.value || "")[0] || "热乎现做";
+    visual.innerHTML = [
+      `<p><strong>封面文案：</strong>${city}${category}，${point}才舒服。</p>`,
+      `<p><strong>简易拍摄产品：</strong>选一份刚出餐的招牌产品，碗口擦干净，汤面或主料要露出来；旁边放一双筷子、一张小票或一杯饮品，让画面有真实用餐感。</p>`,
+      `<p><strong>场景打造：</strong>优先用靠窗桌、门头边、出餐口或有品牌物料的位置；桌面只保留产品、餐具、纸巾和一处价格/菜单信息，背景越干净越容易出片。</p>`,
+      `<p><strong>拍摄角度：</strong>米粉、面、盖饭用 45 度斜拍突出份量；小吃、甜品用俯拍看整盘结构；汤锅、冒热气产品用近景低角度拍出热气和厚度。</p>`,
+      `<p><strong>色调与滤镜：</strong>餐食建议暖一点、亮一点，曝光 +0.3，饱和 +8，对比 +5；夜宵场景可以保留一点暖黄灯，但不要把食物调到发红发灰。</p>`
+    ].join("");
+  }
+
+  function getXhsData() {
+    return {
+      category: get("xhsCategory")?.value.trim() || "招牌菜",
+      city: get("xhsCity")?.value.trim() || "本地",
+      points: splitList(get("xhsSellingPoints")?.value || ""),
+      audience: splitList(get("xhsAudience")?.value || ""),
+      style: get("xhsStyle")?.value || "种草",
+      address: get("xhsAddress")?.value.trim() || "门店附近"
+    };
+  }
+
+  function handleXhsImageUpload(event) {
+    const file = event.target.files?.[0];
+    if (!file) {
+      xhsPatchImage = null;
+      xhsPatchFilename = "";
+      generateXhsImage();
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const image = new Image();
+      image.onload = () => {
+        xhsPatchImage = image;
+        xhsPatchFilename = file.name;
+        generateXhsImage();
+      };
+      image.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function generateXhsImage() {
+    const canvas = get("xhsCoverCanvas");
+    if (!canvas) return;
+    patchXhsAdvice();
+    drawXhsCover(canvas, getXhsData());
+    const status = get("xhsImageStatus");
+    if (status) status.textContent = xhsPatchImage ? `已使用产品图：${xhsPatchFilename}` : "已生成无图简易海报。";
+  }
+
+  function drawXhsCover(canvas, data) {
+    const ctx = canvas.getContext("2d");
+    const width = canvas.width;
+    const height = canvas.height;
+    const mainPoint = data.points[0] || "热乎现做";
+    const secondPoint = data.points[1] || "出品稳定";
+    const people = data.audience[0] || "上班族";
+    const layout = get("xhsImageLayout")?.value || "产品大图";
+    const tone = get("xhsImageTone")?.value || "暖食欲";
+    const filter = get("xhsImageFilter")?.value || "自然提亮";
+    const palette = xhsPalette(tone);
+
+    ctx.clearRect(0, 0, width, height);
+    const bg = ctx.createLinearGradient(0, 0, width, height);
+    bg.addColorStop(0, palette.bg1);
+    bg.addColorStop(0.52, palette.bg2);
+    bg.addColorStop(1, palette.bg3);
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, width, height);
+
+    if (xhsPatchImage && layout !== "文字海报") drawProductPhoto(ctx, xhsPatchImage, layout, filter, palette);
+    else drawSimpleFoodPoster(ctx, data.category, tone, palette);
+
+    const cardY = layout === "文字海报" ? 120 : 760;
+    ctx.fillStyle = "rgba(255,255,255,0.86)";
+    roundRect(ctx, 70, cardY, width - 140, height - cardY - 86, 52, true);
+    ctx.fillStyle = palette.accent;
+    roundRect(ctx, 112, cardY + 52, 184, 62, 31, true);
+    drawCanvasText(ctx, data.style, 204, cardY + 94, 28, "#fff", 800, "center");
+    drawCanvasText(ctx, `${data.city}美食`, 116, cardY + 178, 34, palette.green, 800);
+    wrapCanvasText(ctx, data.category, 112, cardY + 300, 70, 86, width - 224, "#17211c", 900);
+    wrapCanvasText(ctx, `${mainPoint} / ${secondPoint}`, 116, cardY + 516, 38, 54, width - 232, "#3d4b43", 800);
+    drawCanvasText(ctx, `适合${people}收藏`, 116, cardY + 638, 34, palette.accent, 800);
+    drawCanvasText(ctx, `地址：${data.address}`, 116, cardY + 700, 28, "#66736b", 700);
+    [`#${data.city}美食`, `#${data.category}`, "#今天吃什么"].forEach((tag, index) => {
+      const y = height - 210 + index * 56;
+      ctx.fillStyle = index % 2 ? palette.soft2 : palette.soft1;
+      roundRect(ctx, 118, y - 42, Math.min(700, 34 + tag.length * 32), 54, 27, true);
+      drawCanvasText(ctx, tag, 146, y - 4, 26, index % 2 ? palette.dark2 : palette.green, 800);
+    });
+    drawCanvasText(ctx, "胡哥餐饮工具箱", width - 118, height - 98, 26, "#66736b", 700, "right");
+  }
+
+  function xhsPalette(tone) {
+    const palettes = {
+      "清爽干净": { bg1: "#f7fbff", bg2: "#e5f4ee", bg3: "#fff7df", accent: "#286f9e", green: "#247a4b", soft1: "#dff0fa", soft2: "#e3f3e9", dark2: "#286f9e" },
+      "夜宵氛围": { bg1: "#272018", bg2: "#70452b", bg3: "#d59655", accent: "#c84d3f", green: "#ffe0a8", soft1: "#fff0ce", soft2: "#ffe5df", dark2: "#8a560f" },
+      "高质感": { bg1: "#f8f5ef", bg2: "#e6ddd0", bg3: "#cfded7", accent: "#17211c", green: "#247a4b", soft1: "#e3f3e9", soft2: "#fff0ce", dark2: "#65430d" },
+      "暖食欲": { bg1: "#fff8ea", bg2: "#ffe0d2", bg3: "#dff0e5", accent: "#c84d3f", green: "#247a4b", soft1: "#e3f3e9", soft2: "#fff0ce", dark2: "#8a560f" }
+    };
+    return palettes[tone] || palettes["暖食欲"];
+  }
+
+  function drawProductPhoto(ctx, image, layout, filter, palette) {
+    const frame = layout === "门店场景" ? { x: 86, y: 102, width: 908, height: 650, radius: 44 } : { x: 70, y: 78, width: 940, height: 682, radius: 54 };
+    ctx.save();
+    roundedClip(ctx, frame.x, frame.y, frame.width, frame.height, frame.radius);
+    ctx.filter = canvasFilter(filter);
+    drawImageCover(ctx, image, frame.x, frame.y, frame.width, frame.height);
+    ctx.filter = "none";
+    const shade = ctx.createLinearGradient(0, frame.y, 0, frame.y + frame.height);
+    shade.addColorStop(0, "rgba(0,0,0,0.04)");
+    shade.addColorStop(1, "rgba(0,0,0,0.34)");
+    ctx.fillStyle = shade;
+    ctx.fillRect(frame.x, frame.y, frame.width, frame.height);
+    ctx.restore();
+    ctx.strokeStyle = "rgba(255,255,255,0.82)";
+    ctx.lineWidth = 10;
+    roundRect(ctx, frame.x, frame.y, frame.width, frame.height, frame.radius, false, true);
+    if (layout === "门店场景") {
+      ctx.fillStyle = "rgba(255,255,255,0.78)";
+      roundRect(ctx, 118, 614, 334, 76, 38, true);
+      drawCanvasText(ctx, "门店真实场景", 285, 664, 30, palette.accent, 800, "center");
+    }
+  }
+
+  function drawSimpleFoodPoster(ctx, category, tone, palette) {
+    ctx.fillStyle = "rgba(255,255,255,0.42)";
+    ctx.beginPath();
+    ctx.arc(830, 286, 118, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,0.30)";
+    ctx.beginPath();
+    ctx.arc(196, 640, 160, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = tone === "夜宵氛围" ? "#382417" : "#ffffff";
+    roundRect(ctx, 160, 204, 760, 472, 70, true);
+    ctx.fillStyle = tone === "夜宵氛围" ? "#f5b55e" : "#fff0ce";
+    ctx.beginPath();
+    ctx.ellipse(540, 452, 286, 154, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = palette.accent;
+    ctx.lineWidth = 16;
+    ctx.stroke();
+    ctx.strokeStyle = tone === "夜宵氛围" ? "#ffe0a8" : "#c84d3f";
+    ctx.lineWidth = 20;
+    for (let i = 0; i < 5; i += 1) {
+      ctx.beginPath();
+      ctx.moveTo(330 + i * 80, 418);
+      ctx.quadraticCurveTo(370 + i * 78, 366, 414 + i * 72, 420);
+      ctx.stroke();
+    }
+    ctx.fillStyle = "#247a4b";
+    ["现做", "热乎", "招牌"].forEach((label, index) => {
+      roundRect(ctx, 276 + index * 174, 570, 116, 50, 25, true);
+      drawCanvasText(ctx, label, 334 + index * 174, 604, 24, "#fff", 800, "center");
+    });
+    drawCanvasText(ctx, category.slice(0, 8), 540, 178, 38, palette.accent, 900, "center");
+  }
+
+  function canvasFilter(filter) {
+    const filters = {
+      "暖黄胶片": "brightness(1.08) saturate(1.15) sepia(0.18)",
+      "高对比鲜明": "brightness(1.04) contrast(1.18) saturate(1.22)",
+      "柔和奶油": "brightness(1.1) contrast(0.92) saturate(0.95)",
+      "自然提亮": "brightness(1.08) contrast(1.04) saturate(1.08)"
+    };
+    return filters[filter] || filters["自然提亮"];
+  }
+
+  function drawImageCover(ctx, image, x, y, width, height) {
+    const scale = Math.max(width / image.width, height / image.height);
+    const drawWidth = image.width * scale;
+    const drawHeight = image.height * scale;
+    ctx.drawImage(image, x + (width - drawWidth) / 2, y + (height - drawHeight) / 2, drawWidth, drawHeight);
+  }
+
+  function drawCanvasText(ctx, value, x, y, size, color, weight = 700, align = "left") {
+    ctx.font = `${weight} ${size}px "Microsoft YaHei", "PingFang SC", sans-serif`;
+    ctx.fillStyle = color;
+    ctx.textAlign = align;
+    ctx.textBaseline = "alphabetic";
+    ctx.fillText(value, x, y);
+  }
+
+  function wrapCanvasText(ctx, value, x, y, size, lineHeight, maxWidth, color, weight = 700) {
+    ctx.font = `${weight} ${size}px "Microsoft YaHei", "PingFang SC", sans-serif`;
+    ctx.fillStyle = color;
+    ctx.textAlign = "left";
+    const lines = [];
+    let line = "";
+    String(value).split("").forEach((char) => {
+      const next = line + char;
+      if (ctx.measureText(next).width > maxWidth && line) {
+        lines.push(line);
+        line = char;
+      } else {
+        line = next;
+      }
+    });
+    if (line) lines.push(line);
+    lines.forEach((item, index) => ctx.fillText(item, x, y + index * lineHeight));
+  }
+
+  function roundedClip(ctx, x, y, width, height, radius) {
+    roundedPath(ctx, x, y, width, height, radius);
+    ctx.clip();
+  }
+
+  function roundedPath(ctx, x, y, width, height, radius) {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+  }
+
+  function roundRect(ctx, x, y, width, height, radius, fill = false, stroke = false) {
+    roundedPath(ctx, x, y, width, height, radius);
+    if (fill) ctx.fill();
+    if (stroke) ctx.stroke();
+  }
+
+  function downloadXhsCover() {
+    const canvas = get("xhsCoverCanvas");
+    if (!canvas) return;
+    const city = get("xhsCity")?.value.trim() || "本地";
+    const category = get("xhsCategory")?.value.trim() || "小红书封面";
+    const link = document.createElement("a");
+    link.href = canvas.toDataURL("image/png");
+    link.download = `${city}-${category}-封面图.png`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
+
   function bind() {
     injectListStyles();
     ensureUnifiedStage();
@@ -503,11 +807,15 @@
     applyUnifiedContext();
     appendBenchmarkAdvice();
     patchExport();
+    injectXhsStyles();
+    ensureXhsImageTool();
     document.addEventListener("input", () => {
       setTimeout(() => {
         renderComboMargin();
         renderGiftMargin();
         appendBenchmarkAdvice();
+        ensureXhsImageTool();
+        if (document.activeElement?.id?.startsWith("xhs")) generateXhsImage();
       }, 0);
     });
   }
