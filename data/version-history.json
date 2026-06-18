@@ -1,9 +1,27 @@
 {
   "product": "胡哥餐饮工具箱",
-  "currentVersion": "0.7.0",
+  "currentVersion": "0.7.1",
   "updatedAt": "2026-06-18",
   "iterationRule": "每次功能更新都追加版本记录，保留上一版本基线、核心变化、验证结果和风险边界，便于后续按版本对比迭代。",
   "versions": [
+    {
+      "version": "0.7.1",
+      "date": "2026-06-18",
+      "baseline": "0.7.0",
+      "title": "餐饮经营决策辅助系统",
+      "changes": [
+        "应产率工具升级为快速、标准、专业三层模式，快速模式只需原料名称、采购重量和采购金额。",
+        "统一 Material、Product、Result 三类核心 JSON 结构，并保留 meta、batches、loss_layers 等扩展字段。",
+        "计算引擎标准化净料、单原料产能、菜品产能和单位成本公式，内置鸡肉、牛肉、猪肉、鱼类、蔬菜行业默认出成率。",
+        "结果输出升级为决策型输出，包含最大产能、瓶颈原料、单位成本、毛利率和 3 条经营建议。"
+      ],
+      "verification": [
+        "yield-calculator.js、app.js、server.js、webhook.js 和 version-archive.js 通过 node --check。",
+        "data/version-history.json 与 schemas/yield-capacity.schema.json 通过 python3 -m json.tool 校验。",
+        "Node 调用 calculateYieldCapacity 验证 Material/Product/Result 输出、瓶颈原料、单位成本和经营建议。"
+      ],
+      "riskBoundary": "行业默认出成率用于快速估算，真实经营仍需用门店称重测试、盘点数据和标准 BOM 校准。"
+    },
     {
       "version": "0.7.0",
       "date": "2026-06-18",

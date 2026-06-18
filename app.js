@@ -9,6 +9,7 @@ const safeText = (value) => String(value ?? "").replace(/&/g, "&amp;").replace(/
 const lossRecords = [];
 let currentSchedule = [];
 let marginMode = "simple";
+let yieldMode = "quick";
 let ingredientId = 1;
 const ingredients = [];
 const bomItems = [];
@@ -31,6 +32,14 @@ const lossStageMap = {
   semi: { label: "半成品", rate: 85, note: "半成品按原料加工出成率折回采购成本。" },
   cooked: { label: "熟品", rate: 75, note: "熟品按熟成率折回采购原料成本。" },
   finished: { label: "成品", rate: 65, note: "成品按含料出品率折回采购原料成本。" }
+};
+const defaultYieldProfiles = {
+  chicken: { label: "鸡肉", keywords: ["鸡", "鸡肉", "鸡腿", "鸡胸"], yield_rate: 0.72, loss_rate: 0.04 },
+  beef: { label: "牛肉", keywords: ["牛", "牛肉", "牛腩", "肥牛"], yield_rate: 0.68, loss_rate: 0.05 },
+  pork: { label: "猪肉", keywords: ["猪", "猪肉", "五花", "排骨"], yield_rate: 0.75, loss_rate: 0.04 },
+  fish: { label: "鱼类", keywords: ["鱼", "鲈鱼", "草鱼", "鱼片"], yield_rate: 0.55, loss_rate: 0.06 },
+  vegetable: { label: "蔬菜", keywords: ["菜", "青菜", "蔬菜", "生菜", "白菜"], yield_rate: 0.85, loss_rate: 0.03 },
+  other: { label: "通用", keywords: [], yield_rate: 0.8, loss_rate: 0.03 }
 };
 
 document.querySelectorAll(".tool-tab").forEach((tab) => {
@@ -96,9 +105,19 @@ document.querySelectorAll("[data-margin-mode]").forEach((button) => {
     renderMargin();
   });
 });
+document.querySelectorAll("[data-yield-mode]").forEach((button) => {
+  button.addEventListener("click", () => {
+    yieldMode = button.dataset.yieldMode;
+    document.querySelectorAll("[data-yield-mode]").forEach((item) => item.classList.remove("active"));
+    button.classList.add("active");
+    document.body.dataset.yieldMode = yieldMode;
+    renderYieldCapacity();
+  });
+});
 $("lossDate").valueAsDate = new Date();
 
 document.body.dataset.marginMode = marginMode;
+document.body.dataset.yieldMode = yieldMode;
 applyLossStageTemplate();
 updateCustomLossFields();
 applyChannelTemplate();
@@ -415,22 +434,54 @@ function exportCostCard() {
   downloadText(rows.map((row) => row.map(csvCell).join(",")).join("\n"), `${text("marginName") || "菜品"}-成本卡.csv`, "text/csv;charset=utf-8");
 }
 
-function addYieldMaterial() {
+function materialProfile(name) {
+  const normalized = String(name || "").toLowerCase();
+  return Object.values(defaultYieldProfiles).find((profile) => profile.keywords.some((keyword) => normalized.includes(keyword.toLowerCase()))) || defaultYieldProfiles.other;
+}
+
+function defaultUsagePerPortion(name) {
+  const profile = materialProfile(name);
+  if (profile === defaultYieldProfiles.vegetable) return 0.08;
+  if (profile === defaultYieldProfiles.fish) return 0.15;
+  return 0.12;
+}
+
+function currentYieldMaterialInput({ allocateId = true } = {}) {
   const name = text("yieldMaterialName") || "未命名原料";
-  const existingIndex = yieldMaterials.findIndex((item) => item.material_name === name);
-  const material = {
-    id: yieldMaterialId++,
+  const profile = materialProfile(name);
+  const editableYield = yieldMode !== "quick" && num("yieldRateInput");
+  const quickLoss = profile.loss_rate;
+  const proLossLayers = {
+    purchase_loss_rate: percentToRate(num("yieldPurchaseLoss")),
+    processing_loss_rate: percentToRate(num("yieldProcessingLoss")),
+    cooking_loss_rate: percentToRate(num("yieldCookingLoss"))
+  };
+  const standardLossLayers = { processing_loss_rate: quickLoss };
+  const lossLayers = yieldMode === "pro" ? proLossLayers : standardLossLayers;
+  return {
+    id: allocateId ? yieldMaterialId++ : 0,
+    type: "Material",
     material_name: name,
+    name,
+    category: profile.label,
     purchase_weight: num("yieldPurchaseWeight"),
     purchase_cost: num("yieldPurchaseCost"),
-    yield_rate: percentToRate(num("yieldRateInput") || 100),
-    loss_layers: {
-      purchase_loss_rate: percentToRate(num("yieldPurchaseLoss")),
-      processing_loss_rate: percentToRate(num("yieldProcessingLoss")),
-      cooking_loss_rate: percentToRate(num("yieldCookingLoss"))
-    },
-    min_purchase_unit: num("yieldMinUnit")
+    yield_rate: editableYield ? percentToRate(editableYield) : profile.yield_rate,
+    loss_rate: yieldMode === "pro" ? undefined : quickLoss,
+    loss_layers: lossLayers,
+    min_purchase_unit: yieldMode === "pro" ? num("yieldMinUnit") : 0,
+    meta: {
+      mode: yieldMode,
+      default_profile: profile.label,
+      default_yield_rate: profile.yield_rate
+    }
   };
+}
+
+function addYieldMaterial() {
+  const material = currentYieldMaterialInput();
+  const name = material.material_name;
+  const existingIndex = yieldMaterials.findIndex((item) => item.material_name === name);
   if (existingIndex >= 0) yieldMaterials.splice(existingIndex, 1, material);
   else yieldMaterials.unshift(material);
   renderYieldCapacity();
@@ -453,11 +504,20 @@ function addYieldDraftIngredient() {
 
 function addYieldProduct() {
   const productName = text("yieldProductName") || "未命名菜品";
+  if (!yieldDraftIngredients.length && yieldMode !== "pro") {
+    const material = yieldMaterials.find((item) => item.id === Number($("yieldIngredientMaterial").value)) || yieldMaterials[0] || currentYieldMaterialInput({ allocateId: false });
+    const usageKg = num("yieldUsagePerPortion") / 1000 || defaultUsagePerPortion(material.material_name);
+    yieldDraftIngredients.push({ material_name: material.material_name, material_id: material.id || material.material_name, usage_per_portion: usageKg });
+  }
   if (!yieldDraftIngredients.length) return;
   const product = {
     id: yieldProductId++,
+    type: "Product",
     product_name: productName,
-    ingredients: yieldDraftIngredients.map((item) => ({ ...item }))
+    name: productName,
+    selling_price: num("yieldSellingPrice") || 0,
+    ingredients: yieldDraftIngredients.map((item) => ({ ...item })),
+    meta: { mode: yieldMode }
   };
   const existingIndex = yieldProducts.findIndex((item) => item.product_name === productName);
   if (existingIndex >= 0) yieldProducts.splice(existingIndex, 1, product);
@@ -557,6 +617,7 @@ function removeMatchingYieldIngredients(list, materialName) {
 }
 
 function renderYieldCapacity() {
+  renderYieldModeHint();
   renderYieldMaterialOptions();
   renderYieldMaterialRows();
   renderYieldDraftRows();
@@ -567,24 +628,38 @@ function renderYieldCapacity() {
   renderYieldResult(result);
   $("yieldPayloadPreview").value = JSON.stringify(payload, null, 2);
   $("yieldApiNote").innerHTML = [
-    "<p>API 契约：POST /calculate-yield，静态部署可用 POST /api/calculate-yield；请求体即上方 JSON。</p>",
-    "<p>浏览器内也可调用：HugeToolsYield.post('/calculate-yield', payload)。计算函数不读写页面状态，可直接给库存、批次和可视化模块复用。</p>",
-    "<p>扩展预留：loss_layers 支持采购/加工/烹饪多层损耗；batches 支持不同批次成本；inventory_snapshot 预留实时库存。</p>"
+    "<p>API 契约：POST /calculate-yield，静态部署可用 POST /api/calculate-yield；请求体包含标准 materials 与 products。</p>",
+    "<p>计算结果统一返回 Result：最大产能、瓶颈原料、单位成本、毛利率和 3 条经营建议。</p>",
+    "<p>扩展预留：meta、loss_layers、batches、inventory_snapshot 可承接库存、批次、门店和多环境数据。</p>"
   ].join("");
+}
+
+function renderYieldModeHint() {
+  const hints = {
+    quick: "快速模式只填原料名称、采购重量和采购金额，系统自动套用行业默认出成率与损耗率。",
+    standard: "标准模式可编辑出成率，并输入单品每份用量和售价，用于快速判断产能与毛利。",
+    pro: "专业模式支持多原料 BOM、最小采购单位和采购/加工/烹饪双层损耗模型。"
+  };
+  $("yieldModeHint").textContent = hints[yieldMode] || hints.quick;
 }
 
 function emptyYieldResult() {
   return {
     material_availability: [],
     products: [],
+    results: [],
     summary: { material_count: 0, product_count: 0, total_theoretical_portions: 0, bottleneck_materials: [] }
   };
 }
 
 function buildYieldPayload() {
+  const materialSource = yieldMaterials.length ? yieldMaterials : [currentYieldMaterialInput({ allocateId: false })];
+  const productSource = yieldProducts.length ? yieldProducts : [buildAutoYieldProduct(materialSource)];
   return {
-    materials: yieldMaterials.map(({ id, ...material }) => material),
-    products: yieldProducts.map(({ id, ...product }) => ({
+    schema_version: "decision-support.v1",
+    mode: yieldMode,
+    materials: materialSource.map(({ id, ...material }) => material),
+    products: productSource.map(({ id, ...product }) => ({
       ...product,
       ingredients: product.ingredients.map((ingredient) => ({ ...ingredient }))
     })),
@@ -598,6 +673,21 @@ function buildYieldPayload() {
   };
 }
 
+function buildAutoYieldProduct(materials) {
+  const primary = materials[0] || currentYieldMaterialInput({ allocateId: false });
+  const usage = yieldMode === "quick" ? defaultUsagePerPortion(primary.material_name) : (num("yieldUsagePerPortion") / 1000 || defaultUsagePerPortion(primary.material_name));
+  const productName = text("yieldProductName") || `${primary.material_name}单品`;
+  return {
+    id: 0,
+    type: "Product",
+    product_name: productName,
+    name: productName,
+    selling_price: yieldMode === "quick" ? 28 : num("yieldSellingPrice"),
+    ingredients: [{ material_name: primary.material_name, material_id: primary.id || primary.material_name, usage_per_portion: usage }],
+    meta: { mode: yieldMode, auto_generated: true }
+  };
+}
+
 function renderYieldMaterialOptions() {
   $("yieldIngredientMaterial").innerHTML = yieldMaterials.length
     ? yieldMaterials.map((item) => `<option value="${item.id}">${safeText(item.material_name)}</option>`).join("")
@@ -606,10 +696,17 @@ function renderYieldMaterialOptions() {
 
 function renderYieldMaterialRows() {
   if (!yieldMaterials.length) {
+    if (yieldMode === "quick" || yieldMode === "standard") {
+      $("yieldMaterialRows").innerHTML = renderYieldMaterialRow(currentYieldMaterialInput({ allocateId: false }), true);
+      return;
+    }
     $("yieldMaterialRows").innerHTML = `<tr><td class="empty-table" colspan="6">暂无原料，请先录入采购重量、金额、出成率和损耗。</td></tr>`;
     return;
   }
-  $("yieldMaterialRows").innerHTML = yieldMaterials.map((item) => {
+  $("yieldMaterialRows").innerHTML = yieldMaterials.map((item) => renderYieldMaterialRow(item, false)).join("");
+}
+
+function renderYieldMaterialRow(item, transient) {
     const stats = window.HugeToolsYield?.materialAvailability(item) || {};
     const lossLayers = item.loss_layers || {};
     const lossText = [
@@ -620,14 +717,13 @@ function renderYieldMaterialRows() {
     return `
       <tr>
         <td>${safeText(item.material_name)}</td>
-        <td>${safeText(item.purchase_weight)}kg / ${money(item.purchase_cost)}<br><small>最小单位 ${safeText(item.min_purchase_unit || 0)}kg</small></td>
+        <td>${safeText(item.purchase_weight)}kg / ${money(item.purchase_cost)}<br><small>${transient ? "当前输入" : `最小单位 ${safeText(item.min_purchase_unit || 0)}kg`}</small></td>
         <td>出成 ${rateToPercent(item.yield_rate)}%<br><small>${safeText(lossText)}</small></td>
-        <td>${safeText(stats.effective_weight || 0)}kg<br><small>修正采购 ${safeText(stats.effective_purchase_weight || 0)}kg</small></td>
+        <td>${safeText(stats.net_weight || stats.effective_weight || 0)}kg<br><small>净料重量</small></td>
         <td>${money(stats.effective_unit_cost || 0)} / kg</td>
-        <td><button class="text-button danger" type="button" data-delete-yield-material="${item.id}">删除</button></td>
+        <td>${transient ? "自动测算" : `<button class="text-button danger" type="button" data-delete-yield-material="${item.id}">删除</button>`}</td>
       </tr>
     `;
-  }).join("");
 }
 
 function renderYieldDraftRows() {
@@ -665,22 +761,24 @@ function renderYieldResult(result) {
     metric("最常见瓶颈", safeText(tightest), tightest === "暂无" ? "warn" : "bad")
   ].join("");
 
-  $("yieldResultRows").innerHTML = result.products.length
-    ? result.products.map((product) => {
+  const rows = result.results?.length ? result.results : result.products;
+  $("yieldResultRows").innerHTML = rows.length
+    ? rows.map((product) => {
       const utilization = product.material_utilization
         .map((item) => `${safeText(item.material_name)} ${rateToPercent(item.utilization_rate)}%`)
         .join("；");
       return `
         <tr>
           <td>${safeText(product.product_name)}</td>
-          <td>${safeText(product.theoretical_max_portions)} 份<br><small>精确值 ${safeText(product.exact_capacity)}</small></td>
-          <td>${product.bottleneck_materials.map(safeText).join("、") || "暂无"}</td>
-          <td>${money(product.unit_theoretical_cost)}</td>
-          <td>${utilization || "暂无"}</td>
+          <td>${safeText(product.max_capacity ?? product.theoretical_max_portions)} 份<br><small>精确值 ${safeText(product.exact_capacity)}</small></td>
+          <td>${(product.bottleneck_materials || []).map(safeText).join("、") || "暂无"}</td>
+          <td>${money(product.unit_cost ?? product.unit_theoretical_cost)}</td>
+          <td>${rateToPercent(product.gross_margin_rate || 0)}%</td>
+          <td>${(product.recommendations || []).slice(0, 3).map((item) => `<p>${safeText(item)}</p>`).join("") || safeText(utilization || "暂无")}</td>
         </tr>
       `;
     }).join("")
-    : `<tr><td class="empty-table" colspan="5">暂无产能结果，请先录入原料并保存菜品 BOM。</td></tr>`;
+    : `<tr><td class="empty-table" colspan="6">暂无产能结果，请先录入原料并保存菜品 BOM。</td></tr>`;
 
   renderYieldBottleneckMap(result);
   const advice = [];

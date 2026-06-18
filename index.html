@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>胡哥餐饮工具箱</title>
     <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="./styles.css?v=yield-capacity-1">
+    <link rel="stylesheet" href="./styles.css?v=decision-support-1">
   </head>
   <body>
     <main class="app-shell">
@@ -228,25 +228,30 @@
           <div class="tool-heading">
             <div>
               <p class="eyebrow">原料应产与瓶颈产能</p>
-              <h2>应产率与产能计算工具</h2>
+              <h2>餐饮经营决策辅助系统</h2>
             </div>
             <button class="ghost-button" type="button" id="copyYieldPayloadBtn">复制 API 请求</button>
+          </div>
+          <div class="mode-switch" aria-label="决策测算模式">
+            <button class="mode-button active" type="button" data-yield-mode="quick">快速模式</button>
+            <button class="mode-button" type="button" data-yield-mode="standard">标准模式</button>
+            <button class="mode-button" type="button" data-yield-mode="pro">专业模式</button>
           </div>
 
           <section class="margin-section">
             <div class="section-title">
               <h3>原材料输入</h3>
-              <span>采购重量、金额、出成率、损耗和最小采购单位统一换算为有效可食重量</span>
+              <span id="yieldModeHint">快速模式只填原料名称、采购重量和采购金额，系统自动套用行业默认出成率与损耗率。</span>
             </div>
             <div class="form-grid compact-grid">
               <label>原材料名称<input id="yieldMaterialName" value="牛腩"></label>
               <label>采购重量 kg<input id="yieldPurchaseWeight" type="number" min="0" step="0.001" value="10"></label>
               <label>采购金额<input id="yieldPurchaseCost" type="number" min="0" step="0.01" value="420"></label>
-              <label>出成率 %<input id="yieldRateInput" type="number" min="0" max="100" step="0.1" value="82"></label>
-              <label>采购损耗 %<input id="yieldPurchaseLoss" type="number" min="0" max="100" step="0.1" value="0"></label>
-              <label>加工损耗 %<input id="yieldProcessingLoss" type="number" min="0" max="100" step="0.1" value="3"></label>
-              <label>烹饪损耗 %<input id="yieldCookingLoss" type="number" min="0" max="100" step="0.1" value="8"></label>
-              <label>最小采购单位 kg<input id="yieldMinUnit" type="number" min="0" step="0.001" value="1"></label>
+              <label class="yield-standard-field">出成率 %<input id="yieldRateInput" type="number" min="0" max="100" step="0.1" value="82"></label>
+              <label class="yield-pro-field">采购损耗 %<input id="yieldPurchaseLoss" type="number" min="0" max="100" step="0.1" value="0"></label>
+              <label class="yield-pro-field">加工损耗 %<input id="yieldProcessingLoss" type="number" min="0" max="100" step="0.1" value="3"></label>
+              <label class="yield-pro-field">烹饪损耗 %<input id="yieldCookingLoss" type="number" min="0" max="100" step="0.1" value="8"></label>
+              <label class="yield-pro-field">最小采购单位 kg<input id="yieldMinUnit" type="number" min="0" step="0.001" value="1"></label>
               <button class="primary-button inline-button" type="button" id="addYieldMaterialBtn">加入原料</button>
             </div>
             <div class="table-wrap">
@@ -261,17 +266,18 @@
 
           <section class="margin-section">
             <div class="section-title">
-              <h3>菜品 BOM</h3>
-              <span>一个菜品可配置多种原料，系统按最紧张原料计算最大出品份数</span>
+              <h3>菜品结构</h3>
+              <span>标准模式测单品用量；专业模式可配置多原料 BOM、最小采购单位和双层损耗。</span>
             </div>
             <div class="form-grid compact-grid">
               <label>菜品名称<input id="yieldProductName" value="招牌牛腩饭"></label>
-              <label>选择原料<select id="yieldIngredientMaterial"></select></label>
-              <label>每份用量 g<input id="yieldUsagePerPortion" type="number" min="0" step="0.1" value="120"></label>
-              <button class="ghost-button inline-button" type="button" id="addYieldIngredientBtn">加入 BOM</button>
-              <button class="primary-button inline-button" type="button" id="addYieldProductBtn">保存菜品</button>
+              <label class="yield-standard-field">售价/份<input id="yieldSellingPrice" type="number" min="0" step="0.01" value="28"></label>
+              <label class="yield-pro-field">选择原料<select id="yieldIngredientMaterial"></select></label>
+              <label class="yield-standard-field">每份用量 g<input id="yieldUsagePerPortion" type="number" min="0" step="0.1" value="120"></label>
+              <button class="ghost-button inline-button yield-pro-field" type="button" id="addYieldIngredientBtn">加入 BOM</button>
+              <button class="primary-button inline-button yield-standard-field" type="button" id="addYieldProductBtn">保存菜品</button>
             </div>
-            <div class="table-wrap">
+            <div class="table-wrap yield-pro-field">
               <table>
                 <thead>
                   <tr><th>当前菜品</th><th>原料</th><th>每份用量</th><th>操作</th></tr>
@@ -279,7 +285,7 @@
                 <tbody id="yieldDraftRows"></tbody>
               </table>
             </div>
-            <div class="table-wrap">
+            <div class="table-wrap yield-pro-field">
               <table>
                 <thead>
                   <tr><th>已保存菜品</th><th>BOM 原料</th><th>操作</th></tr>
@@ -303,7 +309,7 @@
             <div class="table-wrap">
               <table>
                 <thead>
-                  <tr><th>菜品</th><th>理论最大份数</th><th>瓶颈原料</th><th>单份理论成本</th><th>原材料利用率</th></tr>
+                  <tr><th>菜品</th><th>最大产能</th><th>瓶颈原料</th><th>单位成本</th><th>毛利率</th><th>经营建议</th></tr>
                 </thead>
                 <tbody id="yieldResultRows"></tbody>
               </table>
@@ -636,9 +642,9 @@
       </footer>
     </main>
 
-    <script src="./yield-calculator.js?v=yield-capacity-1"></script>
-    <script src="./app.js?v=yield-capacity-1"></script>
+    <script src="./yield-calculator.js?v=decision-support-1"></script>
+    <script src="./app.js?v=decision-support-1"></script>
     <script src="./slider-fix.js?v=yield-capacity-1"></script>
-    <script src="./version-archive.js?v=0.7.0"></script>
+    <script src="./version-archive.js?v=0.7.1"></script>
   </body>
 </html>
