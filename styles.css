@@ -23,11 +23,19 @@ body {
   min-height: 100vh;
   background: var(--bg);
   color: var(--ink);
-  font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
+
+html { scroll-padding-top: 12px; }
 
 button, input, select, textarea { font: inherit; }
 button { cursor: pointer; }
+input, select, textarea, button {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
 
 .app-shell {
   width: min(1320px, calc(100% - 32px));
@@ -139,17 +147,47 @@ h3 { margin: 18px 0 10px; color: #3d4b43; font-size: 15px; }
 .simple-cost-row { margin-bottom: 14px; }
 body[data-margin-mode="simple"] .advanced-only { display: none; }
 body[data-margin-mode="advanced"] #simpleMarginInputs { display: none; }
+.custom-loss-field { display: none; }
+.custom-loss-field.active { display: grid; }
 
 label { display: grid; gap: 7px; color: #3d4b43; font-size: 13px; font-weight: 800; }
 input, select, textarea { width: 100%; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); padding: 10px 12px; }
 input[type="range"] { padding: 0; }
 textarea { resize: vertical; }
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 10px 12px;
+}
+.checkbox-label input {
+  width: auto;
+  margin: 0 8px 0 0;
+}
 
 .primary-button, .ghost-button { min-height: 40px; border: 1px solid transparent; border-radius: 8px; padding: 0 16px; font-weight: 800; }
 .primary-button { background: var(--ink); color: #fff; }
 .ghost-button { border-color: var(--line); background: #fff; color: var(--ink); }
+.text-button {
+  min-height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--ink);
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 800;
+}
+.text-button.danger {
+  border-color: #f1c8c2;
+  color: var(--red);
+}
 
 .result-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+.secondary-result { margin-top: 12px; }
 .metric { min-height: 112px; border: 1px solid var(--line); border-radius: 8px; background: #fbfcfb; padding: 16px; }
 .metric span { display: block; margin-bottom: 10px; color: var(--muted); font-size: 13px; font-weight: 800; }
 .metric strong { display: block; font-size: 28px; line-height: 1.05; }
@@ -160,9 +198,15 @@ textarea { resize: vertical; }
 .advice-box { display: grid; gap: 8px; margin-top: 16px; border: 1px solid var(--line); border-radius: 8px; background: #fbfcfb; padding: 14px; color: #334139; line-height: 1.7; }
 .advice-box p { margin: 0; }
 .table-wrap { overflow-x: auto; margin-top: 16px; }
+.table-actions { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 12px; }
 table { width: 100%; min-width: 760px; border-collapse: collapse; }
 th, td { border-bottom: 1px solid var(--line); padding: 11px 10px; text-align: left; vertical-align: top; font-size: 14px; }
 th { color: var(--muted); font-size: 12px; }
+.empty-table {
+  color: var(--muted);
+  text-align: center;
+  font-weight: 800;
+}
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { display: inline-flex; align-items: center; min-height: 34px; border-radius: 999px; background: var(--blue-soft); color: var(--blue); padding: 7px 11px; font-size: 13px; font-weight: 800; }
 .content-output textarea { min-height: 180px; line-height: 1.7; }
@@ -171,6 +215,14 @@ th { color: var(--muted); font-size: 12px; }
 .structure-track { height: 12px; overflow: hidden; border-radius: 999px; background: #eef2ed; }
 .structure-fill { height: 100%; border-radius: inherit; background: var(--green); }
 .structure-row strong { color: var(--ink); text-align: right; }
+.bottleneck-row .structure-fill { background: var(--red); }
+.bottleneck-row strong { color: var(--red); }
+#yieldPayloadPreview {
+  min-height: 280px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.55;
+}
 
 @media (max-width: 1080px) {
   .tool-layout, .form-grid, .compact-grid, .result-grid { grid-template-columns: 1fr 1fr; }
@@ -178,11 +230,187 @@ th { color: var(--muted); font-size: 12px; }
 }
 
 @media (max-width: 720px) {
-  .app-shell { width: min(100% - 20px, 1320px); padding: 18px 0; }
+  body { background: #f7f8f6; }
+  .app-shell { width: 100%; padding: 0 0 18px; }
+  .topbar {
+    margin-bottom: 0;
+    padding: 16px 14px 12px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+  }
   .topbar, .tool-heading { align-items: stretch; flex-direction: column; }
+  .eyebrow { font-size: 12px; }
+  h1 { font-size: 26px; line-height: 1.15; }
+  h2 { font-size: 21px; line-height: 1.2; }
+  h3 { font-size: 15px; }
+  .tagline { font-size: 13px; line-height: 1.55; }
   .brand-note { white-space: normal; }
+  .brand-note, .risk-banner, .site-footer {
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    box-shadow: none;
+  }
+  .brand-note {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  .risk-banner {
+    margin: 0;
+    padding: 10px 14px;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .tool-layout {
+    display: block;
+  }
+  .tool-nav {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    border-width: 0 0 1px;
+    border-radius: 0;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 8px 18px rgba(30, 42, 34, 0.07);
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .tool-nav::-webkit-scrollbar { display: none; }
+  .tool-tab {
+    flex: 0 0 auto;
+    min-height: 38px;
+    border-color: var(--line);
+    border-radius: 999px;
+    padding: 0 13px;
+    font-size: 13px;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .tool-panel {
+    border-width: 0 0 1px;
+    border-radius: 0;
+    padding: 16px 14px 18px;
+    box-shadow: none;
+  }
+  .tool-heading {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .mode-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    width: 100%;
+    margin-bottom: 14px;
+    padding: 5px;
+  }
+  .mode-button {
+    min-height: 40px;
+    padding: 0 8px;
+    font-size: 13px;
+  }
+  .margin-section {
+    margin-top: 14px;
+    padding-top: 14px;
+  }
+  .section-title {
+    display: grid;
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+  .section-title span, small {
+    font-size: 11px;
+    line-height: 1.45;
+  }
   .tool-layout, .form-grid, .compact-grid, .result-grid { grid-template-columns: 1fr; }
-  .mode-strip, .section-title, .structure-row { align-items: stretch; flex-direction: column; }
+  .form-grid, .compact-grid, .ingredient-editor {
+    gap: 10px;
+  }
+  label {
+    gap: 6px;
+    font-size: 12px;
+  }
+  input, select, textarea {
+    min-height: 44px;
+    border-radius: 7px;
+    padding: 10px 11px;
+    font-size: 16px;
+  }
+  input[type="range"] { min-height: 32px; }
+  textarea { line-height: 1.55; }
+  .primary-button, .ghost-button, .inline-button {
+    width: 100%;
+    min-height: 44px;
+    border-radius: 7px;
+    padding: 0 12px;
+  }
+  .result-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .metric {
+    min-height: 92px;
+    padding: 12px;
+  }
+  .metric span {
+    margin-bottom: 7px;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+  .metric strong {
+    font-size: 22px;
+    line-height: 1.12;
+    overflow-wrap: anywhere;
+  }
+  .advice-box {
+    margin-top: 12px;
+    padding: 12px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .table-wrap {
+    margin: 12px -14px 0;
+    padding: 0 14px 4px;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  table { min-width: 620px; }
+  th, td {
+    padding: 9px 8px;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+  .chip {
+    min-height: 30px;
+    padding: 6px 9px;
+    font-size: 12px;
+  }
+  .content-output textarea { min-height: 220px; }
+  .mode-strip, .structure-row { align-items: stretch; flex-direction: column; }
   .structure-row { display: grid; grid-template-columns: 1fr; }
   .structure-row strong { text-align: left; }
+  .site-footer {
+    margin-top: 0;
+    padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
+    background: var(--panel);
+  }
+}
+
+@media (max-width: 390px) {
+  .topbar { padding-left: 12px; padding-right: 12px; }
+  .risk-banner, .tool-panel { padding-left: 12px; padding-right: 12px; }
+  .tool-nav { padding-left: 10px; padding-right: 10px; }
+  .table-wrap {
+    margin-left: -12px;
+    margin-right: -12px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  h1 { font-size: 24px; }
+  .result-grid { grid-template-columns: 1fr; }
 }

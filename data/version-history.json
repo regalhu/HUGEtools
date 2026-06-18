@@ -1,9 +1,153 @@
 {
   "product": "胡哥餐饮工具箱",
-  "currentVersion": "0.4.0",
-  "updatedAt": "2026-05-28",
+  "currentVersion": "0.6.3",
+  "updatedAt": "2026-06-17",
   "iterationRule": "每次功能更新都追加版本记录，保留上一版本基线、核心变化、验证结果和风险边界，便于后续按版本对比迭代。",
   "versions": [
+    {
+      "version": "0.6.3",
+      "date": "2026-06-17",
+      "baseline": "0.6.2",
+      "title": "应产率与产能计算工具",
+      "changes": [
+        "新增应产率与产能计算工具，支持原材料采购重量、金额、出成率、多层损耗和最小采购单位。",
+        "新增菜品 BOM 批量计算，按多原料共同限制输出理论最大份数和瓶颈原料。",
+        "新增单份理论成本、原材料利用率和瓶颈原料图谱展示。",
+        "新增纯函数计算模块、JSON Schema 和 POST /calculate-yield API 契约预留。"
+      ],
+      "verification": [
+        "app.js、yield-calculator.js、api/calculate-yield.js、slider-fix.js 和 version-archive.js 通过 node --check。",
+        "版本档案 JSON 与 schemas/yield-capacity.schema.json 通过 python3 -m json.tool 校验。",
+        "本机 Node 调用 calculateYieldCapacity 验证多原料瓶颈、最小采购单位修正、单份成本和利用率输出。"
+      ],
+      "riskBoundary": "产能结果基于门店输入的采购重量、出成率、损耗率和 BOM 克重做经营估算；不替代真实库存盘点、批次追溯、称重测试或财务成本核算。"
+    },
+    {
+      "version": "0.6.2",
+      "date": "2026-06-17",
+      "baseline": "0.6.1",
+      "title": "小红书关键词热点融合",
+      "changes": [
+        "小红书文案拍摄标签助手新增搜索关键词输入。",
+        "生成文案前会按关键词、城市、品类和卖点匹配公开内容热点方向。",
+        "标题、正文、标签和拍摄建议会自动融合地域美食、搜索攻略、生活记录、听劝互动、健康轻负担等热点方向。",
+        "新增小红书搜索入口，便于人工复核公开热词，不抓取、不复制平台笔记正文。"
+      ],
+      "verification": [
+        "app.js、slider-fix.js 和 version-archive.js 通过 node --check。",
+        "版本档案 JSON 通过 python3 -m json.tool 校验。",
+        "本机浏览器验证关键词输入、热点方向、文案、标签和拍摄建议可联动生成。"
+      ],
+      "riskBoundary": "本工具只根据用户输入和公开趋势方向生成原创草稿，不抓取、不复制、不改写平台他人笔记；热点搜索入口用于人工复核公开方向。"
+    },
+    {
+      "version": "0.6.1",
+      "date": "2026-06-17",
+      "baseline": "0.6.0",
+      "title": "内容工具命名与大众点评真实评价助手",
+      "changes": [
+        "工具导航调整为损耗记录排在食材成本与经营健康度上方。",
+        "小红书工具更名为小红书文案拍摄标签助手，明确文案、拍摄建议和标签建议能力。",
+        "新增大众点评真实评价助手，支持基于真实消费信息整理评价草稿、商家回复、拍摄建议和合规检查。",
+        "大众点评工具加入反虚假评价提示，避免生成无真实体验支撑的好评模板。"
+      ],
+      "verification": [
+        "app.js、slider-fix.js 和 version-archive.js 通过 node --check。",
+        "版本档案 JSON 通过 python3 -m json.tool 校验。",
+        "本机浏览器验证工具排序、名称更新、大众点评草稿生成和合规提示可用。"
+      ],
+      "riskBoundary": "大众点评工具仅用于整理真实消费体验或商家对真实评价的回复，不应替用户写评、诱导好评、利益交换评价或批量生成虚假内容。"
+    },
+    {
+      "version": "0.6.0",
+      "date": "2026-06-17",
+      "baseline": "0.5.2",
+      "title": "食材成本与经营健康度",
+      "changes": [
+        "新增食材成本与经营健康度工具，按期初库存、当期采购、期末库存和调整项计算实际 COGS。",
+        "新增食材成本率、毛利、Prime Cost 和 Prime Cost 占比指标。",
+        "新增理论食材成本对比，输出实际成本与理论成本差异。",
+        "损耗记录金额可作为调整项联动计入实际食材成本。"
+      ],
+      "verification": [
+        "app.js、slider-fix.js 和 version-archive.js 通过 node --check。",
+        "版本档案 JSON 通过 python3 -m json.tool 校验。",
+        "本机浏览器验证经营健康度工具可加载、可计算 COGS/Prime Cost，并可随损耗记录新增删除同步。"
+      ],
+      "riskBoundary": "经营健康度工具为本地估算模型，不替代财务账、盘点制度或税务口径；若损耗已经体现在期末库存中，需避免重复计入调整项。"
+    },
+    {
+      "version": "0.5.2",
+      "date": "2026-06-16",
+      "baseline": "0.5.1",
+      "title": "损耗登记原材料成本折算",
+      "changes": [
+        "损耗原因和责任归类增加自己填写选项，可录入门店自定义原因和归类。",
+        "损耗登记增加生品、半成品、熟品和成品物料状态。",
+        "新增原料转化率字段，将半成品、熟品和成品损耗折回采购原材料成本。",
+        "损耗表格新增状态、原料折算和原料成本列，汇总口径统一为采购原料损耗。"
+      ],
+      "verification": [
+        "app.js、slider-fix.js 和 version-archive.js 通过 node --check。",
+        "版本档案 JSON 通过 python3 -m json.tool 校验。",
+        "本机浏览器验证自定义原因、成品状态和转化率可生成原材料成本记录。"
+      ],
+      "riskBoundary": "原料转化率为门店经营估算输入，适合把不同加工状态统一折算到采购原材料成本；最终成本仍需以真实采购、出成测试和门店盘点数据校准。"
+    },
+    {
+      "version": "0.5.1",
+      "date": "2026-06-16",
+      "baseline": "0.5.0",
+      "title": "iPhone 手机显示适配",
+      "changes": [
+        "移动端顶部、风险提示和工具面板改为更紧凑的全宽布局。",
+        "工具导航在手机端改为横向滚动胶囊标签，减少首屏占用。",
+        "输入框、按钮、结果卡片和表格滚动区域按 iPhone 触控与窄屏显示重新调整。",
+        "增加 390px 以下的小屏断点，优化 iPhone 窄屏边距和结果卡片排列。"
+      ],
+      "verification": [
+        "本机在 390x844 与 375x812 iPhone 视口完成截图检查。",
+        "毛利、损耗、小红书和排班入口在 375px 宽度下无非预期整页横向溢出。",
+        "天翼云公网入口 http://113.249.104.188:18089/hugetools/ 已加载新 styles.css 并通过 375px 视口检查。"
+      ],
+      "riskBoundary": "本次仅调整静态前端显示与触控体验，不改变测算公式、不新增后端服务、不采集、不上传、不保存用户门店数据。"
+    },
+    {
+      "version": "0.5.0",
+      "date": "2026-06-09",
+      "baseline": "0.4.1",
+      "title": "新增微信小程序版本",
+      "changes": [
+        "新增 project.config.json，支持微信开发者工具导入仓库根目录。",
+        "新增 miniprogram 原生小程序目录，包含 app、sitemap、首页页面和计算工具模块。",
+        "小程序首页迁移毛利、团购、损耗、小红书文案和排班 5 个核心工具。",
+        "新增 docs/WECHAT_MINIPROGRAM_GUIDE.md，说明导入方式、已迁移能力、数据边界和当前限制。"
+      ],
+      "verification": [
+        "miniprogram/pages/index/index.js 和 miniprogram/utils/calc.js 通过 node --check。",
+        "Node 本地调用 miniprogram/utils/calc.js 验证毛利、团购、小红书和排班计算均可返回结果。"
+      ],
+      "riskBoundary": "小程序版当前仅做前端本地计算，不接入云开发、不连接服务器、不上传门店数据；正式发布前需替换真实 AppID 并在微信开发者工具内完成编译预览验证。"
+    },
+    {
+      "version": "0.4.1",
+      "date": "2026-06-02",
+      "baseline": "0.4.0",
+      "title": "macOS 本地运行适配",
+      "changes": [
+        "README 增加 macOS 终端运行说明和本地文件限制提示。",
+        "新增 scripts/serve-macos.command，支持在 macOS 双击启动本地静态服务并自动打开浏览器。",
+        "首页接入 version-archive.js，确保版本记录面板随页面加载。",
+        "复制文案增加 Safari 和 file:// 场景下的剪贴板兜底逻辑。",
+        "样式优先使用 macOS 系统字体，并增加移动端文字缩放适配。"
+      ],
+      "verification": [
+        "app.js、slider-fix.js 和 version-archive.js 通过 node --check。",
+        "本机通过 python3 静态服务访问 http://127.0.0.1:8765/ 验证页面可加载。",
+        "本机浏览器验证版本记录、工具切换和小红书图片画布可正常渲染。"
+      ],
+      "riskBoundary": "macOS 适配仅优化本地启动、浏览器兼容和静态资源加载，不增加后端服务、不采集、不上传、不保存用户门店数据。"
+    },
     {
       "version": "0.4.0",
       "date": "2026-05-28",

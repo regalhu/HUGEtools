@@ -1,0 +1,394 @@
+.page {
+  min-height: 100vh;
+  padding: 28rpx 24rpx 48rpx;
+}
+
+.hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20rpx;
+  padding: 10rpx 4rpx 22rpx;
+}
+
+.eyebrow {
+  color: #247a4b;
+  font-size: 24rpx;
+  font-weight: 800;
+}
+
+.title {
+  margin-top: 6rpx;
+  color: #17211c;
+  font-size: 48rpx;
+  font-weight: 900;
+  line-height: 1.18;
+}
+
+.tagline {
+  margin-top: 10rpx;
+  color: #66736b;
+  font-size: 26rpx;
+  line-height: 1.55;
+}
+
+.version {
+  flex: 0 0 auto;
+  border: 1rpx solid #dce5dd;
+  border-radius: 16rpx;
+  background: #ffffff;
+  color: #66736b;
+  padding: 12rpx 16rpx;
+  font-size: 22rpx;
+  font-weight: 800;
+}
+
+.risk-banner {
+  border: 1rpx solid #dce5dd;
+  border-radius: 16rpx;
+  background: #fffaf0;
+  color: #65430d;
+  padding: 18rpx 20rpx;
+  font-size: 24rpx;
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+.tool-tabs {
+  margin: 22rpx 0;
+  white-space: nowrap;
+}
+
+.tabs-inner {
+  display: inline-flex;
+  gap: 14rpx;
+}
+
+.tool-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 132rpx;
+  min-height: 72rpx;
+  border: 1rpx solid #dce5dd;
+  border-radius: 16rpx;
+  background: #ffffff;
+  color: #344138;
+  padding: 0 22rpx;
+  font-size: 26rpx;
+  font-weight: 900;
+}
+
+.tool-tab.active {
+  border-color: #247a4b;
+  background: #e3f3e9;
+  color: #247a4b;
+}
+
+.panel {
+  border: 1rpx solid #dce5dd;
+  border-radius: 16rpx;
+  background: #ffffff;
+  padding: 24rpx;
+  box-shadow: 0 18rpx 42rpx rgba(30, 42, 34, 0.08);
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+  margin-bottom: 22rpx;
+}
+
+.panel-title {
+  margin-top: 4rpx;
+  color: #17211c;
+  font-size: 36rpx;
+  font-weight: 900;
+}
+
+.picker-pill {
+  border: 1rpx solid #dce5dd;
+  border-radius: 999rpx;
+  background: #fbfcfb;
+  color: #247a4b;
+  padding: 12rpx 20rpx;
+  font-size: 24rpx;
+  font-weight: 900;
+}
+
+.segmented {
+  display: flex;
+  gap: 10rpx;
+  border: 1rpx solid #dce5dd;
+  border-radius: 16rpx;
+  background: #f8faf8;
+  padding: 8rpx;
+  margin-bottom: 22rpx;
+}
+
+.segment {
+  flex: 1;
+  min-height: 64rpx;
+  border: 0;
+  border-radius: 12rpx;
+  background: transparent;
+  color: #66736b;
+  font-size: 25rpx;
+  font-weight: 900;
+}
+
+.segment.active {
+  background: #17211c;
+  color: #ffffff;
+}
+
+.form-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18rpx;
+}
+
+.field {
+  display: grid;
+  width: 48.5%;
+  gap: 8rpx;
+  color: #3d4b43;
+  font-size: 24rpx;
+  font-weight: 900;
+}
+
+.field.full {
+  width: 100%;
+}
+
+input, textarea {
+  min-height: 76rpx;
+  border: 1rpx solid #dce5dd;
+  border-radius: 14rpx;
+  background: #ffffff;
+  color: #17211c;
+  padding: 0 18rpx;
+  font-size: 26rpx;
+  font-weight: 700;
+}
+
+textarea {
+  min-height: 132rpx;
+  padding: 16rpx 18rpx;
+  line-height: 1.55;
+}
+
+.metric-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-top: 22rpx;
+}
+
+.metric {
+  width: 48.5%;
+  min-height: 142rpx;
+  border: 1rpx solid #dce5dd;
+  border-radius: 16rpx;
+  background: #fbfcfb;
+  padding: 18rpx;
+}
+
+.metric text {
+  display: block;
+  color: #66736b;
+  font-size: 23rpx;
+  font-weight: 900;
+}
+
+.metric view {
+  margin-top: 12rpx;
+  color: #17211c;
+  font-size: 31rpx;
+  font-weight: 900;
+  line-height: 1.18;
+}
+
+.metric.good {
+  background: #e3f3e9;
+}
+
+.metric.warn {
+  background: #fff0ce;
+}
+
+.metric.bad {
+  background: #ffe5df;
+}
+
+.advice {
+  display: grid;
+  gap: 10rpx;
+  margin-top: 20rpx;
+  border: 1rpx solid #dce5dd;
+  border-radius: 16rpx;
+  background: #fbfcfb;
+  color: #334139;
+  padding: 18rpx;
+  font-size: 25rpx;
+  line-height: 1.65;
+}
+
+.advice.flat {
+  margin-top: 10rpx;
+  border: 0;
+  padding: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 14rpx;
+  margin-top: 22rpx;
+}
+
+.primary, .ghost {
+  min-height: 76rpx;
+  border-radius: 14rpx;
+  font-size: 26rpx;
+  font-weight: 900;
+}
+
+.primary {
+  flex: 1;
+  background: #17211c;
+  color: #ffffff;
+}
+
+.ghost {
+  flex: 0 0 180rpx;
+  border: 1rpx solid #dce5dd;
+  background: #ffffff;
+  color: #17211c;
+}
+
+.ghost.small {
+  flex: 0 0 132rpx;
+}
+
+.danger {
+  min-height: 62rpx;
+  border: 1rpx solid #f1c8c2;
+  border-radius: 12rpx;
+  background: #ffffff;
+  color: #c84d3f;
+  font-size: 24rpx;
+  font-weight: 900;
+}
+
+.danger.small {
+  width: 132rpx;
+}
+
+.row-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12rpx;
+}
+
+.wide {
+  width: 100%;
+  margin-top: 20rpx;
+}
+
+.list-card {
+  margin-top: 22rpx;
+  border-top: 1rpx solid #dce5dd;
+  padding-top: 20rpx;
+}
+
+.section-title {
+  color: #17211c;
+  font-size: 29rpx;
+  font-weight: 900;
+  margin-bottom: 14rpx;
+}
+
+.section-title.gap {
+  margin-top: 22rpx;
+}
+
+.empty {
+  color: #66736b;
+  font-size: 25rpx;
+  line-height: 1.55;
+}
+
+.saved-row, .schedule-row {
+  border: 1rpx solid #dce5dd;
+  border-radius: 14rpx;
+  background: #fbfcfb;
+  padding: 16rpx;
+  margin-top: 12rpx;
+  color: #17211c;
+  font-size: 25rpx;
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+.saved-type {
+  display: inline-flex;
+  margin-right: 10rpx;
+  border-radius: 999rpx;
+  background: #e3f3e9;
+  color: #247a4b;
+  padding: 3rpx 12rpx;
+  font-size: 22rpx;
+}
+
+.saved-meta, .saved-note {
+  margin-top: 6rpx;
+  color: #66736b;
+  font-size: 23rpx;
+}
+
+.chip {
+  display: inline-flex;
+  max-width: 100%;
+  border-radius: 999rpx;
+  background: #e3f3e9;
+  color: #247a4b;
+  padding: 9rpx 15rpx;
+  margin: 0 8rpx 10rpx 0;
+  font-size: 24rpx;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.chip.blue {
+  background: #dff0fa;
+  color: #286f9e;
+}
+
+.output-area {
+  width: 100%;
+  min-height: 300rpx;
+  background: #fbfcfb;
+  color: #17211c;
+}
+
+.schedule-day {
+  color: #247a4b;
+  font-size: 28rpx;
+  font-weight: 900;
+  margin-bottom: 6rpx;
+}
+
+@media (max-width: 360px) {
+  .field, .metric { width: 100%; }
+
+  .hero, .panel-head, .actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .ghost, .ghost.small {
+    flex-basis: auto;
+  }
+}

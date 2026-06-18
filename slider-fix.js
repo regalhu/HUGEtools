@@ -197,14 +197,14 @@
         <span>单品毛利相加，再扣套餐额外包装和附加品成本</span>
       </div>
       <div class="form-grid compact-grid">
-        <label>套餐名称<input id="comboName" value="牛肉米粉双人套餐"></label>
-        <label>套餐售价（元）<input id="comboPrice" type="number" min="0" step="0.01" value="58"></label>
-        <label>单品1毛利（元）<input id="comboItemProfit1" type="number" step="0.01" value="17"></label>
-        <label>单品2毛利（元）<input id="comboItemProfit2" type="number" step="0.01" value="12"></label>
-        <label>单品3毛利（元）<input id="comboItemProfit3" type="number" step="0.01" value="4"></label>
-        <label>单品4毛利（元）<input id="comboItemProfit4" type="number" step="0.01" value="0"></label>
-        <label>套餐额外包装成本（元）<input id="comboExtraPackCost" type="number" min="0" step="0.01" value="1.5"></label>
-        <label>玩具/礼品等附加成本（元）<input id="comboGiftCost" type="number" min="0" step="0.01" value="2"></label>
+        <label>套餐名称<input id="comboName"></label>
+        <label>套餐售价（元）<input id="comboPrice" type="number" min="0" step="0.01"></label>
+        <label>单品1毛利（元）<input id="comboItemProfit1" type="number" step="0.01"></label>
+        <label>单品2毛利（元）<input id="comboItemProfit2" type="number" step="0.01"></label>
+        <label>单品3毛利（元）<input id="comboItemProfit3" type="number" step="0.01"></label>
+        <label>单品4毛利（元）<input id="comboItemProfit4" type="number" step="0.01"></label>
+        <label>套餐额外包装成本（元）<input id="comboExtraPackCost" type="number" min="0" step="0.01"></label>
+        <label>礼品等附加成本（元）<input id="comboGiftCost" type="number" min="0" step="0.01"></label>
       </div>
       <div class="result-grid compact-result" id="comboMarginResult"></div>
       <div class="advice-box" id="comboMarginAdvice"></div>
@@ -251,11 +251,11 @@
         <span>适合玩具、周边、赠品加价购等简单测算</span>
       </div>
       <div class="form-grid compact-grid">
-        <label>礼品名称<input id="giftName" value="儿童玩具"></label>
-        <label>售价（元）<input id="giftPrice" type="number" min="0" step="0.01" value="9.9"></label>
-        <label>采购/制作成本（元）<input id="giftBaseCost" type="number" min="0" step="0.01" value="3.5"></label>
-        <label>包装成本（元）<input id="giftPackCost" type="number" min="0" step="0.01" value="0.5"></label>
-        <label>其他成本（元）<input id="giftOtherCost" type="number" min="0" step="0.01" value="0"></label>
+        <label>礼品名称<input id="giftName"></label>
+        <label>售价（元）<input id="giftPrice" type="number" min="0" step="0.01"></label>
+        <label>采购/制作成本（元）<input id="giftBaseCost" type="number" min="0" step="0.01"></label>
+        <label>包装成本（元）<input id="giftPackCost" type="number" min="0" step="0.01"></label>
+        <label>其他成本（元）<input id="giftOtherCost" type="number" min="0" step="0.01"></label>
       </div>
       <div class="result-grid compact-result" id="giftMarginResult"></div>
       <button class="primary-button" type="button" id="addGiftResultBtn">添加当前礼品</button>
@@ -411,7 +411,7 @@
 
   function benchmarkForDish() {
     const combined = get("marginName")?.value || "";
-    if (/(米粉|米线|面|粉面|牛肉粉|牛肉面)/.test(combined)) {
+    if (/(米粉|米线|面|粉面)/.test(combined)) {
       return { label: "粉面/米粉/面馆", basis: "同品类公开毛利率/食材成本率", min: 60, max: 70, costMin: 30, costMax: 40 };
     }
     if (/(快餐|小吃|简餐|盖饭|套餐)/.test(combined)) {
@@ -554,23 +554,37 @@
     const category = get("xhsCategory")?.value.trim() || "招牌菜";
     const city = get("xhsCity")?.value.trim() || "本地";
     const point = splitList(get("xhsSellingPoints")?.value || "")[0] || "热乎现做";
+    const keywords = splitList(get("xhsKeywords")?.value || "");
+    const hotspotText = get("xhsHotspots")?.innerText || "";
+    const hotspotName = (hotspotText.match(/^(地域美食|搜索攻略|生活记录|听劝互动|健康轻负担|周边赠品)/m) || [])[1] || "生活记录";
+    const hotspotBriefs = {
+      "地域美食": "先拍门头和周边街景，再拍招牌菜，把商圈、路线和附近场景交代清楚。",
+      "搜索攻略": "补菜单价格、份量对比和桌面全景，让读者能快速判断值不值得去。",
+      "生活记录": "多拍下班、聚餐、一人食或夜宵场景，用真实用餐片段弱化广告感。",
+      "听劝互动": "拍新品细节、试吃反馈和可投票选项，结尾留下一个明确问题。",
+      "健康轻负担": "拍食材、配料、汤底或菜单标识，强调真实清爽，避免功效化表达。",
+      "周边赠品": "拍包装、周边、桌面拼图和门店视觉元素，让画面有可晒可收藏的理由。"
+    };
+    const keywordLine = keywords.length ? keywords.join("、") : `${city}${category}`;
     visual.innerHTML = [
       `<p><strong>封面文案：</strong>${city}${category}，${point}才舒服。</p>`,
-      `<p><strong>简易拍摄产品：</strong>选一份刚出餐的招牌产品，碗口擦干净，汤面或主料要露出来；旁边放一双筷子、一张小票或一杯饮品，让画面有真实用餐感。</p>`,
-      `<p><strong>场景打造：</strong>优先用靠窗桌、门头边、出餐口或有品牌物料的位置；桌面只保留产品、餐具、纸巾和一处价格/菜单信息，背景越干净越容易出片。</p>`,
-      `<p><strong>拍摄角度：</strong>米粉、面、盖饭用 45 度斜拍突出份量；小吃、甜品用俯拍看整盘结构；汤锅、冒热气产品用近景低角度拍出热气和厚度。</p>`,
-      `<p><strong>色调与滤镜：</strong>餐食建议暖一点、亮一点，曝光 +0.3，饱和 +8，对比 +5；夜宵场景可以保留一点暖黄灯，但不要把食物调到发红发灰。</p>`
+      `<p><strong>热点方向：</strong>${hotspotName}。围绕「${keywordLine}」拍，不照搬他人标题正文。</p>`,
+      `<p><strong>拍摄建议：</strong>${hotspotBriefs[hotspotName]} 门头、产品近景、出餐过程、顾客用餐场景和菜单价格至少覆盖 3 类。</p>`,
+      `<p><strong>画面重点：</strong>把「${point}」拍成一眼能懂的证据，例如锅底、份量、菜单价格、食材细节或真实用餐状态。</p>`,
+      `<p><strong>热点融合边界：</strong>可以借用公开热点方向和搜索关键词，不复制他人标题正文，不编造体验。</p>`
     ].join("");
   }
 
   function getXhsData() {
+    const keywords = splitList(get("xhsKeywords")?.value || "");
     return {
       category: get("xhsCategory")?.value.trim() || "招牌菜",
       city: get("xhsCity")?.value.trim() || "本地",
       points: splitList(get("xhsSellingPoints")?.value || ""),
       audience: splitList(get("xhsAudience")?.value || ""),
       style: get("xhsStyle")?.value || "种草",
-      address: get("xhsAddress")?.value.trim() || "门店附近"
+      address: get("xhsAddress")?.value.trim() || "门店附近",
+      keywords
     };
   }
 
@@ -638,7 +652,7 @@
     wrapCanvasText(ctx, `${mainPoint} / ${secondPoint}`, 116, cardY + 516, 38, 54, width - 232, "#3d4b43", 800);
     drawCanvasText(ctx, `适合${people}收藏`, 116, cardY + 638, 34, palette.accent, 800);
     drawCanvasText(ctx, `地址：${data.address}`, 116, cardY + 700, 28, "#66736b", 700);
-    [`#${data.city}美食`, `#${data.category}`, "#今天吃什么"].forEach((tag, index) => {
+    [`#${data.city}美食`, `#${data.category}`, data.keywords?.[0] ? `#${data.keywords[0].replace(/\s+/g, "")}` : "#今天吃什么"].forEach((tag, index) => {
       const y = height - 210 + index * 56;
       ctx.fillStyle = index % 2 ? palette.soft2 : palette.soft1;
       roundRect(ctx, 118, y - 42, Math.min(700, 34 + tag.length * 32), 54, 27, true);

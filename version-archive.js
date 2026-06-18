@@ -3,16 +3,16 @@
 
   function fallbackHistory() {
     return {
-      currentVersion: "0.4.0",
-      updatedAt: "2026-05-28",
+      currentVersion: "0.6.3",
+      updatedAt: "2026-06-17",
       iterationRule: "每次功能更新都追加版本记录，保留上一版本基线、核心变化、验证结果和风险边界。",
       versions: [
         {
-          version: "0.4.0",
-          date: "2026-05-28",
-          baseline: "0.3.2",
-          title: "建立版本自引用与迭代档案",
-          changes: ["新增版本档案。", "前端可显示当前版本、上版基线、更新内容和验证结果。"],
+          version: "0.6.3",
+          date: "2026-06-17",
+          baseline: "0.6.2",
+          title: "应产率与产能计算工具",
+          changes: ["新增原材料应产率与产能工具。", "按多原料瓶颈计算菜品最大出品份数。", "预留 JSON Schema 和 POST /calculate-yield API 契约。"],
           verification: ["版本档案读取失败时，不影响工具主体使用。"]
         }
       ]

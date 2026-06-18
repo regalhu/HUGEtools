@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hugetools.local/schemas/yield-capacity.schema.json",
+  "title": "HUGEtools Yield Capacity Calculation Payload",
+  "type": "object",
+  "required": ["materials", "products"],
+  "additionalProperties": true,
+  "properties": {
+    "materials": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/material" }
+    },
+    "products": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/product" }
+    },
+    "options": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "weight_unit": { "type": "string", "default": "kg" },
+        "rounding": { "type": "string", "enum": ["floor", "exact"], "default": "floor" },
+        "include_min_purchase_unit": { "type": "boolean", "default": true }
+      }
+    },
+    "inventory_snapshot": {
+      "type": "object",
+      "description": "Reserved for real-time inventory integration.",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "on_hand_weight": { "type": "number", "minimum": 0 },
+          "reserved_weight": { "type": "number", "minimum": 0 },
+          "updated_at": { "type": "string" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "material": {
+      "type": "object",
+      "required": ["material_name", "purchase_weight", "purchase_cost", "yield_rate"],
+      "additionalProperties": true,
+      "properties": {
+        "material_name": { "type": "string", "minLength": 1 },
+        "purchase_weight": { "type": "number", "minimum": 0 },
+        "purchase_cost": { "type": "number", "minimum": 0 },
+        "yield_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "loss_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "loss_layers": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "purchase_loss_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+            "processing_loss_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+            "cooking_loss_rate": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
+        "min_purchase_unit": { "type": "number", "minimum": 0 },
+        "batches": {
+          "type": "array",
+          "description": "Reserved for batch-level weight, cost, yield, and loss overrides.",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "properties": {
+              "batch_id": { "type": "string" },
+              "purchase_weight": { "type": "number", "minimum": 0 },
+              "purchase_cost": { "type": "number", "minimum": 0 },
+              "yield_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+              "loss_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+              "received_at": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "product": {
+      "type": "object",
+      "required": ["product_name", "ingredients"],
+      "additionalProperties": true,
+      "properties": {
+        "product_name": { "type": "string", "minLength": 1 },
+        "ingredients": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/ingredient" }
+        }
+      }
+    },
+    "ingredient": {
+      "type": "object",
+      "required": ["material_name", "usage_per_portion"],
+      "additionalProperties": true,
+      "properties": {
+        "material_name": { "type": "string", "minLength": 1 },
+        "usage_per_portion": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    }
+  }
+}

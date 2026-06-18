@@ -1,0 +1,15 @@
+.env
+.env.*
+.vercel
+.git
+.gitignore
+.DS_Store
+artifacts
+docs
+miniprogram
+scripts
+DEPLOY_CHECK.md
+DEPLOY_PLAN.md
+VERCEL_DEPLOY_ATTEMPT.md
+project.config.json
+*.md
