@@ -8,7 +8,7 @@
 - SSH 用户：`root`
 - SSH 端口：`22`
 - 静态站点 URL：`http://113.249.104.188:18089/hugetools/`
-- Web 根目录：`/var/www/hugetools`
+- Web 根目录：`/www/hugetools`
 - Nginx 配置：`/etc/nginx/conf.d/hugetools-mainland.conf`
 - 推荐端口：`18089`
 
@@ -17,25 +17,29 @@
 - 天翼公网入口可返回 `200 OK`。
 - 2026-06-18 检查时，公网版本记录仍为 `0.6.2`。
 - 本地最新待同步版本为 `0.6.3`，标题为“应产率与产能计算工具”。
-- 2026-06-18 检查时，SSH 连接在 banner 阶段超时，暂时无法直接登录服务器覆盖 `/var/www/hugetools`。
+- 2026-06-18 已改为 Git 拉取式部署目标：服务器目录统一为 `/www/hugetools`。
 
 ## 部署方式
 
-在本地生成静态包后，上传到服务器 `/tmp/hugetools-static.tar.gz`，再在服务器执行：
+生产环境不再使用 SCP 上传静态包。服务器部署统一执行：
 
 ```bash
-ALLOWED_IPS="允许访问的公网 IP" \
-PORT=18089 \
-bash /path/to/tianyi-hugetools-server-setup.sh /tmp/hugetools-static.tar.gz
+/root/deploy.sh
 ```
 
 部署脚本会：
 
-- 解压静态文件到 `/var/www/hugetools`。
-- 写入或更新 `/etc/nginx/conf.d/hugetools-mainland.conf`。
-- 为 `/hugetools/` 和 `/hugetools/data/` 设置 no-cache 或 must-revalidate 缓存头。
-- 按 `ALLOWED_IPS` 生成 Nginx allowlist，并尝试同步 UFW 规则。
-- 执行 `nginx -t` 并 reload/restart Nginx。
+- 进入 `/www/hugetools`。
+- 执行 `git fetch origin main --prune`。
+- 执行 `git pull --ff-only origin main`。
+- 执行 `systemctl restart huge-tools`。
+- 写入 `/var/log/hugetools/deploy.log`。
+
+首次初始化和 Webhook 自动部署说明见：
+
+```text
+docs/DEVOPS_RUNBOOK.md
+```
 
 ## 端口限制
 
@@ -47,6 +51,7 @@ bash /path/to/tianyi-hugetools-server-setup.sh /tmp/hugetools-static.tar.gz
 - 优先继续使用 `18089` 这类高位非标准端口。
 - 防火墙、安全组、Nginx 监听端口和文档访问 URL 要保持一致。
 - 如果公网请求不到 Nginx 日志，而服务器本机 `127.0.0.1:18089` 正常，应优先检查天翼云安全组、NAT 或外部转发策略。
+- 测试用户访问 `18089` 时，不要在 Nginx 应用层添加窄白名单；需要小范围内测时优先在天翼云安全组维护测试用户公网 IP。
 
 ## 安全提醒
 

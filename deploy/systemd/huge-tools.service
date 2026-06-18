@@ -1,0 +1,13 @@
+[Unit]
+Description=HUGEtools static site reload wrapper
+After=network.target nginx.service
+Wants=nginx.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/hugetools-reload.sh
+ExecReload=/usr/local/bin/hugetools-reload.sh
+
+[Install]
+WantedBy=multi-user.target

@@ -68,6 +68,34 @@ scripts/serve-macos.command
 
 如果只想快速看页面，直接打开 `index.html` 也可使用主体计算功能；但部分浏览器会限制本地文件的剪贴板或 `fetch` 能力。
 
+## 生产部署
+
+天翼云生产环境采用 Git 拉取式部署，服务器目录统一为：
+
+```text
+/www/hugetools
+```
+
+本地发布固定流程：
+
+```bash
+git add .
+git commit -m "version update"
+git push origin main
+```
+
+服务器更新：
+
+```bash
+/root/deploy.sh
+```
+
+完整 DevOps、Webhook、回滚和 SSH 安全说明见：
+
+```text
+docs/DEVOPS_RUNBOOK.md
+```
+
 ## 应产率与产能 API 契约
 
 浏览器端和 Vercel API 共用 `yield-calculator.js` 里的纯函数：

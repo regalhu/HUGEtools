@@ -1,9 +1,27 @@
 {
   "product": "胡哥餐饮工具箱",
-  "currentVersion": "0.6.3",
-  "updatedAt": "2026-06-17",
+  "currentVersion": "0.6.4",
+  "updatedAt": "2026-06-18",
   "iterationRule": "每次功能更新都追加版本记录，保留上一版本基线、核心变化、验证结果和风险边界，便于后续按版本对比迭代。",
   "versions": [
+    {
+      "version": "0.6.4",
+      "date": "2026-06-18",
+      "baseline": "0.6.3",
+      "title": "DevOps 部署与安全体系",
+      "changes": [
+        "新增 Git 拉取式生产部署体系，服务器目录统一为 /www/hugetools。",
+        "新增 /root/deploy.sh、回滚脚本、systemd 服务和 GitHub Webhook 自动部署服务。",
+        "新增 SSH 白名单、sshd 参数优化和 fail2ban 防暴力破解配置脚本。",
+        "更新天翼云部署文档，废弃 SCP 上传发布包，保留多环境、日志和 CI/CD 扩展路径。"
+      ],
+      "verification": [
+        "deploy/server/*.sh 与兼容部署入口通过 bash -n 语法检查。",
+        "deploy/server/webhook.py 通过 python3 -m py_compile 检查。",
+        "git diff --check 通过空白与补丁格式检查。"
+      ],
+      "riskBoundary": "本次主要变更生产部署和服务器安全配置，不改变前端计算公式；启用 PasswordAuthentication no 前必须确认服务器 SSH 公钥登录已经可用。"
+    },
     {
       "version": "0.6.3",
       "date": "2026-06-17",

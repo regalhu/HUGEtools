@@ -1,0 +1,18 @@
+[Unit]
+Description=HUGEtools GitHub webhook deploy listener
+After=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+EnvironmentFile=-/etc/hugetools/webhook.env
+WorkingDirectory=/www/hugetools
+ExecStart=/usr/bin/python3 /www/hugetools/deploy/server/webhook.py
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
