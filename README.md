@@ -68,9 +68,16 @@ scripts/serve-macos.command
 
 如果只想快速看页面，直接打开 `index.html` 也可使用主体计算功能；但部分浏览器会限制本地文件的剪贴板或 `fetch` 能力。
 
-## 生产部署
+## SaaS 生产部署
 
-天翼云生产环境采用 Git 拉取式部署，服务器目录统一为：
+天翼云生产环境采用 SaaS 级部署结构：
+
+```text
+用户 -> Nginx 80/443 -> Node 服务 127.0.0.1:18089
+GitHub push -> Webhook 127.0.0.1:18090 -> /root/deploy.sh
+```
+
+服务器目录统一为：
 
 ```text
 /www/hugetools
@@ -90,7 +97,7 @@ git push origin main
 /root/deploy.sh
 ```
 
-完整 DevOps、Webhook、回滚和 SSH 安全说明见：
+完整 Nginx、systemd、Webhook、灰度发布、回滚和 SSH 安全说明见：
 
 ```text
 docs/DEVOPS_RUNBOOK.md

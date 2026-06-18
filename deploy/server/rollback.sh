@@ -2,7 +2,7 @@
 set -euo pipefail
 
 APP_DIR="${APP_DIR:-/www/hugetools}"
-TARGET="${1:-}"
+TARGET="${1:-HEAD~1}"
 SERVICE_NAME="${SERVICE_NAME:-huge-tools}"
 LOG_DIR="${LOG_DIR:-/var/log/hugetools}"
 LOG_FILE="${LOG_FILE:-${LOG_DIR}/deploy.log}"
@@ -15,11 +15,6 @@ log() {
   printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S %z')" "$*" | tee -a "$LOG_FILE"
 }
 
-if [[ -z "$TARGET" ]]; then
-  echo "Usage: $0 <commit-or-tag>" >&2
-  exit 2
-fi
-
 exec 9>"$LOCK_FILE"
 if ! flock -n 9; then
   log "another deployment is running; exiting"
@@ -29,6 +24,8 @@ fi
 cd "$APP_DIR"
 
 before="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
+echo "rolling back..." | tee -a "$LOG_FILE"
+git log --oneline -5 | tee -a "$LOG_FILE"
 log "rollback start: target=$TARGET before=$before"
 
 git fetch --all --tags --prune
@@ -48,3 +45,4 @@ else
 fi
 
 log "rollback success: before=$before after=$after target=$TARGET"
+echo "rollback done" | tee -a "$LOG_FILE"

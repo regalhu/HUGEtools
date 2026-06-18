@@ -3,16 +3,16 @@
 
   function fallbackHistory() {
     return {
-      currentVersion: "0.6.4",
+      currentVersion: "0.7.0",
       updatedAt: "2026-06-18",
       iterationRule: "每次功能更新都追加版本记录，保留上一版本基线、核心变化、验证结果和风险边界。",
       versions: [
         {
-          version: "0.6.4",
+          version: "0.7.0",
           date: "2026-06-18",
-          baseline: "0.6.3",
-          title: "DevOps 部署与安全体系",
-          changes: ["新增 Git 拉取式生产部署体系。", "新增 deploy.sh、回滚脚本和 GitHub Webhook。", "新增 SSH 白名单、fail2ban 和 sshd 加固脚本。"],
+          baseline: "0.6.4",
+          title: "SaaS 级部署架构",
+          changes: ["新增 Node 应用服务与 Nginx 80/443 统一入口。", "新增 Node/Express webhook 和 HMAC 校验。", "新增 main/staging 灰度发布与一键回滚。"],
           verification: ["版本档案读取失败时，不影响工具主体使用。"]
         }
       ]

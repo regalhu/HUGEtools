@@ -1,9 +1,27 @@
 {
   "product": "胡哥餐饮工具箱",
-  "currentVersion": "0.6.4",
+  "currentVersion": "0.7.0",
   "updatedAt": "2026-06-18",
   "iterationRule": "每次功能更新都追加版本记录，保留上一版本基线、核心变化、验证结果和风险边界，便于后续按版本对比迭代。",
   "versions": [
+    {
+      "version": "0.7.0",
+      "date": "2026-06-18",
+      "baseline": "0.6.4",
+      "title": "SaaS 级部署架构",
+      "changes": [
+        "新增 Node 应用服务 server.js，生产服务监听 127.0.0.1:18089，由 Nginx 80/443 统一反向代理。",
+        "新增 Node/Express webhook.js，监听 127.0.0.1:18090，并使用 GitHub HMAC SHA256 签名校验。",
+        "升级 systemd、deploy.sh、rollback.sh 和 staging 灰度发布脚本，main 对应生产，staging 对应测试。",
+        "更新 Nginx、SSH、fail2ban、防火墙和域名/SSL 预留配置，废弃公网直连内部服务端口。"
+      ],
+      "verification": [
+        "server.js、webhook.js、app.js、yield-calculator.js 和 version-archive.js 通过 node --check。",
+        "deploy/server/*.sh 与兼容部署入口通过 bash -n 检查。",
+        "data/version-history.json 通过 python3 -m json.tool 校验，git diff --check 通过。"
+      ],
+      "riskBoundary": "SaaS 部署层默认以域名 80/443 为标准入口；天翼云若未开放或未备案 80/443，需要先完成域名、备案、SSL 和安全组配置后再切换正式入口。"
+    },
     {
       "version": "0.6.4",
       "date": "2026-06-18",

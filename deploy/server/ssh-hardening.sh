@@ -34,7 +34,8 @@ EOF
 
 ufw allow from "${SSH_ALLOW_IP}" to any port 22 proto tcp
 ufw delete allow 22/tcp >/dev/null 2>&1 || true
-ufw allow 18089/tcp
+ufw allow 80/tcp
+ufw allow 443/tcp
 
 sshd -t
 systemctl enable --now fail2ban

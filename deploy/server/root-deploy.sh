@@ -4,7 +4,7 @@ set -euo pipefail
 APP_DIR="${APP_DIR:-/www/hugetools}"
 BRANCH="${BRANCH:-main}"
 REMOTE="${REMOTE:-origin}"
-SERVICE_NAME="${SERVICE_NAME:-huge-tools}"
+SERVICE_NAME="${SERVICE_NAME:-hugetools}"
 LOG_DIR="${LOG_DIR:-/var/log/hugetools}"
 LOG_FILE="${LOG_FILE:-${LOG_DIR}/deploy.log}"
 LOCK_FILE="${LOCK_FILE:-/tmp/hugetools-deploy.lock}"
@@ -29,11 +29,15 @@ fi
 
 cd "$APP_DIR"
 
+echo "===== DEPLOY START =====" | tee -a "$LOG_FILE"
 before="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
 log "deploy start: dir=$APP_DIR remote=$REMOTE branch=$BRANCH before=$before"
 
-git fetch "$REMOTE" "$BRANCH" --prune
+git fetch "$REMOTE" --prune
+git checkout "$BRANCH"
 git pull --ff-only "$REMOTE" "$BRANCH"
+
+npm install --omit=dev || true
 
 after="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
 version="$(python3 - <<'PY'
@@ -59,3 +63,4 @@ else
 fi
 
 log "deploy success: before=$before after=$after version=$version"
+echo "===== DEPLOY SUCCESS =====" | tee -a "$LOG_FILE"

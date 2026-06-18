@@ -1,0 +1,29 @@
+name: HUGEtools CI
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: JavaScript syntax check
+        run: npm run check
+
+      - name: JSON validation
+        run: |
+          python3 -m json.tool data/version-history.json >/dev/null
+          python3 -m json.tool schemas/yield-capacity.schema.json >/dev/null

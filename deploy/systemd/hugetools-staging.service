@@ -1,0 +1,16 @@
+[Unit]
+Description=hugetools staging service
+After=network.target
+
+[Service]
+WorkingDirectory=/www/hugetools-staging
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=3
+User=root
+Environment=NODE_ENV=staging
+Environment=HOST=127.0.0.1
+Environment=PORT=18091
+
+[Install]
+WantedBy=multi-user.target
