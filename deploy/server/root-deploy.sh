@@ -59,22 +59,18 @@ if [[ "$(id -u)" == "0" ]]; then
   if [[ -f deploy/nginx-hugetools-saas.conf ]]; then
     install -D -m 0644 deploy/nginx-hugetools-saas.conf /etc/nginx/conf.d/hugetools-saas.conf
     sed -i "s/your-domain.com/${DOMAIN}/g" /etc/nginx/conf.d/hugetools-saas.conf
-    sed -i "s/listen 18089;/listen ${PUBLIC_PORT};/" /etc/nginx/conf.d/hugetools-saas.conf
+    sed -i "s/listen 18089 default_server;/listen ${PUBLIC_PORT} default_server;/" /etc/nginx/conf.d/hugetools-saas.conf
     sed -i "s/127.0.0.1:18088/127.0.0.1:${APP_PORT}/" /etc/nginx/conf.d/hugetools-saas.conf
 
-    while IFS= read -r default_conf; do
-      disabled="${default_conf}.disabled-by-hugetools-$(date +%Y%m%d%H%M%S)"
-      mv "$default_conf" "$disabled"
-      log "disabled default nginx site on ${PUBLIC_PORT}: ${default_conf} -> ${disabled}"
-    done < <(
+    mapfile -t port_conflicts < <(
       grep -RIlE "listen[[:space:]]+${PUBLIC_PORT}([[:space:];]| default_server)" /etc/nginx/sites-enabled /etc/nginx/conf.d 2>/dev/null \
-        | grep -v "/etc/nginx/conf.d/hugetools-saas.conf" \
-        | while IFS= read -r conf; do
-            if grep -q "root /var/www/html" "$conf"; then
-              printf '%s\n' "$conf"
-            fi
-          done
+        | grep -v "/etc/nginx/conf.d/hugetools-saas.conf" || true
     )
+    for conflict_conf in "${port_conflicts[@]}"; do
+      disabled="${conflict_conf}.disabled-by-hugetools-$(date +%Y%m%d%H%M%S)"
+      mv "$conflict_conf" "$disabled"
+      log "disabled conflicting nginx site on ${PUBLIC_PORT}: ${conflict_conf} -> ${disabled}"
+    done
 
     nginx -t
     log "nginx gateway synced: public ${PUBLIC_PORT} -> 127.0.0.1:${APP_PORT}"
