@@ -1,18 +1,18 @@
 # HUGEtools SaaS 部署与安全运行手册
 
-更新时间：2026-06-18
+更新时间：2026-06-22
 
 ## 目标架构
 
 ```text
 用户访问
-  -> Nginx 80/443 统一入口
-  -> Node 应用服务 127.0.0.1:18089
+  -> Nginx 公网 18089 入口
+  -> Node 应用服务 127.0.0.1:18088
   -> GitHub main/staging 唯一代码源
   -> Webhook/CI 触发器 127.0.0.1:18090
 ```
 
-生产入口只暴露 `80/443`。`18089` 和 `18090` 只监听本机，不作为公网入口。
+生产入口只暴露 `18089`。`18088` 和 `18090` 只监听本机，不作为公网入口。
 
 ## 本地发布规范
 
@@ -35,7 +35,7 @@ git push origin staging
 分支约定：
 
 ```text
-main    -> production -> /www/hugetools -> 127.0.0.1:18089
+main    -> production -> /www/hugetools -> 127.0.0.1:18088 -> public 18089
 staging -> test       -> /www/hugetools-staging -> 127.0.0.1:18091
 ```
 
@@ -45,6 +45,22 @@ staging -> test       -> /www/hugetools-staging -> 127.0.0.1:18091
 /www/hugetools
 /www/hugetools-staging
 ```
+
+## 私有仓库拉取要求
+
+GitHub 仓库设为 private 后，服务器不能再依赖公开仓库下载。生产机必须提前配置以下任一方式：
+
+- 推荐：给服务器配置只读 Deploy Key，并加入 GitHub 仓库的 Deploy keys。
+- 备选：使用权限最小化的 token，通过凭据管理器或只读环境变量供部署脚本拉取。
+
+确认命令：
+
+```bash
+cd /www/hugetools
+git fetch origin main
+```
+
+该命令成功后，才能继续启用 `/root/deploy.sh`、Webhook 自动部署或回滚脚本。
 
 首次初始化：
 
@@ -76,7 +92,8 @@ REPO_URL="git@github.com:regalhu/HUGEtools.git" \
 APP_DIR="/www/hugetools" \
 BRANCH="main" \
 DOMAIN="your-domain.com" \
-WEB_PORT="18089" \
+PUBLIC_PORT="18089" \
+APP_PORT="18088" \
 WEBHOOK_PORT="18090" \
 STAGING_PORT="18091" \
 SSH_ALLOW_IP="166.0.17.12" \
@@ -110,7 +127,7 @@ ExecStart=/usr/bin/node server.js
 Restart=always
 User=root
 Environment=HOST=127.0.0.1
-Environment=PORT=18089
+Environment=PORT=18088
 
 [Install]
 WantedBy=multi-user.target
@@ -127,7 +144,7 @@ hugetools-webhook.service -> /usr/bin/node webhook.js -> 127.0.0.1:18090
 ```bash
 systemctl status hugetools --no-pager
 systemctl status hugetools-webhook --no-pager
-ss -lntp | egrep ':(80|443|18089|18090|18091)'
+ss -lntp | egrep ':(18088|18089|18090|18091)'
 ```
 
 ## Nginx 统一入口
@@ -142,11 +159,11 @@ deploy/nginx-hugetools-saas.conf
 
 ```nginx
 server {
-    listen 80;
+    listen 18089;
     server_name your-domain.com;
 
     location / {
-        proxy_pass http://127.0.0.1:18089;
+        proxy_pass http://127.0.0.1:18088;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
     }
@@ -269,9 +286,8 @@ git push origin main
 
 | 服务 | 端口 | 公网策略 |
 |---|---:|---|
-| HTTP | 80 | 开放 |
-| HTTPS | 443 | 开放 |
-| Node 生产服务 | 18089 | 仅本机 |
+| Nginx 生产入口 | 18089 | 开放 |
+| Node 生产服务 | 18088 | 仅本机 |
 | Node Webhook | 18090 | 仅本机 |
 | Node staging | 18091 | 仅本机 |
 | SSH | 22 | 仅 `166.0.17.12/32` |
@@ -299,13 +315,13 @@ fail2ban-client status sshd
 生产版本：
 
 ```bash
-curl -fsS http://your-domain.com/data/version-history.json | python3 -m json.tool | head
+curl -fsS http://113.249.104.188:18089/data/version-history.json | python3 -m json.tool | head
 ```
 
 本机服务：
 
 ```bash
-curl -fsS http://127.0.0.1:18089/health
+curl -fsS http://127.0.0.1:18088/health
 curl -fsS http://127.0.0.1:18090/health
 ```
 

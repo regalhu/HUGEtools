@@ -1165,7 +1165,7 @@ function renderXiaohongshu() {
     `${city}吃饭灵感：${primaryHotspot.searchHook}`
   ];
   const body = [
-    `最近做${city}${category}内容时，可以把关键词放在「${keywordLine}」这一组搜索场景里，而不是只写一句泛泛的好吃。`,
+    `最近做${city}${category}种草内容时，可以把关键词放在「${keywordLine}」这一组搜索场景里，而不是只写一句泛泛的好吃。`,
     `这篇按「${primaryHotspot.name}」来写：${primaryHotspot.bodyAngle}`,
     `适合${audience.join("、") || "日常吃饭"}参考。真实卖点可以落到：${points.join("、") || "出品稳定、价格清楚、吃起来舒服"}。`,
     `如果你正在${address}找吃的，可以把它当成${primaryHotspot.sceneUse}。第一次来建议先点招牌款，再按口味加小吃或饮品。`,
@@ -1176,7 +1176,7 @@ function renderXiaohongshu() {
     `#${category}`,
     ...keywords.map((item) => `#${item.replace(/\s+/g, "")}`),
     ...hotspots.flatMap((item) => item.tags),
-    "#小餐饮探店",
+    "#餐饮种草",
     "#今天吃什么",
     "#本地生活",
     "#餐饮老板",
@@ -1185,7 +1185,7 @@ function renderXiaohongshu() {
 
   $("xhsHotspots").innerHTML = [
     ...hotspots.map((item) => `<p><strong>${safeText(item.name)}：</strong>${safeText(item.summary)}</p>`),
-    `<p><a href="${xhsSearchUrl(keywordLine)}" target="_blank" rel="noopener">打开小红书搜索：${safeText(keywordLine)}</a> <small>用于人工复核公开热词，不抓取或照搬平台原文。</small></p>`
+    `<p><a href="${xhsSearchUrl(keywordLine)}" target="_blank" rel="noopener">打开公开内容搜索：${safeText(keywordLine)}</a> <small>用于人工复核公开热词，不抓取或照搬平台原文。</small></p>`
   ].join("");
   $("xhsTitles").innerHTML = titles.map((item) => `<span class="chip">${item}</span>`).join("");
   $("xhsBody").value = body;
@@ -1234,7 +1234,7 @@ function xhsHotspotsFor({ category, city, keywords, points, audience, style }) {
       phrase: "真实生活感",
       bodyAngle: "少写广告口吻，多写什么时间、和谁来、为什么点、吃完感受。",
       sceneUse: "日常吃饭灵感",
-      summary: "公开资料提到小红书从种草走向生活兴趣社区，餐饮笔记更适合写真实生活片段，而不是硬广。",
+      summary: "公开内容平台里的种草内容更适合写真实生活片段，而不是硬广。",
       coverLine: "{city}下班吃什么",
       photoBrief: "拍用餐前后、热气、夹菜、朋友同桌等生活瞬间，弱化摆拍感。",
       tags: ["#下班吃什么", "#打工人午餐", "#一人食", "#生活记录"]
@@ -1309,7 +1309,7 @@ async function copyXhsPost() {
     $("xhsBody").select();
   }
   $("copyPostBtn").textContent = copied ? "已复制" : "已选中文案";
-  setTimeout(() => $("copyPostBtn").textContent = "复制文案", 1200);
+  setTimeout(() => $("copyPostBtn").textContent = "复制种草文案", 1200);
 }
 
 function renderDianping() {
@@ -1338,7 +1338,7 @@ function buildDianpingContent() {
   const focus = text("dpFocus");
   const detailScore = [items, taste, service, focus || issues].filter(Boolean).length;
   const riskLevel = detailScore >= 3 ? "低" : detailScore >= 2 ? "中" : "高";
-  const modeLabel = mode === "merchantReply" ? "商家回复" : "真实评价";
+  const modeLabel = mode === "merchantReply" ? "商家回复" : "真实体验评价";
   const compliance = [
     "仅可整理本人真实消费体验或商家对真实评价的回复，不替顾客写评，不提供给顾客照抄。",
     "不要承诺返现、赠品、折扣来换评价，不要求用户删改评价或截图证明。",

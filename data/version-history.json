@@ -1,9 +1,46 @@
 {
   "product": "胡哥餐饮工具箱",
-  "currentVersion": "0.7.1",
-  "updatedAt": "2026-06-18",
+  "currentVersion": "0.7.3",
+  "updatedAt": "2026-06-22",
   "iterationRule": "每次功能更新都追加版本记录，保留上一版本基线、核心变化、验证结果和风险边界，便于后续按版本对比迭代。",
   "versions": [
+    {
+      "version": "0.7.3",
+      "date": "2026-06-22",
+      "baseline": "0.7.2",
+      "title": "固定 18089 生产入口与同步排障",
+      "changes": [
+        "将天翼云公网生产入口明确固定为 18089，不再把 80/443 作为当前默认入口。",
+        "将 Node 生产服务调整为仅监听 127.0.0.1:18088，由 Nginx 在公网 18089 反向代理，避免 Nginx 与 Node 抢占同一端口。",
+        "同步更新 bootstrap、systemd、Nginx 模板、服务器备忘和 DevOps 手册，保持本地、GitHub 与云服务器部署口径一致。",
+        "记录 2026-06-22 同步测试结果：GitHub HTTPS 可读取远端 HEAD，SSH 推送通路和天翼云 SSH 登录均出现 banner exchange 超时。"
+      ],
+      "verification": [
+        "app.js、slider-fix.js、version-archive.js、server.js、webhook.js 通过 node --check。",
+        "data/version-history.json 与 schemas/yield-capacity.schema.json 通过 python3 -m json.tool 校验。",
+        "deploy/server/root-deploy.sh、root-deploy-staging.sh、bootstrap-tianyi.sh 与 deploy/tianyi-hugetools-server-setup.sh 通过 bash -n。",
+        "公网探测确认 http://113.249.104.188:18089/ 当前仍返回 Nginx 默认页，http://113.249.104.188:18089/hugetools/ 返回 403，说明云端 Nginx 已占用 18089 但尚未加载本仓库生产配置。"
+      ],
+      "riskBoundary": "本次解决的是端口规划、部署脚本和版本同步口径；在天翼云 SSH banner 超时恢复前，仍无法在服务器上执行 /root/deploy.sh 或确认 systemd/Nginx 最终状态。"
+    },
+    {
+      "version": "0.7.2",
+      "date": "2026-06-19",
+      "baseline": "0.7.1",
+      "title": "评价类与种草类生成工具命名",
+      "changes": [
+        "将小红书文案拍摄标签助手改为种草类生成工具，保留关键词、热点方向、标题、正文、标签和封面图生成能力。",
+        "将大众点评真实评价助手改为评价类生成工具，保留真实体验评价整理和商家评价回复两类场景。",
+        "生成内容中的平台指向改为更通用的公开内容搜索、种草内容和评价内容表达，降低单一平台依赖。",
+        "同步提升 app.js、slider-fix.js 和 version-archive.js 的静态资源 cache-bust。"
+      ],
+      "verification": [
+        "index.html、app.js、slider-fix.js、version-archive.js 通过 node --check。",
+        "data/version-history.json 通过 python3 -m json.tool 校验。",
+        "本机检查导航、工具标题、输出区标题和封面图文案均已改为评价类/种草类定位。"
+      ],
+      "riskBoundary": "种草类生成工具只生成原创内容草稿和拍摄建议，不抓取、不复制平台原文；评价类生成工具只整理真实体验或商家回复，不替顾客写评、不诱导虚假评价。"
+    },
     {
       "version": "0.7.1",
       "date": "2026-06-18",

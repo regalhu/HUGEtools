@@ -3,16 +3,16 @@
 
   function fallbackHistory() {
     return {
-      currentVersion: "0.7.1",
-      updatedAt: "2026-06-18",
+      currentVersion: "0.7.3",
+      updatedAt: "2026-06-22",
       iterationRule: "每次功能更新都追加版本记录，保留上一版本基线、核心变化、验证结果和风险边界。",
       versions: [
         {
-          version: "0.7.1",
-          date: "2026-06-18",
-          baseline: "0.7.0",
-          title: "餐饮经营决策辅助系统",
-          changes: ["新增快速、标准、专业三层测算模式。", "统一 Material、Product、Result JSON 结构。", "结果输出最大产能、瓶颈、单位成本、毛利率和经营建议。"],
+          version: "0.7.3",
+          date: "2026-06-22",
+          baseline: "0.7.2",
+          title: "固定 18089 生产入口与同步排障",
+          changes: ["公网入口固定为 18089。", "Node 内部服务改为 127.0.0.1:18088。", "同步更新部署脚本与运维文档。"],
           verification: ["版本档案读取失败时，不影响工具主体使用。"]
         }
       ]

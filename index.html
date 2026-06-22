@@ -29,8 +29,8 @@
           <button class="tool-tab" type="button" data-tool="yield">应产率与产能计算工具</button>
           <button class="tool-tab" type="button" data-tool="health">食材成本与经营健康度</button>
           <button class="tool-tab" type="button" data-tool="deal">团购套餐利润测算器</button>
-          <button class="tool-tab" type="button" data-tool="xiaohongshu">小红书文案拍摄标签助手</button>
-          <button class="tool-tab" type="button" data-tool="dianping">大众点评真实评价助手</button>
+          <button class="tool-tab" type="button" data-tool="xiaohongshu">种草类生成工具</button>
+          <button class="tool-tab" type="button" data-tool="dianping">评价类生成工具</button>
           <button class="tool-tab" type="button" data-tool="schedule">单店排班工具</button>
         </nav>
 
@@ -525,10 +525,10 @@
         <section class="tool-panel" id="tool-xiaohongshu">
           <div class="tool-heading">
             <div>
-              <p class="eyebrow">内容营销工具</p>
-              <h2>小红书文案拍摄标签助手</h2>
+              <p class="eyebrow">种草内容与拍摄建议</p>
+              <h2>种草类生成工具</h2>
             </div>
-            <button class="ghost-button" type="button" id="copyPostBtn">复制文案</button>
+            <button class="ghost-button" type="button" id="copyPostBtn">复制种草文案</button>
           </div>
           <div class="form-grid">
             <label>门店品类<input id="xhsCategory"></label>
@@ -547,13 +547,13 @@
             <label>门店地址<input id="xhsAddress" value="写字楼附近"></label>
           </div>
           <div class="content-output">
-            <h3>公开热点方向</h3>
+            <h3>公开种草方向</h3>
             <div class="advice-box" id="xhsHotspots"></div>
-            <h3>标题</h3>
+            <h3>种草标题</h3>
             <div class="chips" id="xhsTitles"></div>
-            <h3>正文</h3>
+            <h3>种草正文</h3>
             <textarea id="xhsBody" rows="8"></textarea>
-            <h3>标签</h3>
+            <h3>种草标签</h3>
             <div class="chips" id="xhsTags"></div>
             <h3>封面文案与拍摄建议</h3>
             <div class="advice-box" id="xhsVisual"></div>
@@ -563,15 +563,15 @@
         <section class="tool-panel" id="tool-dianping">
           <div class="tool-heading">
             <div>
-              <p class="eyebrow">真实评价与商家回复</p>
-              <h2>大众点评真实评价助手</h2>
+              <p class="eyebrow">真实体验与评价回复</p>
+              <h2>评价类生成工具</h2>
             </div>
             <button class="ghost-button" type="button" id="copyDianpingBtn">复制内容</button>
           </div>
           <div class="form-grid">
             <label>使用场景
               <select id="dpMode">
-                <option value="customer">顾客真实体验整理</option>
+                <option value="customer">真实体验评价整理</option>
                 <option value="merchantReply">商家评价回复</option>
               </select>
             </label>
@@ -594,7 +594,7 @@
           </div>
           <div class="result-grid" id="dianpingSummary"></div>
           <div class="content-output">
-            <h3>评价/回复草稿</h3>
+            <h3>评价/回复内容</h3>
             <textarea id="dianpingDraft" rows="9"></textarea>
             <h3>拍摄建议</h3>
             <div class="advice-box" id="dianpingPhotoAdvice"></div>
@@ -643,8 +643,8 @@
     </main>
 
     <script src="./yield-calculator.js?v=decision-support-1"></script>
-    <script src="./app.js?v=decision-support-1"></script>
-    <script src="./slider-fix.js?v=yield-capacity-1"></script>
-    <script src="./version-archive.js?v=0.7.1"></script>
+    <script src="./app.js?v=content-generators-1"></script>
+    <script src="./slider-fix.js?v=content-generators-1"></script>
+    <script src="./version-archive.js?v=0.7.3"></script>
   </body>
 </html>

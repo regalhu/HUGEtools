@@ -512,11 +512,11 @@
         <button class="primary-button inline-button" type="button" id="generateXhsImageBtn">生成图片</button>
       </div>
       <div class="xhs-cover-layout">
-        <canvas id="xhsCoverCanvas" width="1080" height="1440" aria-label="小红书封面图预览"></canvas>
+        <canvas id="xhsCoverCanvas" width="1080" height="1440" aria-label="种草封面图预览"></canvas>
         <div class="xhs-image-actions">
           <button class="ghost-button" type="button" id="downloadXhsCoverBtn">下载 PNG</button>
           <div class="advice-box xhs-cover-notes">
-            <p>竖版 3:4 图片，适合小红书封面。上传产品图后会把实拍图、标题、卖点和标签合成一张图。</p>
+            <p>竖版 3:4 图片，适合种草内容封面。上传产品图后会把实拍图、标题、卖点和标签合成一张图。</p>
             <p>没有产品图时，工具会生成一张简易产品海报，适合先做选题测试或发给店员照着拍。</p>
           </div>
         </div>
@@ -800,7 +800,7 @@
     const canvas = get("xhsCoverCanvas");
     if (!canvas) return;
     const city = get("xhsCity")?.value.trim() || "本地";
-    const category = get("xhsCategory")?.value.trim() || "小红书封面";
+    const category = get("xhsCategory")?.value.trim() || "种草封面";
     const link = document.createElement("a");
     link.href = canvas.toDataURL("image/png");
     link.download = `${city}-${category}-封面图.png`;

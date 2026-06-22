@@ -1,6 +1,6 @@
 # 胡哥餐饮工具箱迭代规则
 
-本项目采用轻量“版本自引用”机制：每一次功能更新，都需要同步更新 `data/version-history.json`。
+本项目采用轻量“版本自引用”机制：每一次功能更新，都需要同步更新 `data/version-history.json`，并在 `docs/update-log/` 留一份本地 Markdown 更新文档。
 
 ## 每次更新必须记录
 
@@ -12,11 +12,31 @@
 - `verification`：本次验证方式和结果。
 - `riskBoundary`：风险边界和合规提醒。
 
+## 本地更新文档
+
+每一次更新都新增或补齐一份本地文档，文件名建议：
+
+```text
+docs/update-log/YYYY-MM-DD-vX.Y.Z.md
+```
+
+文档至少包含：
+
+- 本次版本与上一版本。
+- 变更范围。
+- 关键文件。
+- 验证结果。
+- 部署状态。
+- 后续待办或风险。
+
+这份文档用于让 ChatGPT 或后续维护者快速对齐版本，不替代 `data/version-history.json`，但需要与其中的版本、标题和验证结论保持一致。
+
 ## 迭代顺序
 
 1. 先确认上一版本能力和问题。
 2. 再做本次代码变更。
 3. 完成后跑语法检查或页面验证。
-4. 最后把本次变更追加到 `data/version-history.json`。
+4. 把本次变更追加到 `data/version-history.json`。
+5. 在 `docs/update-log/` 新增或更新本次 Markdown 更新文档。
 
 这样后续可以按版本回看：为什么改、改了什么、和上一版相比解决了什么问题。

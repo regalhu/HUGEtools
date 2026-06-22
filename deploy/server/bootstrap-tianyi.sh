@@ -4,7 +4,8 @@ set -euo pipefail
 REPO_URL="${REPO_URL:-git@github.com:regalhu/HUGEtools.git}"
 APP_DIR="${APP_DIR:-/www/hugetools}"
 BRANCH="${BRANCH:-main}"
-WEB_PORT="${WEB_PORT:-18089}"
+PUBLIC_PORT="${PUBLIC_PORT:-${WEB_PORT:-18089}}"
+APP_PORT="${APP_PORT:-18088}"
 WEBHOOK_PORT="${WEBHOOK_PORT:-18090}"
 STAGING_PORT="${STAGING_PORT:-18091}"
 ENABLE_WEBHOOK="${ENABLE_WEBHOOK:-1}"
@@ -62,11 +63,13 @@ install -D -m 0755 "$APP_DIR/deploy/server/rollback.sh" /root/rollback.sh
 install -D -m 0644 "$APP_DIR/deploy/systemd/hugetools.service" /etc/systemd/system/hugetools.service
 install -D -m 0644 "$APP_DIR/deploy/systemd/hugetools-staging.service" /etc/systemd/system/hugetools-staging.service
 install -D -m 0644 "$APP_DIR/deploy/systemd/hugetools-webhook.service" /etc/systemd/system/hugetools-webhook.service
-sed -i "s/PORT=18089/PORT=${WEB_PORT}/" /etc/systemd/system/hugetools.service
+sed -i "s/PORT=18088/PORT=${APP_PORT}/" /etc/systemd/system/hugetools.service
 sed -i "s/PORT=18091/PORT=${STAGING_PORT}/" /etc/systemd/system/hugetools-staging.service
 
 install -D -m 0644 "$APP_DIR/deploy/nginx-hugetools-saas.conf" /etc/nginx/conf.d/hugetools-saas.conf
 sed -i "s/your-domain.com/${DOMAIN}/g" /etc/nginx/conf.d/hugetools-saas.conf
+sed -i "s/listen 18089;/listen ${PUBLIC_PORT};/" /etc/nginx/conf.d/hugetools-saas.conf
+sed -i "s/127.0.0.1:18088/127.0.0.1:${APP_PORT}/" /etc/nginx/conf.d/hugetools-saas.conf
 
 install -d -m 0755 /var/log/hugetools /etc/hugetools
 cat > /etc/hugetools/webhook.env <<EOF
@@ -80,8 +83,7 @@ EOF
 chmod 0600 /etc/hugetools/webhook.env
 
 SSH_ALLOW_IP="$SSH_ALLOW_IP" bash "$APP_DIR/deploy/server/ssh-hardening.sh"
-ufw allow 80/tcp
-ufw allow 443/tcp
+ufw allow "${PUBLIC_PORT}/tcp"
 
 nginx -t
 systemctl daemon-reload
@@ -107,8 +109,9 @@ Project: ${APP_DIR}
 Deploy script: /root/deploy.sh
 Staging deploy script: /root/deploy-staging.sh
 Rollback script: /root/rollback.sh
-Public URL: http://${DOMAIN}/
-Internal app: http://127.0.0.1:${WEB_PORT}/
+Public URL: http://${DOMAIN}:${PUBLIC_PORT}/
+Public port: ${PUBLIC_PORT}
+Internal app: http://127.0.0.1:${APP_PORT}/
 Internal webhook: http://127.0.0.1:${WEBHOOK_PORT}/webhook
 Webhook secret: ${WEBHOOK_SECRET}
 

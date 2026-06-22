@@ -11,5 +11,6 @@ REPO_URL="${REPO_URL:-git@github.com:regalhu/HUGEtools.git}" \
 APP_DIR="${APP_DIR:-/www/hugetools}" \
 BRANCH="${BRANCH:-main}" \
 WEB_PORT="${WEB_PORT:-18089}" \
+APP_PORT="${APP_PORT:-18088}" \
 WEBHOOK_PORT="${WEBHOOK_PORT:-18090}" \
 bash "${ROOT_DIR}/deploy/server/bootstrap-tianyi.sh"

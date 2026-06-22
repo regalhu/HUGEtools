@@ -1,6 +1,6 @@
 {
   "name": "hugetools",
-  "version": "0.7.0",
+  "version": "0.7.3",
   "private": true,
   "description": "HUGEtools catering SaaS deployment service",
   "main": "server.js",
