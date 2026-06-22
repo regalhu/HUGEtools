@@ -43,6 +43,8 @@ git pull --ff-only "$REMOTE" "$BRANCH"
 npm install --omit=dev || true
 
 if [[ "$(id -u)" == "0" ]]; then
+  escaped_app_dir="${APP_DIR//&/\\&}"
+
   if [[ -f deploy/server/root-deploy.sh ]]; then
     install -D -m 0755 deploy/server/root-deploy.sh /root/deploy.sh
     log "deploy script refreshed: /root/deploy.sh"
@@ -50,6 +52,7 @@ if [[ "$(id -u)" == "0" ]]; then
 
   if [[ -f deploy/systemd/hugetools.service ]]; then
     install -D -m 0644 deploy/systemd/hugetools.service "/etc/systemd/system/${SERVICE_NAME}.service"
+    sed -i "s#WorkingDirectory=/www/hugetools#WorkingDirectory=${escaped_app_dir}#" "/etc/systemd/system/${SERVICE_NAME}.service"
     sed -i "s/PORT=18088/PORT=${APP_PORT}/" "/etc/systemd/system/${SERVICE_NAME}.service"
     systemctl daemon-reload
     systemctl enable "${SERVICE_NAME}.service" >/dev/null 2>&1 || true
@@ -60,6 +63,7 @@ if [[ "$(id -u)" == "0" ]]; then
     install -D -m 0644 deploy/nginx-hugetools-saas.conf /etc/nginx/conf.d/hugetools-saas.conf
     sed -i "s/your-domain.com/${DOMAIN}/g" /etc/nginx/conf.d/hugetools-saas.conf
     sed -i "s/listen 18089 default_server;/listen ${PUBLIC_PORT} default_server;/" /etc/nginx/conf.d/hugetools-saas.conf
+    sed -i "s#root /www/hugetools;#root ${escaped_app_dir};#" /etc/nginx/conf.d/hugetools-saas.conf
     sed -i "s/127.0.0.1:18088/127.0.0.1:${APP_PORT}/" /etc/nginx/conf.d/hugetools-saas.conf
 
     mapfile -t port_conflicts < <(
