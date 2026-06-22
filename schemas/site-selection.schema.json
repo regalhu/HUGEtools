@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hugetools.local/schemas/site-selection.schema.json",
+  "title": "HUGEtools Store Site Selection Payload",
+  "type": "object",
+  "required": ["storeType", "candidate", "businessAssumption", "siteCondition"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": { "type": "string", "default": "site-selection.v1" },
+    "storeType": {
+      "type": "string",
+      "enum": ["hotpot", "fast_food", "snack", "drink", "chinese", "bbq", "noodle", "bakery", "other"]
+    },
+    "cityTier": {
+      "type": "string",
+      "enum": ["first_tier", "new_first_tier", "second_tier", "third_tier", "county"]
+    },
+    "candidate": { "$ref": "#/$defs/candidate" },
+    "businessAssumption": { "$ref": "#/$defs/businessAssumption" },
+    "siteCondition": { "$ref": "#/$defs/siteCondition" },
+    "competition": { "$ref": "#/$defs/competition" },
+    "customNotes": { "type": "string" },
+    "options": { "$ref": "#/$defs/options" },
+    "result": { "$ref": "#/$defs/result" }
+  },
+  "$defs": {
+    "candidate": {
+      "type": "object",
+      "required": ["areaSqm", "monthlyRent", "contractYears"],
+      "additionalProperties": true,
+      "properties": {
+        "areaSqm": { "type": "number", "minimum": 0 },
+        "monthlyRent": { "type": "number", "minimum": 0 },
+        "propertyFee": { "type": "number", "minimum": 0 },
+        "transferFee": { "type": "number", "minimum": 0 },
+        "decorationCost": { "type": "number", "minimum": 0 },
+        "equipmentCost": { "type": "number", "minimum": 0 },
+        "depositMonths": { "type": "number", "minimum": 0 },
+        "contractYears": { "type": "number", "minimum": 0 },
+        "rentFreeMonths": { "type": "number", "minimum": 0 },
+        "annualRentIncreaseRate": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "businessAssumption": {
+      "type": "object",
+      "required": ["avgTicket", "dailyOrders", "grossMarginRate", "businessDaysPerMonth"],
+      "additionalProperties": true,
+      "properties": {
+        "avgTicket": { "type": "number", "minimum": 0 },
+        "dailyOrders": { "type": "number", "minimum": 0 },
+        "grossMarginRate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "businessDaysPerMonth": { "type": "number", "minimum": 1 },
+        "laborCost": { "type": "number", "minimum": 0 },
+        "utilitiesCost": { "type": "number", "minimum": 0 },
+        "marketingCost": { "type": "number", "minimum": 0 },
+        "otherFixedCost": { "type": "number", "minimum": 0 },
+        "platformRate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "variableCostPerOrder": { "type": "number", "minimum": 0 }
+      }
+    },
+    "siteCondition": {
+      "type": "object",
+      "required": ["canApplyLicense", "hasExhaust", "hasWaterDrainage"],
+      "additionalProperties": true,
+      "properties": {
+        "canApplyLicense": { "type": "boolean" },
+        "hasExhaust": { "type": "boolean" },
+        "hasGas": { "type": "boolean" },
+        "hasWaterDrainage": { "type": "boolean" },
+        "powerCapacityKw": { "type": "number", "minimum": 0 },
+        "visibilityScore": { "type": "number", "minimum": 0, "maximum": 5 },
+        "trafficScore": { "type": "number", "minimum": 0, "maximum": 5 },
+        "targetCustomerScore": { "type": "number", "minimum": 0, "maximum": 5 },
+        "competitionScore": { "type": "number", "minimum": 0, "maximum": 5 },
+        "deliveryConvenienceScore": { "type": "number", "minimum": 0, "maximum": 5 },
+        "parkingScore": { "type": "number", "minimum": 0, "maximum": 5 },
+        "floorScore": { "type": "number", "minimum": 0, "maximum": 5 },
+        "brandFitScore": { "type": "number", "minimum": 0, "maximum": 5 }
+      }
+    },
+    "competition": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "sameCategoryCount": { "type": "number", "minimum": 0 },
+        "strongBrandCount": { "type": "number", "minimum": 0 }
+      }
+    },
+    "options": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "rentToSalesWarn": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.1 },
+        "rentToSalesBad": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.15 },
+        "paybackWarnMonths": { "type": "number", "minimum": 0, "default": 18 },
+        "paybackBadMonths": { "type": "number", "minimum": 0, "default": 24 }
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "financials": { "type": "object", "additionalProperties": true },
+        "scores": { "type": "object", "additionalProperties": true },
+        "risks": { "type": "object", "additionalProperties": true },
+        "verdict": { "type": "object", "additionalProperties": true },
+        "recommendations": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

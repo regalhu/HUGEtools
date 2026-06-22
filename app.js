@@ -81,6 +81,8 @@ $("addYieldProductBtn").addEventListener("click", addYieldProduct);
 $("loadYieldSampleBtn").addEventListener("click", loadYieldSample);
 $("calculateYieldBtn").addEventListener("click", renderYieldCapacity);
 $("copyYieldPayloadBtn").addEventListener("click", copyYieldPayload);
+$("loadSiteSampleBtn").addEventListener("click", loadSiteSample);
+$("copySitePayloadBtn").addEventListener("click", copySitePayload);
 $("ingredientRows").addEventListener("click", handleIngredientAction);
 $("bomRows").addEventListener("click", handleBomAction);
 $("lossRows").addEventListener("click", handleLossAction);
@@ -127,6 +129,7 @@ recalculate();
 function recalculate() {
   renderMargin();
   renderHealth();
+  renderSiteSelection();
   renderYieldCapacity();
   renderDeal();
   renderLoss();
@@ -818,6 +821,192 @@ async function copyYieldPayload() {
     $("yieldPayloadPreview").select();
   }
   setTimeout(() => $("copyYieldPayloadBtn").textContent = "复制 API 请求", 1200);
+}
+
+function buildSiteSelectionPayload() {
+  return {
+    schema_version: "site-selection.v1",
+    mode: "standard",
+    storeType: $("siteStoreType").value,
+    cityTier: $("siteCityTier").value,
+    candidate: {
+      areaSqm: num("siteAreaSqm"),
+      monthlyRent: num("siteMonthlyRent"),
+      propertyFee: num("sitePropertyFee"),
+      transferFee: num("siteTransferFee"),
+      decorationCost: num("siteDecorationCost"),
+      equipmentCost: num("siteEquipmentCost"),
+      depositMonths: num("siteDepositMonths"),
+      contractYears: num("siteContractYears"),
+      rentFreeMonths: num("siteRentFreeMonths"),
+      annualRentIncreaseRate: percentToRate(num("siteAnnualRentIncreaseRate"))
+    },
+    businessAssumption: {
+      avgTicket: num("siteAvgTicket"),
+      dailyOrders: num("siteDailyOrders"),
+      grossMarginRate: percentToRate(num("siteGrossMarginRate")),
+      businessDaysPerMonth: num("siteBusinessDays"),
+      laborCost: num("siteLaborCost"),
+      utilitiesCost: num("siteUtilitiesCost"),
+      marketingCost: num("siteMarketingCost"),
+      otherFixedCost: num("siteOtherFixedCost"),
+      platformRate: percentToRate(num("sitePlatformRate")),
+      variableCostPerOrder: num("siteVariableCostPerOrder")
+    },
+    siteCondition: {
+      canApplyLicense: $("siteCanApplyLicense").checked,
+      hasExhaust: $("siteHasExhaust").checked,
+      hasGas: $("siteHasGas").checked,
+      hasWaterDrainage: $("siteHasWaterDrainage").checked,
+      powerCapacityKw: num("sitePowerCapacityKw"),
+      visibilityScore: num("siteVisibilityScore"),
+      trafficScore: num("siteTrafficScore"),
+      targetCustomerScore: num("siteCustomerScore"),
+      competitionScore: num("siteCompetitionScore"),
+      deliveryConvenienceScore: num("siteDeliveryScore"),
+      parkingScore: num("siteParkingScore"),
+      floorScore: num("siteFloorScore"),
+      brandFitScore: num("siteBrandFitScore")
+    },
+    competition: {
+      sameCategoryCount: num("siteSameCategoryCount"),
+      strongBrandCount: num("siteStrongBrandCount")
+    },
+    customNotes: text("siteCustomNotes"),
+    options: {
+      rentToSalesWarn: 0.1,
+      rentToSalesBad: 0.15,
+      paybackWarnMonths: 18,
+      paybackBadMonths: 24
+    }
+  };
+}
+
+function renderSiteSelection() {
+  const payload = buildSiteSelectionPayload();
+  const calculator = window.HugeToolsSiteSelection;
+  const result = calculator?.calculateSiteSelection ? calculator.calculateSiteSelection(payload) : emptySiteSelectionResult();
+  const finalScore = result.scores.final_score || 0;
+  const scoreLevel = result.verdict.level === "blocker" || finalScore < 40 ? "bad" : finalScore >= 70 ? "good" : "warn";
+  const rentLevel = result.financials.rent_to_sales_rate <= 0.1 ? "good" : result.financials.rent_to_sales_rate <= 0.15 ? "warn" : "bad";
+  const profitLevel = result.financials.monthly_net_profit > 0 ? "good" : "bad";
+  const paybackLevel = result.financials.payback_months == null ? "bad" : result.financials.payback_months <= 18 ? "good" : result.financials.payback_months <= 24 ? "warn" : "bad";
+
+  $("siteResult").innerHTML = [
+    metric("选址结论", safeText(result.verdict.label), scoreLevel),
+    metric("综合评分", `${finalScore.toFixed(1)} 分`, scoreLevel),
+    metric("租售比", `${rateToPercent(result.financials.rent_to_sales_rate)}%`, rentLevel),
+    metric("月净利润", money(result.financials.monthly_net_profit), profitLevel),
+    metric("保本日订单", `${result.financials.break_even_daily_orders || 0} 单`, result.financials.break_even_daily_orders <= payload.businessAssumption.dailyOrders * 0.8 ? "good" : "warn"),
+    metric("回本周期", result.financials.payback_months == null ? "无法回本" : `${result.financials.payback_months} 月`, paybackLevel),
+    metric("合理租金上限", money(result.financials.affordable_monthly_rent), result.financials.affordable_monthly_rent >= payload.candidate.monthlyRent ? "good" : "warn"),
+    metric("一次性投入", money(result.financials.initial_investment), result.financials.initial_investment <= result.financials.monthly_revenue * 2 ? "good" : "warn")
+  ].join("");
+
+  $("siteScoreBars").innerHTML = result.scores.dimensions.map((item) => `
+    <div class="structure-row ${item.rate < 0.55 ? "bottleneck-row" : ""}">
+      <span>${safeText(item.label)}</span>
+      <div class="structure-track"><div class="structure-fill" style="width: ${Math.min(item.rate * 100, 100)}%"></div></div>
+      <strong>${item.score} / ${item.max}</strong>
+    </div>
+  `).join("");
+
+  const riskBlocks = [];
+  riskBlocks.push(`<p><strong>${safeText(result.verdict.label)}：</strong>${safeText(result.verdict.summary)}</p>`);
+  if (result.risks.redFlags.length) {
+    riskBlocks.push(`<p><strong>红线：</strong>${result.risks.redFlags.map(safeText).join("；")}</p>`);
+  }
+  if (result.risks.warnings.length) {
+    riskBlocks.push(`<p><strong>风险：</strong>${result.risks.warnings.map(safeText).join("；")}</p>`);
+  }
+  riskBlocks.push(`<p><strong>建议：</strong>${result.recommendations.map(safeText).join("；")}</p>`);
+  riskBlocks.push(`<p><strong>谈判清单：</strong>${result.negotiation_points.map(safeText).join("；")}</p>`);
+  $("siteRiskAdvice").innerHTML = riskBlocks.join("");
+
+  $("sitePayloadPreview").value = JSON.stringify(payload, null, 2);
+  $("siteApiNote").innerHTML = [
+    "<p>API 契约：POST /calculate-site-selection，静态部署可用 POST /api/calculate-site-selection。</p>",
+    "<p>计算结果返回 financials、scores、risks、verdict、recommendations，方便以后做多个候选点横向对比。</p>",
+    "<p>红线条件会压低最终等级；证照、排烟、上下水、负利润模型未解决前，不用综合分掩盖风险。</p>"
+  ].join("");
+}
+
+function emptySiteSelectionResult() {
+  return {
+    financials: {
+      monthly_revenue: 0,
+      monthly_rent_cost: 0,
+      rent_to_sales_rate: 0,
+      monthly_net_profit: 0,
+      initial_investment: 0,
+      break_even_daily_orders: 0,
+      payback_months: null,
+      affordable_monthly_rent: 0
+    },
+    scores: { base_score: 0, risk_penalty: 0, final_score: 0, dimensions: [] },
+    risks: { redFlags: ["选址评估计算模块未加载。"], warnings: [] },
+    verdict: { level: "blocker", label: "暂不可用", summary: "页面脚本未完成加载，请刷新后重试。" },
+    recommendations: ["刷新页面后重新计算。"],
+    negotiation_points: []
+  };
+}
+
+function loadSiteSample() {
+  const values = {
+    siteStoreType: "hotpot",
+    siteCityTier: "new_first_tier",
+    siteAreaSqm: 180,
+    siteMonthlyRent: 38000,
+    sitePropertyFee: 2800,
+    siteTransferFee: 120000,
+    siteDecorationCost: 320000,
+    siteEquipmentCost: 110000,
+    siteDepositMonths: 2,
+    siteContractYears: 5,
+    siteRentFreeMonths: 2,
+    siteAnnualRentIncreaseRate: 5,
+    siteAvgTicket: 88,
+    siteDailyOrders: 170,
+    siteGrossMarginRate: 62,
+    siteBusinessDays: 30,
+    siteLaborCost: 62000,
+    siteUtilitiesCost: 14000,
+    siteMarketingCost: 12000,
+    siteOtherFixedCost: 7000,
+    sitePlatformRate: 3,
+    siteVariableCostPerOrder: 1.8,
+    sitePowerCapacityKw: 90,
+    siteVisibilityScore: 4,
+    siteTrafficScore: 4,
+    siteCustomerScore: 4,
+    siteCompetitionScore: 3,
+    siteSameCategoryCount: 8,
+    siteStrongBrandCount: 2,
+    siteDeliveryScore: 4,
+    siteParkingScore: 3,
+    siteFloorScore: 4,
+    siteBrandFitScore: 4,
+    siteCustomNotes: "社区和办公混合商圈，晚高峰强，午市一般，需二次确认排烟管道产权。"
+  };
+  Object.entries(values).forEach(([id, value]) => {
+    $(id).value = value;
+  });
+  ["siteCanApplyLicense", "siteHasExhaust", "siteHasGas", "siteHasWaterDrainage"].forEach((id) => {
+    $(id).checked = true;
+  });
+  renderSiteSelection();
+}
+
+async function copySitePayload() {
+  const payload = $("sitePayloadPreview").value || JSON.stringify(buildSiteSelectionPayload(), null, 2);
+  const content = `POST /calculate-site-selection\nContent-Type: application/json\n\n${payload}`;
+  const copied = await copyText(content);
+  $("copySitePayloadBtn").textContent = copied ? "已复制" : "已选中";
+  if (!copied) {
+    $("sitePayloadPreview").focus();
+    $("sitePayloadPreview").select();
+  }
+  setTimeout(() => $("copySitePayloadBtn").textContent = "复制 API 请求", 1200);
 }
 
 function percentToRate(value) {

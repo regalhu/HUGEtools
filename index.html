@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>胡哥餐饮工具箱</title>
     <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="./styles.css?v=decision-support-1">
+    <link rel="stylesheet" href="./styles.css?v=site-selection-1">
   </head>
   <body>
     <main class="app-shell">
@@ -28,6 +28,7 @@
           <button class="tool-tab" type="button" data-tool="loss">门店损耗记录工具</button>
           <button class="tool-tab" type="button" data-tool="yield">应产率与产能计算工具</button>
           <button class="tool-tab" type="button" data-tool="health">食材成本与经营健康度</button>
+          <button class="tool-tab" type="button" data-tool="site">门店选址评估工具</button>
           <button class="tool-tab" type="button" data-tool="deal">团购套餐利润测算器</button>
           <button class="tool-tab" type="button" data-tool="xiaohongshu">种草类生成工具</button>
           <button class="tool-tab" type="button" data-tool="dianping">评价类生成工具</button>
@@ -382,6 +383,117 @@
           <div class="advice-box" id="healthAdvice"></div>
         </section>
 
+        <section class="tool-panel" id="tool-site">
+          <div class="tool-heading">
+            <div>
+              <p class="eyebrow">开店决策辅助</p>
+              <h2>门店选址评估工具</h2>
+            </div>
+            <div class="table-actions">
+              <button class="ghost-button" type="button" id="loadSiteSampleBtn">载入示例</button>
+              <button class="ghost-button" type="button" id="copySitePayloadBtn">复制 API 请求</button>
+            </div>
+          </div>
+
+          <section class="margin-section">
+            <div class="section-title">
+              <h3>点位基础</h3>
+              <span>先把业态、面积、租金、合同和一次性投入算清楚</span>
+            </div>
+            <div class="form-grid">
+              <label>经营业态
+                <select id="siteStoreType">
+                  <option value="hotpot">火锅/重餐饮</option>
+                  <option value="fast_food">快餐简餐</option>
+                  <option value="snack">小吃档口</option>
+                  <option value="drink">茶饮咖啡</option>
+                  <option value="chinese">中餐正餐</option>
+                  <option value="bbq">烧烤烤肉</option>
+                  <option value="noodle">粉面米饭</option>
+                  <option value="bakery">烘焙甜品</option>
+                  <option value="other">其他</option>
+                </select>
+              </label>
+              <label>城市层级
+                <select id="siteCityTier">
+                  <option value="new_first_tier">新一线</option>
+                  <option value="first_tier">一线</option>
+                  <option value="second_tier">二线</option>
+                  <option value="third_tier">三四线</option>
+                  <option value="county">县城/下沉市场</option>
+                </select>
+              </label>
+              <label>面积 m²<input id="siteAreaSqm" type="number" min="0" step="1" value="160"></label>
+              <label>月租金<input id="siteMonthlyRent" type="number" min="0" step="100" value="36000"></label>
+              <label>物业费/月<input id="sitePropertyFee" type="number" min="0" step="100" value="2500"></label>
+              <label>转让费<input id="siteTransferFee" type="number" min="0" step="1000" value="80000"></label>
+              <label>装修投入<input id="siteDecorationCost" type="number" min="0" step="1000" value="280000"></label>
+              <label>设备投入<input id="siteEquipmentCost" type="number" min="0" step="1000" value="90000"></label>
+              <label>押金月数<input id="siteDepositMonths" type="number" min="0" step="0.5" value="2"></label>
+              <label>合同年限<input id="siteContractYears" type="number" min="0" step="0.5" value="5"></label>
+              <label>免租月数<input id="siteRentFreeMonths" type="number" min="0" step="0.5" value="2"></label>
+              <label>租金年递增 %<input id="siteAnnualRentIncreaseRate" type="number" min="0" max="50" step="0.5" value="5"></label>
+            </div>
+          </section>
+
+          <section class="margin-section">
+            <div class="section-title">
+              <h3>经营假设</h3>
+              <span>用订单、客单、毛利和固定成本反推能不能赚钱</span>
+            </div>
+            <div class="form-grid">
+              <label>客单价<input id="siteAvgTicket" type="number" min="0" step="0.1" value="78"></label>
+              <label>预估日订单<input id="siteDailyOrders" type="number" min="0" step="1" value="180"></label>
+              <label>毛利率 %<input id="siteGrossMarginRate" type="number" min="0" max="100" step="0.5" value="62"></label>
+              <label>每月营业天数<input id="siteBusinessDays" type="number" min="1" max="31" step="1" value="30"></label>
+              <label>人工成本/月<input id="siteLaborCost" type="number" min="0" step="100" value="58000"></label>
+              <label>水电燃气/月<input id="siteUtilitiesCost" type="number" min="0" step="100" value="12000"></label>
+              <label>营销费用/月<input id="siteMarketingCost" type="number" min="0" step="100" value="10000"></label>
+              <label>其他固定成本/月<input id="siteOtherFixedCost" type="number" min="0" step="100" value="6000"></label>
+              <label>平台/支付费率 %<input id="sitePlatformRate" type="number" min="0" max="100" step="0.1" value="3"></label>
+              <label>单均变动成本<input id="siteVariableCostPerOrder" type="number" min="0" step="0.1" value="1.5"></label>
+            </div>
+          </section>
+
+          <section class="margin-section">
+            <div class="section-title">
+              <h3>物业与商圈条件</h3>
+              <span>红线条件优先于综合分，1 分最弱，5 分最好</span>
+            </div>
+            <div class="form-grid">
+              <label class="checkbox-label"><input id="siteCanApplyLicense" type="checkbox" checked>可办理餐饮证照</label>
+              <label class="checkbox-label"><input id="siteHasExhaust" type="checkbox" checked>排烟条件满足</label>
+              <label class="checkbox-label"><input id="siteHasGas" type="checkbox" checked>燃气/能源满足</label>
+              <label class="checkbox-label"><input id="siteHasWaterDrainage" type="checkbox" checked>上下水满足</label>
+              <label>电力容量 kW<input id="sitePowerCapacityKw" type="number" min="0" step="1" value="80"></label>
+              <label>门头可见度 1-5<input id="siteVisibilityScore" type="number" min="1" max="5" step="1" value="4"></label>
+              <label>自然客流 1-5<input id="siteTrafficScore" type="number" min="1" max="5" step="1" value="4"></label>
+              <label>客群匹配 1-5<input id="siteCustomerScore" type="number" min="1" max="5" step="1" value="4"></label>
+              <label>竞争可承受度 1-5<input id="siteCompetitionScore" type="number" min="1" max="5" step="1" value="3"></label>
+              <label>同品类数量<input id="siteSameCategoryCount" type="number" min="0" step="1" value="8"></label>
+              <label>强竞争品牌数<input id="siteStrongBrandCount" type="number" min="0" step="1" value="2"></label>
+              <label>外卖取餐便利 1-5<input id="siteDeliveryScore" type="number" min="1" max="5" step="1" value="4"></label>
+              <label>停车/到达便利 1-5<input id="siteParkingScore" type="number" min="1" max="5" step="1" value="3"></label>
+              <label>楼层/动线 1-5<input id="siteFloorScore" type="number" min="1" max="5" step="1" value="4"></label>
+              <label>品牌匹配 1-5<input id="siteBrandFitScore" type="number" min="1" max="5" step="1" value="4"></label>
+              <label>补充记录<textarea id="siteCustomNotes" rows="3" placeholder="例如：房东要求、历史经营情况、特殊风险、二次踩点发现"></textarea></label>
+            </div>
+          </section>
+
+          <div class="result-grid" id="siteResult"></div>
+          <div class="structure-bars" id="siteScoreBars"></div>
+          <div class="advice-box" id="siteRiskAdvice"></div>
+
+          <section class="margin-section">
+            <div class="section-title">
+              <h3>JSON Schema 与 API 预留</h3>
+              <span>同一份 payload 可用于 POST /calculate-site-selection 或 POST /api/calculate-site-selection</span>
+            </div>
+            <textarea id="sitePayloadPreview" rows="12" spellcheck="false"></textarea>
+            <div class="advice-box compact-advice" id="siteApiNote"></div>
+          </section>
+        </section>
+
         <section class="tool-panel" id="tool-deal">
           <div class="tool-heading">
             <div>
@@ -642,9 +754,10 @@
       </footer>
     </main>
 
-    <script src="./yield-calculator.js?v=decision-support-1"></script>
-    <script src="./app.js?v=content-generators-1"></script>
-    <script src="./slider-fix.js?v=content-generators-1"></script>
-    <script src="./version-archive.js?v=0.7.3"></script>
+    <script src="./yield-calculator.js?v=site-selection-1"></script>
+    <script src="./site-selection-calculator.js?v=site-selection-1"></script>
+    <script src="./app.js?v=site-selection-1"></script>
+    <script src="./slider-fix.js?v=site-selection-1"></script>
+    <script src="./version-archive.js?v=0.7.4"></script>
   </body>
 </html>

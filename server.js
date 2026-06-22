@@ -1,6 +1,7 @@
 const express = require("express");
 const path = require("path");
 const { calculateYieldCapacity } = require("./yield-calculator.js");
+const { calculateSiteSelection } = require("./site-selection-calculator.js");
 
 const app = express();
 const PORT = Number(process.env.PORT || 18089);
@@ -25,8 +26,21 @@ function calculateYield(req, res) {
   }
 }
 
+function calculateSite(req, res) {
+  try {
+    res.json(calculateSiteSelection(req.body || {}));
+  } catch (error) {
+    res.status(400).json({
+      error: "invalid_payload",
+      message: error.message || "Invalid site selection payload."
+    });
+  }
+}
+
 app.post("/calculate-yield", calculateYield);
 app.post("/api/calculate-yield", calculateYield);
+app.post("/calculate-site-selection", calculateSite);
+app.post("/api/calculate-site-selection", calculateSite);
 
 app.use(express.static(ROOT, {
   etag: true,
