@@ -1,9 +1,28 @@
 {
   "product": "胡哥餐饮工具箱",
-  "currentVersion": "0.7.3",
+  "currentVersion": "0.7.4",
   "updatedAt": "2026-06-22",
   "iterationRule": "每次功能更新都追加版本记录，保留上一版本基线、核心变化、验证结果和风险边界，便于后续按版本对比迭代。",
   "versions": [
+    {
+      "version": "0.7.4",
+      "date": "2026-06-22",
+      "baseline": "0.7.3",
+      "title": "门店选址评估工具",
+      "changes": [
+        "新增门店选址评估工具，覆盖点位基础、经营假设、物业商圈条件和补充记录。",
+        "新增 site-selection-calculator.js 纯函数模块，输出财务测算、红线风险、分项评分、综合结论和谈判建议。",
+        "新增 schemas/site-selection.schema.json，为后续多候选点对比、API 调用和小程序复用保留扩展字段。",
+        "新增 POST /calculate-site-selection 与 POST /api/calculate-site-selection 服务端接口，并同步更新页面 cache-bust、版本档案、README 和本地更新记录。"
+      ],
+      "verification": [
+        "server.js、webhook.js、yield-calculator.js、site-selection-calculator.js、app.js 和 api/*.js 通过 node --check。",
+        "data/version-history.json、schemas/yield-capacity.schema.json 和 schemas/site-selection.schema.json 通过 JSON 校验。",
+        "Node 直接调用 calculateSiteSelection 验证示例点位输出“可谈判进入”、scores.final_score、租售比、保本日订单和建议数量。",
+        "2026-06-22 复查确认 GitHub main 已到 d447e0c，但云服务器公网入口仍返回 Nginx 默认页或 404/500，root SSH 仍卡在 banner exchange 超时，尚未完成云端部署。"
+      ],
+      "riskBoundary": "选址评估基于用户输入做经营估算，不替代现场尽调、合同审核、证照办理确认、消防审查或财务/法律意见；云端同步仍依赖天翼云 SSH 恢复或控制台执行部署脚本。"
+    },
     {
       "version": "0.7.3",
       "date": "2026-06-22",

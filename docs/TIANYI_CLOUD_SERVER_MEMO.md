@@ -19,7 +19,8 @@
 - 2026-06-22 检查时，`http://113.249.104.188:18089/` 返回 Nginx 默认页。
 - 2026-06-22 检查时，`http://113.249.104.188:18089/hugetools/` 返回 `403 Forbidden`。
 - 2026-06-22 检查时，SSH 到 `root@113.249.104.188:22` 仍卡在 `Connection timed out during banner exchange`。
-- 本地最新待同步版本为 `0.7.3`，标题为“固定 18089 生产入口与同步排障”。
+- 本地最新待同步版本为 `0.7.4`，标题为“门店选址评估工具”。
+- 2026-06-22 复查时，GitHub `main` 已到 `d447e0c`，但云服务器公网入口仍未加载 HUGEtools 应用；`root@113.249.104.188:22` 仍卡在 `Connection timed out during banner exchange`，需恢复 SSH 或通过天翼云控制台执行 `/root/deploy.sh`。
 - 当前部署目标是 Nginx 公网监听 `18089`，反向代理到本机 Node `18088`，Webhook 监听本机 `18090`。
 
 ## 部署方式
