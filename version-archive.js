@@ -3,16 +3,16 @@
 
   function fallbackHistory() {
     return {
-      currentVersion: "0.7.7",
+      currentVersion: "0.7.8",
       updatedAt: "2026-06-23",
       iterationRule: "每次功能更新都追加版本记录，保留上一版本基线、核心变化、验证结果和风险边界。",
       versions: [
         {
-          version: "0.7.7",
+          version: "0.7.8",
           date: "2026-06-23",
-          baseline: "0.7.6",
-          title: "门店任务提醒工具",
-          changes: ["新增离线门店任务提醒工具。", "任务数据保存到浏览器 IndexedDB。", "支持周期提醒、逾期提醒和餐饮任务模板库。"],
+          baseline: "0.7.7",
+          title: "餐饮门店员工激励系统",
+          changes: ["新增任务驱动员工激励系统。", "支持行为评分、积分激励和门店排行榜。", "新增今日任务页、我的评分页和排行榜页。"],
           verification: ["版本档案读取失败时，不影响工具主体使用。"]
         }
       ]

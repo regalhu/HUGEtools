@@ -1,0 +1,91 @@
+{
+  "roles": ["店长", "后厨", "库管", "前厅"],
+  "employees": [
+    { "id": "emp-store-manager", "name": "店长A", "role": "店长" },
+    { "id": "emp-kitchen-lead", "name": "后厨A", "role": "后厨" },
+    { "id": "emp-stock-keeper", "name": "库管A", "role": "库管" },
+    { "id": "emp-front-lead", "name": "前厅A", "role": "前厅" }
+  ],
+  "tasks": [
+    {
+      "id": "daily-opening-standards",
+      "title": "开店标准检查",
+      "role": "店长",
+      "ownerId": "emp-store-manager",
+      "cycle": "daily",
+      "dueTime": "09:30",
+      "basePoints": 12,
+      "description": "检查门头、收银、排班到岗、卫生和营业准备。",
+      "qualityStandard": "照片/文字记录完整，发现问题当天闭环。"
+    },
+    {
+      "id": "daily-fridge-temperature",
+      "title": "冰箱温度记录",
+      "role": "后厨",
+      "ownerId": "emp-kitchen-lead",
+      "cycle": "daily",
+      "dueTime": "11:00",
+      "basePoints": 8,
+      "description": "记录冷藏、冷冻和展示柜温度。",
+      "qualityStandard": "温度异常必须备注并通知店长。"
+    },
+    {
+      "id": "daily-stock-first-in",
+      "title": "先进先出检查",
+      "role": "库管",
+      "ownerId": "emp-stock-keeper",
+      "cycle": "daily",
+      "dueTime": "16:00",
+      "basePoints": 10,
+      "description": "检查冻品、干货、包材和半成品先进先出。",
+      "qualityStandard": "标识清楚，无过期、无混放。"
+    },
+    {
+      "id": "daily-service-review",
+      "title": "前厅服务复盘",
+      "role": "前厅",
+      "ownerId": "emp-front-lead",
+      "cycle": "daily",
+      "dueTime": "22:00",
+      "basePoints": 10,
+      "description": "复盘排队、差评、客诉、翻台和交接事项。",
+      "qualityStandard": "客诉有责任人和解决动作。"
+    },
+    {
+      "id": "weekly-food-safety",
+      "title": "周食品安全巡检",
+      "role": "店长",
+      "ownerId": "emp-store-manager",
+      "cycle": "weekly",
+      "dueWeekday": 5,
+      "dueTime": "15:00",
+      "basePoints": 35,
+      "description": "按周检查留样、消毒、证照、台账和虫害记录。",
+      "qualityStandard": "问题清单可追踪，复查责任明确。"
+    },
+    {
+      "id": "weekly-supplier-check",
+      "title": "供应商到货复核",
+      "role": "库管",
+      "ownerId": "emp-stock-keeper",
+      "cycle": "weekly",
+      "dueWeekday": 3,
+      "dueTime": "17:00",
+      "basePoints": 28,
+      "description": "抽查供应商到货数量、温度、破损和价格。",
+      "qualityStandard": "异常有照片、差异金额和处理结果。"
+    },
+    {
+      "id": "monthly-inventory-close",
+      "title": "月度盘点闭环",
+      "role": "店长",
+      "ownerId": "emp-store-manager",
+      "cycle": "monthly",
+      "dueMonthDay": "last",
+      "dueTime": "21:00",
+      "basePoints": 80,
+      "description": "组织月度盘点，输出差异、损耗、责任和改善动作。",
+      "qualityStandard": "盘点表、差异说明和下月动作齐全。"
+    }
+  ]
+}

@@ -34,6 +34,7 @@
           <button class="tool-tab" type="button" data-tool="xiaohongshu">种草类生成工具</button>
           <button class="tool-tab" type="button" data-tool="dianping">评价类生成工具</button>
           <button class="tool-tab" type="button" data-tool="task-reminder">门店任务提醒工具</button>
+          <button class="tool-tab" type="button" data-tool="incentive">员工激励系统</button>
           <button class="tool-tab" type="button" data-tool="schedule">单店排班工具</button>
         </nav>
 
@@ -916,6 +917,134 @@
           </div>
         </section>
 
+        <section class="tool-panel" id="tool-incentive">
+          <div id="incentivePanel">
+            <div class="tool-heading">
+              <div>
+                <p class="eyebrow">连锁门店执行力管理</p>
+                <h2>餐饮门店员工激励系统</h2>
+              </div>
+              <div class="brand-note">榜首：<span id="incentiveTopPerformer">暂无排名</span></div>
+            </div>
+
+            <section class="risk-banner task-privacy-note">
+              这是任务驱动、行为评分、积分激励的执行力管理工具，不是薪资核算系统。积分可用于奖金参考、门店排名、晋升候选和培训辅导。
+            </section>
+
+            <div class="mode-strip incentive-tabs" role="group" aria-label="员工激励系统页面">
+              <button class="mode-button active" type="button" data-incentive-view="today">今日任务页</button>
+              <button class="mode-button" type="button" data-incentive-view="score">我的评分页</button>
+              <button class="mode-button" type="button" data-incentive-view="leaderboard">门店排行榜页</button>
+              <button class="mode-button" type="button" data-incentive-view="management">任务管理</button>
+            </div>
+
+            <div class="result-grid" id="incentiveSummary"></div>
+
+            <section class="margin-section" data-incentive-panel="today">
+              <div class="section-title">
+                <h3>今日任务页</h3>
+                <span>系统按周期自动生成执行记录，店长只需录入完成时间、质量分和是否遗漏</span>
+              </div>
+              <div class="task-filterbar">
+                <select id="incentiveRoleFilter" aria-label="按角色筛选">
+                  <option value="all">全部角色</option>
+                  <option value="店长">店长</option>
+                  <option value="后厨">后厨</option>
+                  <option value="库管">库管</option>
+                  <option value="前厅">前厅</option>
+                </select>
+                <select id="incentiveEmployeeFilter" aria-label="按员工筛选">
+                  <option value="all">全部员工</option>
+                </select>
+              </div>
+              <div class="incentive-record-list" id="incentiveRecordList"></div>
+            </section>
+
+            <section class="margin-section" data-incentive-panel="score" hidden>
+              <div class="section-title">
+                <h3>我的评分页</h3>
+                <span>按员工查看准时率、质量评分、遗漏情况、积分和激励标签</span>
+              </div>
+              <div class="form-grid compact-grid">
+                <label>选择员工
+                  <select id="incentiveMyEmployee"></select>
+                </label>
+              </div>
+              <div class="result-grid secondary-result" id="incentiveMyScoreSummary"></div>
+              <div class="advice-box" id="incentiveMyScoreList"></div>
+            </section>
+
+            <section class="margin-section" data-incentive-panel="leaderboard" hidden>
+              <div class="section-title">
+                <h3>门店排行榜页</h3>
+                <span>按积分优先、评分次之排名，用于奖金参考、晋升候选和重点辅导</span>
+              </div>
+              <div class="leaderboard-list" id="incentiveLeaderboard"></div>
+            </section>
+
+            <section class="margin-section" data-incentive-panel="management" hidden>
+              <div class="section-title">
+                <h3>任务管理</h3>
+                <span>任务按角色分配，周期支持每天、每周、每月，基础积分不等同于工资</span>
+              </div>
+              <form id="incentiveTaskForm">
+                <div class="form-grid">
+                  <label>任务名称<input id="incentiveTaskTitle" required maxlength="80" placeholder="例如：晚市卫生复盘"></label>
+                  <label>角色
+                    <select id="incentiveTaskRole">
+                      <option>店长</option>
+                      <option>后厨</option>
+                      <option>库管</option>
+                      <option>前厅</option>
+                    </select>
+                  </label>
+                  <label>负责人
+                    <select id="incentiveTaskOwner"></select>
+                  </label>
+                  <label>周期
+                    <select id="incentiveTaskCycle">
+                      <option value="daily">每天</option>
+                      <option value="weekly">每周</option>
+                      <option value="monthly">每月</option>
+                    </select>
+                  </label>
+                  <label>截止时间<input id="incentiveTaskDueTime" type="time" value="18:00"></label>
+                  <label data-incentive-cycle-field="weekly">每周截止日
+                    <select id="incentiveTaskWeekday">
+                      <option value="1">周一</option>
+                      <option value="2">周二</option>
+                      <option value="3">周三</option>
+                      <option value="4">周四</option>
+                      <option value="5">周五</option>
+                      <option value="6">周六</option>
+                      <option value="7">周日</option>
+                    </select>
+                  </label>
+                  <label data-incentive-cycle-field="monthly">每月截止日
+                    <select id="incentiveTaskMonthDay">
+                      <option value="last">每月最后一天</option>
+                      <option value="1">1日</option>
+                      <option value="5">5日</option>
+                      <option value="10">10日</option>
+                      <option value="15">15日</option>
+                      <option value="25">25日</option>
+                    </select>
+                  </label>
+                  <label>基础积分<input id="incentiveTaskPoints" type="number" min="1" max="200" step="1" value="10"></label>
+                  <label class="checkbox-label"><input id="incentiveTaskActive" type="checkbox" checked>启用任务</label>
+                  <label class="wide-field">任务说明<textarea id="incentiveTaskDescription" rows="3" placeholder="写清执行动作、检查范围和交接要求"></textarea></label>
+                  <label class="wide-field">质量标准<textarea id="incentiveTaskStandard" rows="3" placeholder="例如：照片完整、异常有责任人、当天闭环"></textarea></label>
+                </div>
+                <div class="task-form-actions">
+                  <button class="primary-button" type="submit" id="incentiveTaskSaveBtn">保存任务</button>
+                  <button class="ghost-button" type="button" id="incentiveTaskResetBtn">清空表单</button>
+                </div>
+              </form>
+              <div class="task-list" id="incentiveTaskList"></div>
+            </section>
+          </div>
+        </section>
+
         <section class="tool-panel" id="tool-schedule">
           <div class="tool-heading">
             <div>
@@ -955,14 +1084,17 @@
       </footer>
     </main>
 
-    <script src="./yield-calculator.js?v=task-reminder-1"></script>
-    <script src="./site-selection-calculator.js?v=task-reminder-1"></script>
-    <script src="./app.js?v=task-reminder-1"></script>
-    <script src="./slider-fix.js?v=task-reminder-1"></script>
-    <script src="./task-reminder-storage.js?v=task-reminder-1"></script>
-    <script src="./task-reminder-scheduler.js?v=task-reminder-1"></script>
-    <script src="./task-reminder-ui.js?v=task-reminder-1"></script>
-    <script src="./task-reminder.js?v=task-reminder-1"></script>
-    <script src="./version-archive.js?v=0.7.7"></script>
+    <script src="./yield-calculator.js?v=incentive-1"></script>
+    <script src="./site-selection-calculator.js?v=incentive-1"></script>
+    <script src="./app.js?v=incentive-1"></script>
+    <script src="./slider-fix.js?v=incentive-1"></script>
+    <script src="./task-reminder-storage.js?v=incentive-1"></script>
+    <script src="./task-reminder-scheduler.js?v=incentive-1"></script>
+    <script src="./task-reminder-ui.js?v=incentive-1"></script>
+    <script src="./task-reminder.js?v=incentive-1"></script>
+    <script src="./incentive-system-engine.js?v=incentive-1"></script>
+    <script src="./incentive-system-ui.js?v=incentive-1"></script>
+    <script src="./incentive-system.js?v=incentive-1"></script>
+    <script src="./version-archive.js?v=0.7.8"></script>
   </body>
 </html>

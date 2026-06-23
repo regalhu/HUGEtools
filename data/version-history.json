@@ -1,9 +1,30 @@
 {
   "product": "胡哥餐饮工具箱",
-  "currentVersion": "0.7.7",
+  "currentVersion": "0.7.8",
   "updatedAt": "2026-06-23",
   "iterationRule": "每次功能更新都追加版本记录，保留上一版本基线、核心变化、验证结果和风险边界，便于后续按版本对比迭代。",
   "versions": [
+    {
+      "version": "0.7.8",
+      "date": "2026-06-23",
+      "baseline": "0.7.7",
+      "title": "餐饮门店员工激励系统",
+      "changes": [
+        "新增员工激励系统，定位为餐饮连锁执行力管理工具，不作为传统薪资系统。",
+        "新增任务管理模块，支持店长、后厨、库管、前厅等角色分配任务，周期支持每天、每周和每月。",
+        "新增评分引擎，每个周期任务自动生成执行记录，并按准时率、完成质量和是否遗漏计算评分。",
+        "新增积分系统，按基础积分和评分结果折算积分，可用于奖金参考、排名、晋升候选和辅导提醒。",
+        "新增门店排行榜模块，按积分和平均评分输出员工排名、准时率、遗漏数和激励标签。",
+        "前端新增今日任务页、我的评分页、门店排行榜页和任务管理页。"
+      ],
+      "verification": [
+        "incentive-system-engine.js、incentive-system-ui.js、incentive-system.js、app.js、slider-fix.js 和 version-archive.js 通过 node --check。",
+        "data/version-history.json、data/incentive-task-templates.json 和 schemas/incentive-system.schema.json 通过 JSON 校验。",
+        "本地 Chrome 验证员工激励系统页面可打开，执行记录可自动生成，任务完成后评分和积分会更新，排行榜和我的评分页可联动。",
+        "390px 手机宽度下今日任务页、我的评分页和排行榜页无整页横向溢出。"
+      ],
+      "riskBoundary": "该系统用于门店执行力管理和激励参考，不直接计算工资，不替代劳动合同、公司绩效制度、财务审批或人事晋升流程。"
+    },
     {
       "version": "0.7.7",
       "date": "2026-06-23",
