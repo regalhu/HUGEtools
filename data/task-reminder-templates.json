@@ -1,0 +1,60 @@
+{
+  "templates": [
+    {
+      "id": "opening-check",
+      "name": "开店检查",
+      "role": "店长",
+      "description": "检查门头灯箱、收银设备、备货、卫生、员工到岗和营业准备。",
+      "schedule": { "type": "daily", "time": "09:30" }
+    },
+    {
+      "id": "closing-check",
+      "name": "闭店检查",
+      "role": "值班经理",
+      "description": "检查收银结账、燃气水电、冰箱门、门锁、垃圾清运和交接事项。",
+      "schedule": { "type": "daily", "time": "22:30" }
+    },
+    {
+      "id": "receiving-check",
+      "name": "收货检查",
+      "role": "后厨主管",
+      "description": "核对供应商、数量、温度、生产日期、破损和入库签字。",
+      "schedule": { "type": "weekly", "time": "10:00", "weekdays": [1, 3, 5] }
+    },
+    {
+      "id": "monthly-inventory",
+      "name": "月度盘点",
+      "role": "店长",
+      "description": "完成原料、包材、冻品、酒水和低值易耗品盘点，记录差异。",
+      "schedule": { "type": "monthly_last", "time": "21:00" }
+    },
+    {
+      "id": "attendance-submit",
+      "name": "考勤提交",
+      "role": "店长",
+      "description": "核对排班、迟到早退、请假、加班和兼职工时，提交给财务。",
+      "schedule": { "type": "monthly_date", "time": "18:00", "monthDay": 3 }
+    },
+    {
+      "id": "supplier-reconciliation",
+      "name": "供应商对账",
+      "role": "财务",
+      "description": "核对送货单、退换货、付款周期、发票和异常扣款。",
+      "schedule": { "type": "monthly_date", "time": "16:00", "monthDay": 5 }
+    },
+    {
+      "id": "fridge-temperature",
+      "name": "冰箱温度记录",
+      "role": "后厨",
+      "description": "记录冷藏、冷冻、展示柜温度，发现异常立即通知负责人。",
+      "schedule": { "type": "custom_interval", "time": "11:00", "intervalValue": 6, "intervalUnit": "hours" }
+    },
+    {
+      "id": "delivery-platform-check",
+      "name": "外卖平台检查",
+      "role": "运营",
+      "description": "检查营业状态、菜单售罄、配送范围、活动、差评和异常订单。",
+      "schedule": { "type": "daily", "time": "10:30" }
+    }
+  ]
+}

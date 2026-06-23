@@ -223,11 +223,238 @@ th { color: var(--muted); font-size: 12px; }
 .structure-row strong { color: var(--ink); text-align: right; }
 .bottleneck-row .structure-fill { background: var(--red); }
 .bottleneck-row strong { color: var(--red); }
-#yieldPayloadPreview {
-  min-height: 280px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+.recruitment-output {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(320px, 1.1fr);
+  gap: 16px;
+  align-items: stretch;
+}
+.recruitment-card {
+  display: grid;
+  gap: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffaf0;
+  padding: 18px;
+}
+.recruitment-card-head {
+  display: grid;
+  gap: 8px;
+}
+.recruitment-card-head span {
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 800;
+}
+.recruitment-card-head strong {
+  font-size: 30px;
+  line-height: 1.08;
+}
+.recruitment-card-head em {
+  color: var(--red);
+  font-style: normal;
+  font-size: 22px;
+  font-weight: 900;
+}
+.recruitment-facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 0;
+}
+.recruitment-facts div {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 10px;
+}
+.recruitment-facts dt {
+  color: var(--muted);
   font-size: 12px;
-  line-height: 1.55;
+  font-weight: 800;
+}
+.recruitment-facts dd {
+  margin: 4px 0 0;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+.recruitment-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.recruitment-columns h3 {
+  margin-top: 0;
+}
+.recruitment-columns ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #334139;
+  line-height: 1.65;
+}
+.recruitment-output textarea {
+  min-height: 460px;
+  line-height: 1.7;
+}
+.task-filterbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.task-filterbar select {
+  min-width: 132px;
+}
+.task-privacy-note {
+  margin: 0 0 16px;
+}
+.wide-field {
+  grid-column: 1 / -1;
+}
+.weekday-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+.weekday-picker label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+  padding: 0 10px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 800;
+}
+.weekday-picker input {
+  min-height: auto;
+  margin: 0 6px 0 0;
+}
+.task-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+.task-list {
+  display: grid;
+  gap: 12px;
+}
+.task-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--green);
+  border-radius: 8px;
+  background: #fff;
+  padding: 14px;
+}
+.task-card.today {
+  border-left-color: var(--amber);
+  background: var(--amber-soft);
+}
+.task-card.overdue {
+  border-left-color: var(--red);
+  background: var(--red-soft);
+}
+.task-card.inactive {
+  border-left-color: var(--muted);
+  opacity: 0.78;
+}
+.task-card-main {
+  display: grid;
+  gap: 12px;
+}
+.task-card h3 {
+  margin: 5px 0 6px;
+  line-height: 1.25;
+}
+.task-card p {
+  margin: 0;
+  color: #334139;
+  line-height: 1.6;
+}
+.task-state {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--muted);
+  padding: 0 9px;
+  font-size: 12px;
+  font-weight: 900;
+}
+.task-card dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+.task-card dl div {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.78);
+  padding: 9px;
+}
+.task-card dt {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+.task-card dd {
+  margin: 4px 0 0;
+  color: var(--ink);
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+.task-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  align-content: start;
+  min-width: 88px;
+}
+.task-empty {
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  background: #fbfcfb;
+  padding: 18px;
+  color: var(--muted);
+  text-align: center;
+  font-weight: 800;
+}
+.task-alert-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 23, 42, 0.42);
+  padding: 18px;
+}
+.task-alert-modal[hidden] {
+  display: none;
+}
+.task-alert-card {
+  width: min(520px, 100%);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 18px;
+  box-shadow: 0 18px 48px rgba(30, 42, 34, 0.24);
+}
+.task-alert-card h3 {
+  margin-top: 0;
+}
+.task-alert-card p {
+  margin: 8px 0;
+  color: #334139;
+  line-height: 1.6;
 }
 
 @media (max-width: 1080px) {
@@ -397,6 +624,41 @@ th { color: var(--muted); font-size: 12px; }
     font-size: 12px;
   }
   .content-output textarea { min-height: 220px; }
+  .recruitment-output, .recruitment-columns, .recruitment-facts { grid-template-columns: 1fr; }
+  .recruitment-card {
+    padding: 14px;
+  }
+  .recruitment-card-head strong {
+    font-size: 24px;
+  }
+  .recruitment-card-head em {
+    font-size: 19px;
+  }
+  .recruitment-output textarea {
+    min-height: 360px;
+  }
+  .task-filterbar, .task-form-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .task-filterbar select {
+    width: 100%;
+  }
+  .task-card {
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+  .task-card dl {
+    grid-template-columns: 1fr;
+  }
+  .task-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-width: 0;
+  }
+  .weekday-picker {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
   .mode-strip, .structure-row { align-items: stretch; flex-direction: column; }
   .structure-row { display: grid; grid-template-columns: 1fr; }
   .structure-row strong { text-align: left; }

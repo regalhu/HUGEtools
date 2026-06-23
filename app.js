@@ -41,6 +41,29 @@ const defaultYieldProfiles = {
   vegetable: { label: "蔬菜", keywords: ["菜", "青菜", "蔬菜", "生菜", "白菜"], yield_rate: 0.85, loss_rate: 0.03 },
   other: { label: "通用", keywords: [], yield_rate: 0.8, loss_rate: 0.03 }
 };
+const recruitmentCategoryProfiles = {
+  hotpot: { label: "火锅/重餐饮", pace: "翻台节奏快、晚市高峰明显", skills: ["熟悉锅底、蘸料和桌边服务", "重视食品安全、餐具清洁和补台速度"], hooks: ["客流稳定", "培训标准清楚", "晋升店助/店长"] },
+  fast_food: { label: "快餐简餐", pace: "午晚高峰集中、出餐速度要求高", skills: ["能按标准流程备餐、打包、叫号", "适应多岗位轮换和高峰协作"], hooks: ["流程简单上手快", "排班清楚", "绩效看得见"] },
+  chinese: { label: "中餐正餐", pace: "菜品结构多、前后厅配合要求高", skills: ["熟悉点菜、传菜、包间服务或炒锅出品", "能稳定把控口味、卫生和客诉处理"], hooks: ["菜品体系完整", "师傅带教", "长期发展空间"] },
+  bbq: { label: "烧烤烤肉", pace: "夜宵和周末高峰强、现场服务感重要", skills: ["能适应晚班、备串、烤制或桌边服务", "注意明火安全、食材保鲜和出品速度"], hooks: ["夜班补贴", "团队氛围直接", "旺季收入弹性"] },
+  drink: { label: "茶饮咖啡", pace: "点单密集、标准化制作和门店形象重要", skills: ["能按配方制作饮品、备料、收银和清洁", "服务表达自然，能保持台面整洁"], hooks: ["年轻团队", "产品培训完整", "可学门店运营"] },
+  bakery: { label: "烘焙甜品", pace: "产品陈列、出炉节奏和卫生细节要求高", skills: ["能协助烘焙、裱花、包装、陈列或收银", "重视克重、保质期和卖相"], hooks: ["环境干净", "技能成长清晰", "产品有成就感"] },
+  noodle: { label: "粉面米饭", pace: "单品爆发强、备料和出餐链路短", skills: ["能完成煮面、浇头、配菜、打包或收台", "高峰期手脚麻利，愿意按标准克重出品"], hooks: ["岗位容易熟练", "小团队沟通快", "包吃实在"] },
+  group_meal: { label: "团餐食堂", pace: "餐段固定、批量出餐和安全管理优先", skills: ["能按批量生产计划备餐、分餐和留样", "遵守食安、消毒、验收和台账要求"], hooks: ["作息相对稳定", "流程规范", "团队协作强"] },
+  snack: { label: "小吃档口", pace: "人流变化快、一人多岗能力重要", skills: ["能完成现做、打包、收银和卫生维护", "愿意主动招呼顾客，动作利索"], hooks: ["上手快", "老板带着做", "多劳多得"] }
+};
+const recruitmentRankProfiles = {
+  server: { label: "服务员/传菜/迎宾", level: "基础岗位", must: ["接待引导、点单协助、传菜收台", "保持前厅、桌面和餐具整洁", "高峰期配合厨房和收银完成翻台"], requirements: ["有礼貌，做事麻利", "能接受餐饮高峰节奏", "有服务经验优先，没有经验可培训"] },
+  cashier: { label: "收银/点单", level: "基础岗位", must: ["完成点单、收银、核销和简单对账", "熟悉菜单、套餐和优惠规则", "协助外卖打包、叫号和顾客咨询"], requirements: ["表达清楚，数字敏感", "细心负责，能处理基础客诉", "会使用收银系统优先"] },
+  kitchen: { label: "后厨/切配/洗消", level: "后厨基础岗", must: ["完成备菜、切配、洗消、打包和卫生收尾", "按标准克重、先进先出和保质期要求操作", "高峰期配合出餐，保证台面整洁"], requirements: ["手脚麻利，能吃苦", "重视卫生和安全", "有后厨经验优先，可接受学徒"] },
+  cook: { label: "厨师/炒锅/出品", level: "技术岗", must: ["负责指定档口或菜品出品", "稳定口味、火候、克重和出餐速度", "配合备货、验收、盘点和新品试做"], requirements: ["有相关菜系或档口经验", "能按标准出品，不随意改配方", "食品安全意识强"] },
+  chef_leader: { label: "厨师长/后厨主管", level: "后厨管理岗", must: ["负责后厨日常管理、排岗和出品质量", "控制食材验收、储存、损耗和毛利", "培训厨师、切配和洗消，推动新品优化"], requirements: ["有后厨管理经验", "懂成本、卫生和标准化", "能带团队，能解决高峰出餐问题"] },
+  shift_leader: { label: "领班/班组长", level: "一线管理岗", must: ["负责班次人员分工、巡台和现场协调", "处理顾客反馈，盯住服务标准和卫生收尾", "协助店长做考勤、培训和物料检查"], requirements: ["有餐饮带班经验优先", "沟通直接，执行力强", "能接受轮班和高峰压力"] },
+  store_manager: { label: "店长/储备店长", level: "门店管理岗", must: ["负责营业目标、人员排班、成本和服务质量", "管理库存、损耗、点评反馈和安全检查", "带教新人，推动活动执行和复盘"], requirements: ["有餐饮门店管理经验", "懂营业额、毛利、人工和顾客体验", "能独立处理门店日常问题"] },
+  supervisor: { label: "运营督导", level: "多店运营岗", must: ["巡店检查标准执行、人员训练和经营数据", "协助门店提升营业额、毛利和服务稳定性", "输出问题清单、整改节奏和复盘结果"], requirements: ["有连锁餐饮或多店管理经验", "能看懂营业、成本、人效数据", "沟通推动能力强"] },
+  marketing: { label: "市场/团购运营", level: "增长运营岗", must: ["负责团购套餐、达人沟通、社群和门店活动", "跟进核销、转化、评价反馈和复购数据", "协助拍摄菜单、门店环境和活动素材"], requirements: ["熟悉本地生活平台优先", "文案表达清楚，执行细致", "懂门店实际，不做脱离经营的活动"] },
+  part_time: { label: "兼职/小时工", level: "灵活用工", must: ["协助高峰期传菜、收台、打包、洗消或叫号", "按班次完成指定区域卫生和收尾", "服从当班负责人安排"], requirements: ["时间稳定，守时靠谱", "手脚麻利，愿意配合", "有餐饮兼职经验优先"] }
+};
 
 document.querySelectorAll(".tool-tab").forEach((tab) => {
   tab.addEventListener("click", () => {
@@ -80,9 +103,8 @@ $("addYieldIngredientBtn").addEventListener("click", addYieldDraftIngredient);
 $("addYieldProductBtn").addEventListener("click", addYieldProduct);
 $("loadYieldSampleBtn").addEventListener("click", loadYieldSample);
 $("calculateYieldBtn").addEventListener("click", renderYieldCapacity);
-$("copyYieldPayloadBtn").addEventListener("click", copyYieldPayload);
 $("loadSiteSampleBtn").addEventListener("click", loadSiteSample);
-$("copySitePayloadBtn").addEventListener("click", copySitePayload);
+$("copyRecruitmentBtn").addEventListener("click", copyRecruitmentContent);
 $("ingredientRows").addEventListener("click", handleIngredientAction);
 $("bomRows").addEventListener("click", handleBomAction);
 $("lossRows").addEventListener("click", handleLossAction);
@@ -124,12 +146,12 @@ applyLossStageTemplate();
 updateCustomLossFields();
 applyChannelTemplate();
 loadYieldSample();
-recalculate();
 
 function recalculate() {
   renderMargin();
   renderHealth();
   renderSiteSelection();
+  renderRecruitment();
   renderYieldCapacity();
   renderDeal();
   renderLoss();
@@ -629,12 +651,6 @@ function renderYieldCapacity() {
   const calculator = window.HugeToolsYield;
   const result = calculator?.calculateYieldCapacity ? calculator.calculateYieldCapacity(payload) : emptyYieldResult();
   renderYieldResult(result);
-  $("yieldPayloadPreview").value = JSON.stringify(payload, null, 2);
-  $("yieldApiNote").innerHTML = [
-    "<p>API 契约：POST /calculate-yield，静态部署可用 POST /api/calculate-yield；请求体包含标准 materials 与 products。</p>",
-    "<p>计算结果统一返回 Result：最大产能、瓶颈原料、单位成本、毛利率和 3 条经营建议。</p>",
-    "<p>扩展预留：meta、loss_layers、batches、inventory_snapshot 可承接库存、批次、门店和多环境数据。</p>"
-  ].join("");
 }
 
 function renderYieldModeHint() {
@@ -788,7 +804,7 @@ function renderYieldResult(result) {
   if (!result.products.length) advice.push("先录入至少一个原料和一个菜品 BOM，工具会自动按多原料瓶颈法计算产能。");
   if (tightest !== "暂无") advice.push(`当前最常见瓶颈原料是「${tightest}」，优先复核采购量、出成率、BOM 克重或替代菜品结构。`);
   if (Number.isFinite(lowestCapacity) && lowestCapacity <= 20 && result.products.length) advice.push(`最低菜品产能只有 ${lowestCapacity} 份，适合提前做限量售卖、补货或调整排产。`);
-  advice.push("所有重量在 API payload 中统一为 kg；页面输入的每份用量 g 会自动换算为 kg。");
+  advice.push("页面输入的每份用量 g 会自动换算参与计算，适合直接拿来做采购、备货和限量售卖判断。");
   $("yieldAdvice").innerHTML = advice.map((item) => `<p>${item}</p>`).join("");
 }
 
@@ -809,18 +825,6 @@ function renderYieldBottleneckMap(result) {
       </div>
     `).join("")
     : "";
-}
-
-async function copyYieldPayload() {
-  const payload = $("yieldPayloadPreview").value || JSON.stringify(buildYieldPayload(), null, 2);
-  const content = `POST /calculate-yield\nContent-Type: application/json\n\n${payload}`;
-  const copied = await copyText(content);
-  $("copyYieldPayloadBtn").textContent = copied ? "已复制" : "已选中";
-  if (!copied) {
-    $("yieldPayloadPreview").focus();
-    $("yieldPayloadPreview").select();
-  }
-  setTimeout(() => $("copyYieldPayloadBtn").textContent = "复制 API 请求", 1200);
 }
 
 function buildSiteSelectionPayload() {
@@ -922,13 +926,6 @@ function renderSiteSelection() {
   riskBlocks.push(`<p><strong>建议：</strong>${result.recommendations.map(safeText).join("；")}</p>`);
   riskBlocks.push(`<p><strong>谈判清单：</strong>${result.negotiation_points.map(safeText).join("；")}</p>`);
   $("siteRiskAdvice").innerHTML = riskBlocks.join("");
-
-  $("sitePayloadPreview").value = JSON.stringify(payload, null, 2);
-  $("siteApiNote").innerHTML = [
-    "<p>API 契约：POST /calculate-site-selection，静态部署可用 POST /api/calculate-site-selection。</p>",
-    "<p>计算结果返回 financials、scores、risks、verdict、recommendations，方便以后做多个候选点横向对比。</p>",
-    "<p>红线条件会压低最终等级；证照、排烟、上下水、负利润模型未解决前，不用综合分掩盖风险。</p>"
-  ].join("");
 }
 
 function emptySiteSelectionResult() {
@@ -995,18 +992,6 @@ function loadSiteSample() {
     $(id).checked = true;
   });
   renderSiteSelection();
-}
-
-async function copySitePayload() {
-  const payload = $("sitePayloadPreview").value || JSON.stringify(buildSiteSelectionPayload(), null, 2);
-  const content = `POST /calculate-site-selection\nContent-Type: application/json\n\n${payload}`;
-  const copied = await copyText(content);
-  $("copySitePayloadBtn").textContent = copied ? "已复制" : "已选中";
-  if (!copied) {
-    $("sitePayloadPreview").focus();
-    $("sitePayloadPreview").select();
-  }
-  setTimeout(() => $("copySitePayloadBtn").textContent = "复制 API 请求", 1200);
 }
 
 function percentToRate(value) {
@@ -1101,6 +1086,171 @@ function calculateHealth() {
     primeRedline: num("primeCostRedline") || 65,
     hasCoreInput: Boolean(revenue || openingInventory || periodPurchases || endingInventory)
   };
+}
+
+function renderRecruitment() {
+  const result = buildRecruitmentContent();
+  $("recruitmentSummary").innerHTML = [
+    metric("餐饮类目", safeText(result.category.label), "good"),
+    metric("招聘职级", safeText(result.rank.label), "good"),
+    metric("发布形式", safeText(result.formatLabel), "warn"),
+    metric("招募重点", safeText(result.primaryHook), "good")
+  ].join("");
+  $("recruitmentTips").innerHTML = result.tips.map((item) => `<p>${safeText(item)}</p>`).join("");
+  $("recruitmentPreview").innerHTML = `
+    <div class="recruitment-card-head">
+      <span>${safeText(result.category.label)}</span>
+      <strong>${safeText(result.title)}</strong>
+      <em>${safeText(result.salary)}</em>
+    </div>
+    <div class="chips">${result.hookChips.map((item) => `<span class="chip">${safeText(item)}</span>`).join("")}</div>
+    <dl class="recruitment-facts">
+      <div><dt>地点</dt><dd>${safeText(result.location)}</dd></div>
+      <div><dt>人数</dt><dd>${safeText(result.count)}</dd></div>
+      <div><dt>时间</dt><dd>${safeText(result.schedule)}</dd></div>
+      <div><dt>联系</dt><dd>${safeText(result.contact)} ${safeText(result.phone)}</dd></div>
+    </dl>
+    <div class="recruitment-columns">
+      <div>
+        <h3>岗位职责</h3>
+        <ul>${result.duties.slice(0, 4).map((item) => `<li>${safeText(item)}</li>`).join("")}</ul>
+      </div>
+      <div>
+        <h3>任职要求</h3>
+        <ul>${result.requirements.slice(0, 4).map((item) => `<li>${safeText(item)}</li>`).join("")}</ul>
+      </div>
+    </div>
+  `;
+  $("recruitmentDraft").value = result.draft;
+}
+
+function buildRecruitmentContent() {
+  const category = recruitmentCategoryProfiles[$("recruitCategory").value] || recruitmentCategoryProfiles.fast_food;
+  const rank = recruitmentRankProfiles[$("recruitRank").value] || recruitmentRankProfiles.server;
+  const company = text("recruitCompany") || "本店";
+  const location = text("recruitLocation") || "门店附近";
+  const count = text("recruitCount") || "若干";
+  const salary = text("recruitSalary") || "面议";
+  const schedule = text("recruitSchedule") || "按门店班次安排";
+  const benefits = splitList(text("recruitBenefits") || "包吃,绩效奖金,晋升培训");
+  const highlights = splitList(text("recruitHighlights") || "团队稳定,流程清楚");
+  const contact = text("recruitContact") || "负责人";
+  const phone = text("recruitPhone") || "到店咨询";
+  const format = $("recruitFormat").value;
+  const formatLabel = { poster: "门店海报", moments: "朋友圈/社群", platform: "招聘平台" }[format] || "门店海报";
+  const title = makeRecruitmentTitle({ company, category, rank, format });
+  const duties = uniqueList([
+    ...rank.must,
+    ...category.skills.slice(0, 2),
+    `适应${category.pace}，按门店标准完成当班工作`
+  ]).slice(0, 5);
+  const requirements = uniqueList([
+    ...rank.requirements,
+    "身体健康，守时靠谱，服从门店排班",
+    "认同食品安全、卫生清洁和顾客体验要求"
+  ]).slice(0, 5);
+  const hookChips = uniqueList([...category.hooks, ...benefits, ...highlights]).slice(0, 8);
+  const primaryHook = hookChips[0] || "岗位清楚";
+  const tips = [
+    "公开招聘平台和餐厅招聘海报的共性结构已内置：岗位、职责、要求、薪资、时间、人数、地点、福利和联系方式。",
+    `${rank.label}文案会突出${rank.level}的核心判断点；${category.label}会强化${category.pace}和类目技能。`,
+    "发布前建议补齐真实手机号、详细地址、休息制度和社保/住宿等硬信息，避免只写“待遇从优”。"
+  ];
+  const data = { company, category, rank, location, count, salary, schedule, benefits, highlights, contact, phone, title, duties, requirements, hookChips };
+  const draft = format === "moments"
+    ? recruitmentMomentsDraft(data)
+    : format === "platform"
+      ? recruitmentPlatformDraft(data)
+      : recruitmentPosterDraft(data);
+  return {
+    ...data,
+    formatLabel,
+    primaryHook,
+    tips,
+    draft
+  };
+}
+
+function makeRecruitmentTitle({ company, category, rank, format }) {
+  if (format === "moments") return `${company}招${rank.label}`;
+  if (format === "platform") return `${category.label}${rank.label}招聘`;
+  return `急招 ${rank.label}`;
+}
+
+function recruitmentPosterDraft(data) {
+  return [
+    `${data.company} 招人`,
+    "",
+    `${data.title}`,
+    `招聘人数：${data.count}`,
+    `薪资待遇：${data.salary}`,
+    `工作地点：${data.location}`,
+    `工作时间：${data.schedule}`,
+    "",
+    "岗位职责：",
+    ...numberedLines(data.duties),
+    "",
+    "任职要求：",
+    ...numberedLines(data.requirements),
+    "",
+    `福利亮点：${uniqueList([...data.benefits, ...data.highlights]).join("、")}`,
+    `联系电话：${data.contact} ${data.phone}`
+  ].join("\n");
+}
+
+function recruitmentMomentsDraft(data) {
+  return [
+    `${data.company}现在招${data.rank.label}，${data.location}附近方便的朋友可以看一下。`,
+    "",
+    `岗位：${data.rank.label}，招${data.count}`,
+    `薪资：${data.salary}`,
+    `时间：${data.schedule}`,
+    `福利：${data.benefits.join("、")}`,
+    "",
+    `我们是${data.category.label}门店，${data.category.pace}，希望你做事靠谱、手脚麻利、愿意按标准把服务和出品做好。`,
+    `主要工作：${data.duties.slice(0, 3).join("；")}。`,
+    "",
+    `门店亮点：${data.highlights.join("、")}`,
+    `联系：${data.contact} ${data.phone}`,
+    "也欢迎转给正在找餐饮工作的朋友。"
+  ].join("\n");
+}
+
+function recruitmentPlatformDraft(data) {
+  return [
+    `职位名称：${data.title}`,
+    `公司/门店：${data.company}`,
+    `工作地点：${data.location}`,
+    `招聘人数：${data.count}`,
+    `薪资范围：${data.salary}`,
+    `工作时间：${data.schedule}`,
+    "",
+    "岗位职责：",
+    ...numberedLines(data.duties),
+    "",
+    "任职要求：",
+    ...numberedLines(data.requirements),
+    "",
+    "福利待遇：",
+    ...numberedLines(uniqueList([...data.benefits, ...data.highlights]).slice(0, 6)),
+    "",
+    `联系方式：${data.contact} ${data.phone}`
+  ].join("\n");
+}
+
+function numberedLines(items) {
+  return items.map((item, index) => `${index + 1}. ${item}`);
+}
+
+async function copyRecruitmentContent() {
+  const content = $("recruitmentDraft").value;
+  const copied = await copyText(content);
+  if (!copied) {
+    $("recruitmentDraft").focus();
+    $("recruitmentDraft").select();
+  }
+  $("copyRecruitmentBtn").textContent = copied ? "已复制" : "已选中文案";
+  setTimeout(() => $("copyRecruitmentBtn").textContent = "复制招募文案", 1200);
 }
 
 function renderDeal() {
@@ -1335,6 +1485,161 @@ function updateCustomLossFields() {
   });
 }
 
+const xhsTemplateLibrary = [
+  {
+    id: "localGuide",
+    name: "地域搜索攻略",
+    match: /(本地|附近|商圈|地铁|攻略|推荐|怎么选|路线|停车|周末|旅游|旅行)/,
+    titlePattern: ({ city, category, keyword, point }) => `${city}${keyword}｜${category}怎么选先看这家`,
+    body: ({ city, category, keyword, point, points, audience, address, hotspot }) => [
+      `${city}${keyword}这组词，建议开头就写清楚：地点、品类、适合谁。今天这家${category}放在${address}场景里看，主打${point}。`,
+      `为什么值得放进清单：${sentenceList(points, ["位置好找", "价格清楚", "出品稳定"])}。如果是${audience[0] || "附近吃饭人群"}临时决策，重点看动线、等位、份量和人均。`,
+      `我的建议点法：第一次来先点招牌，再补一个低风险小吃或饮品；如果多人来，按“主菜+主食+解腻”组合更稳。`,
+      `拍摄和发布时把「${hotspot.name}」放进前 3 行，结尾补一句：你还想看${city}哪一片的${category}清单？`
+    ],
+    tags: ["#附近美食", "#本地美食", "#吃饭攻略", "#美食清单"],
+    photo: ({ city, category, point, address }) => [`首图拍门头+街景，画面里带出${address}。`, `第二张拍${category}招牌近景，让${point}有证据。`, "第三张拍菜单价格或桌面全景，适合做攻略收藏。"],
+    cover: ({ city, category }) => `${city}${category}吃饭攻略`
+  },
+  {
+    id: "valueList",
+    name: "高性价比清单",
+    match: /(性价比|便宜|划算|人均|套餐|学生|打工人|午餐|价格|省钱|预算)/,
+    titlePattern: ({ city, category, priceWord }) => `${city}${priceWord}吃${category}，这份清单先收藏`,
+    body: ({ city, category, point, points, audience, priceWord }) => [
+      `如果你在${city}找${priceWord}的${category}，这篇就按“吃饱、好点、不容易踩雷”来写。`,
+      `我会优先把${point}讲清楚：份量是不是够、套餐怎么点、哪些菜适合${audience.join("、") || "日常吃饭"}。`,
+      `亮点拆开看：${sentenceList(points, ["出餐快", "价格透明", "主食和小吃搭配稳"])}。不建议只写“便宜”，要写清楚便宜在哪里。`,
+      "结尾互动：你们更想看人均 30、50 还是 80 的版本？我按评论继续整理。"
+    ],
+    tags: ["#高性价比美食", "#人均消费", "#打工人午餐", "#省钱吃饭"],
+    photo: ({ category }) => ["首图拍完整套餐或桌面全景，体现份量。", "补一张菜单/小票/价格牌，增强信任。", `拍${category}入口质感，避免只拍包装。`],
+    cover: ({ city, priceWord }) => `${city}${priceWord}吃饭`
+  },
+  {
+    id: "realVisit",
+    name: "真实探店体验",
+    match: /(探店|真实|体验|打卡|环境|服务|排队|第一次|朋友|聚餐)/,
+    titlePattern: ({ city, category, point }) => `${city}探店｜这家${category}${point}是真的明显`,
+    body: ({ category, point, points, audience, address }) => [
+      `这篇按真实探店来写，不写空泛夸奖，直接记录到店后的几个感受。`,
+      `到店场景：${address}，适合${audience.join("、") || "朋友小聚"}。第一眼先看环境和出餐节奏，再看${category}本身是否稳定。`,
+      `我会重点写三件事：${sentenceList(points, [point, "服务动线", "真实份量"])}。如果有排队或等位，也要如实写等待时间。`,
+      "最后用一句真实总结收尾：适合谁来、什么时间来、第一次点什么，不要编造不存在的体验。"
+    ],
+    tags: ["#真实探店", "#美食探店", "#打卡餐厅", "#用餐体验"],
+    photo: ({ address }) => [`首图拍到店第一视角，能看出${address}。`, "拍环境、菜单、上菜顺序和吃到一半的真实状态。", "保留一张桌面全景，增强“真的来过”的感觉。"],
+    cover: ({ category }) => `${category}真实探店`
+  },
+  {
+    id: "officeMeal",
+    name: "上班族工作餐",
+    match: /(上班|打工人|午餐|工作餐|写字楼|快餐|出餐快|外卖|附近)/,
+    titlePattern: ({ city, category }) => `${city}打工人午餐｜这家${category}适合工作日`,
+    body: ({ city, category, point, points, audience, address }) => [
+      `${city}工作日吃饭，最怕慢、贵、吃完犯困。所以这篇按${audience[0] || "上班族"}的午餐需求来写。`,
+      `这家${category}在${address}，核心卖点是${point}。如果午休时间短，要优先写出餐速度、动线和是否方便打包。`,
+      `内容结构：第一段写“为什么适合工作日”，第二段写点单建议，第三段写${sentenceList(points, ["份量", "价格", "口味负担"])}。`,
+      "结尾可以问：你们午餐更在意出餐快、吃得饱，还是下午不困？"
+    ],
+    tags: ["#打工人午餐", "#工作餐", "#写字楼美食", "#午餐吃什么"],
+    photo: () => ["首图拍一人份套餐，桌面干净，突出工作餐效率。", "拍打包、取餐口或出餐动线。", "拍吃完后的空盘/剩余状态，说明份量是否真实。"],
+    cover: ({ city }) => `${city}打工人午餐`
+  },
+  {
+    id: "nightSnack",
+    name: "夜宵氛围",
+    match: /(夜宵|晚餐|烧烤|烤肉|火锅|啤酒|下班|深夜|朋友|宵夜)/,
+    titlePattern: ({ city, category, point }) => `${city}夜宵局｜${point}的${category}太适合下班后`,
+    body: ({ city, category, point, points, audience, address }) => [
+      `${city}夜宵内容要先写氛围，再写味道。这家${category}适合${audience.join("、") || "下班后朋友局"}，位置在${address}。`,
+      `开头直接抛场景：忙完一天想吃点热的/重口的/能聊天的，${point}就是这篇的主线。`,
+      `正文用“环境灯光、上菜节奏、必点组合、适合几个人”四段写，卖点落到：${sentenceList(points, [point, "热乎", "适合聊天"])}。`,
+      "结尾问一句：夜宵你们更爱火锅、烧烤还是粉面？"
+    ],
+    tags: ["#夜宵吃什么", "#下班吃什么", "#朋友聚餐", "#城市夜生活"],
+    photo: () => ["首图用暖光，拍热气、烟火感和桌面氛围。", "拍夹菜、倒汤、烤制等动态瞬间。", "补门头夜景，证明夜宵营业氛围。"],
+    cover: ({ city, category }) => `${city}夜宵${category}`
+  },
+  {
+    id: "dateGathering",
+    name: "约会聚餐",
+    match: /(约会|情侣|朋友|聚餐|生日|闺蜜|环境|仪式感|拍照|出片)/,
+    titlePattern: ({ city, category }) => `${city}聚餐约会｜这家${category}环境和菜都稳`,
+    body: ({ category, point, points, audience, address }) => [
+      `这篇适合写给准备约会或朋友聚餐的人，重点不是“好吃”两个字，而是能不能坐得舒服、点得稳、拍得好看。`,
+      `地点在${address}，${category}的主要卖点是${point}。适合${audience.join("、") || "朋友聚餐、情侣约会"}。`,
+      `推荐从环境、桌距、招牌菜、拍照角度四个部分写。菜品亮点可以放：${sentenceList(points, [point, "摆盘好看", "多人分享方便"])}。`,
+      "结尾给明确建议：几个人来、预算大概怎么控、第一次点哪几个菜。"
+    ],
+    tags: ["#约会餐厅", "#朋友聚餐", "#出片餐厅", "#生日聚餐"],
+    photo: () => ["首图拍桌面+环境，留出文字区。", "拍两人或多人分享视角，不要只拍单盘菜。", "补一张门店角落/灯光/座位，突出适合拍照。"],
+    cover: ({ category }) => `适合聚餐的${category}`
+  },
+  {
+    id: "familyKids",
+    name: "亲子家庭",
+    match: /(亲子|带娃|家庭|老人|孩子|周末|不辣|停车|包间|儿童)/,
+    titlePattern: ({ city, category }) => `${city}带娃吃饭｜这家${category}对家庭挺友好`,
+    body: ({ category, point, points, audience, address }) => [
+      `亲子家庭内容要写“省心”，不要只写口味。这家${category}在${address}，适合${audience.join("、") || "带娃家庭、周末聚餐"}。`,
+      `重点信息：有没有不辣/清淡选择、座位是否舒服、上菜是否快、停车或动线是否方便。`,
+      `卖点可以这样落：${sentenceList(points, [point, "选择多", "孩子老人都能点"])}。`,
+      "结尾提醒：高峰期是否建议提前到、哪些菜更适合孩子、是否需要避开排队。"
+    ],
+    tags: ["#亲子餐厅", "#带娃吃饭", "#周末去哪吃", "#家庭聚餐"],
+    photo: () => ["首图拍桌面全景，体现家庭可共享。", "拍清淡/不辣/儿童友好选项。", "拍座位、通道、停车或包间信息，帮助家长决策。"],
+    cover: ({ city }) => `${city}带娃吃饭`
+  },
+  {
+    id: "healthyLight",
+    name: "健康轻负担",
+    match: /(健康|低脂|低糖|轻食|清爽|不腻|真材实料|新鲜|配料|减脂|养生)/,
+    titlePattern: ({ city, category, point }) => `${city}轻负担吃饭｜${point}的${category}`,
+    body: ({ category, point, points, audience }) => [
+      `轻负担内容不能写功效，要写“吃起来的负担感”和“配料是否清楚”。这篇围绕${category}的${point}展开。`,
+      `适合${audience.join("、") || "想吃清爽一点的人"}，重点讲配料、油感、甜度/辣度、份量和饱腹感。`,
+      `正文结构：先说为什么想吃轻一点，再写真实口感，最后写适合/不适合谁。卖点：${sentenceList(points, [point, "清爽不腻", "配料看得见"])}。`,
+      "结尾避免“减肥必吃”等夸张承诺，改成“想吃清爽一点可以参考”。"
+    ],
+    tags: ["#轻负担美食", "#真材实料", "#清爽不腻", "#健康吃饭"],
+    photo: () => ["首图拍食材和颜色，避免重滤镜。", "拍配料、汤底、称重或菜单标识。", "用自然光，画面干净，突出清爽。"],
+    cover: ({ category }) => `轻负担${category}`
+  },
+  {
+    id: "newProduct",
+    name: "新品听劝互动",
+    match: /(新品|上新|听劝|评论|投票|隐藏|菜单|试吃|限定|联名)/,
+    titlePattern: ({ category, point }) => `听劝试了${category}新品，${point}这一点挺明显`,
+    body: ({ category, point, points, audience }) => [
+      `这篇按互动型新品来写，开头要说明：为什么试、谁推荐、想验证什么。`,
+      `新品是${category}方向，核心感受先落到${point}。适合${audience.join("、") || "喜欢尝鲜的人"}。`,
+      `正文不要只夸，按“第一口感受、适合口味、价格份量、还想怎么改”写。可展开：${sentenceList(points, [point, "新鲜感", "是否值得复点"])}。`,
+      "结尾设置投票：下次想看隐藏吃法、价格明细还是老板改菜单？"
+    ],
+    tags: ["#听劝", "#新品试吃", "#隐藏菜单", "#评论区告诉我"],
+    photo: () => ["首图拍新品最有辨识度的细节。", "拍试吃前后对比，留一个可投票的问题。", "拍菜单或新品标识，避免看不出是新品。"],
+    cover: ({ category }) => `听劝试${category}`
+  },
+  {
+    id: "avoidPit",
+    name: "避坑对比测评",
+    match: /(避坑|踩雷|测评|对比|不推荐|推荐|真实|价格|份量|怎么点)/,
+    titlePattern: ({ city, category }) => `${city}${category}怎么点不踩雷？真实测完这样选`,
+    body: ({ category, point, points, address }) => [
+      `避坑类内容要克制，写事实，不做攻击。这篇围绕${address}这家${category}的点单选择来写。`,
+      `先讲结论：什么值得点、什么看个人口味、什么不建议第一次点。核心判断来自${point}。`,
+      `对比维度：价格、份量、出餐、口味稳定、适合人数。已知卖点：${sentenceList(points, [point, "份量清楚", "点单风险低"])}。`,
+      "结尾写清楚“我的口味仅供参考”，并邀请大家补充真实点单经验。"
+    ],
+    tags: ["#避坑指南", "#真实测评", "#点单攻略", "#不踩雷"],
+    photo: () => ["首图拍多道菜对比，标出推荐顺序。", "拍份量参照物和菜单价格。", "拍不夸张的真实状态，不用过度美化。"],
+    cover: ({ category }) => `${category}点单避坑`
+  }
+];
+
+recalculate();
+
 function renderXiaohongshu() {
   const category = text("xhsCategory") || "招牌菜";
   const city = text("xhsCity") || "本地";
@@ -1343,27 +1648,39 @@ function renderXiaohongshu() {
   const audience = splitList(text("xhsAudience"));
   const style = $("xhsStyle").value;
   const address = text("xhsAddress") || "门店附近";
+  const template = chooseXhsTemplate({ category, city, keywords, points, audience, style, address });
   const hotspots = xhsHotspotsFor({ category, city, keywords, points, audience, style });
   const primaryHotspot = hotspots[0];
   const keywordLine = keywords.length ? keywords.join("、") : `${city}${category}`;
+  const point = points[0] || primaryHotspot.phrase || "出品稳定";
+  const priceWord = keywords.find((item) => /(人均|价格|便宜|划算|性价比|套餐|预算)/.test(item)) || "高性价比";
+  const templateData = {
+    category,
+    city,
+    keywords,
+    keyword: keywords[0] || primaryHotspot.searchHook || category,
+    keywordLine,
+    points,
+    point,
+    audience,
+    style,
+    address,
+    hotspot: primaryHotspot,
+    priceWord
+  };
   const titles = [
+    template.titlePattern(templateData),
     `${city}${category}｜${primaryHotspot.titleHook}`,
-    `${keywordLine}怎么选？这家先记到清单里`,
-    `${audience[0] || "附近打工人"}可以收藏的${category}小店`,
-    `${style}｜${points[0] || primaryHotspot.phrase}的${category}`,
-    `${city}吃饭灵感：${primaryHotspot.searchHook}`
+    `${keywordLine}怎么选？${template.name}版先记好`,
+    `${audience[0] || "附近打工人"}会关心的${category}真实信息`,
+    `${style}｜${point}的${category}，适合${audience[0] || "日常吃饭"}`
   ];
-  const body = [
-    `最近做${city}${category}种草内容时，可以把关键词放在「${keywordLine}」这一组搜索场景里，而不是只写一句泛泛的好吃。`,
-    `这篇按「${primaryHotspot.name}」来写：${primaryHotspot.bodyAngle}`,
-    `适合${audience.join("、") || "日常吃饭"}参考。真实卖点可以落到：${points.join("、") || "出品稳定、价格清楚、吃起来舒服"}。`,
-    `如果你正在${address}找吃的，可以把它当成${primaryHotspot.sceneUse}。第一次来建议先点招牌款，再按口味加小吃或饮品。`,
-    `互动可以这样收尾：你们更想看「价格明细」「真实份量」还是「避雷点」？我下次按评论区继续补。`
-  ].join("\n\n");
+  const body = template.body(templateData).join("\n\n");
   const tags = uniqueList([
     `#${city}美食`,
     `#${category}`,
     ...keywords.map((item) => `#${item.replace(/\s+/g, "")}`),
+    ...template.tags,
     ...hotspots.flatMap((item) => item.tags),
     "#餐饮种草",
     "#今天吃什么",
@@ -1373,17 +1690,55 @@ function renderXiaohongshu() {
   ]).slice(0, 14);
 
   $("xhsHotspots").innerHTML = [
+    `<p><strong>当前模板：</strong>${safeText(template.name)}。${safeText(templateGuide(template.id))}</p>`,
+    `<p><strong>10 套备选：</strong>${xhsTemplateLibrary.map((item) => item.id === template.id ? `【${item.name}】` : item.name).join(" / ")}</p>`,
     ...hotspots.map((item) => `<p><strong>${safeText(item.name)}：</strong>${safeText(item.summary)}</p>`),
     `<p><a href="${xhsSearchUrl(keywordLine)}" target="_blank" rel="noopener">打开公开内容搜索：${safeText(keywordLine)}</a> <small>用于人工复核公开热词，不抓取或照搬平台原文。</small></p>`
   ].join("");
-  $("xhsTitles").innerHTML = titles.map((item) => `<span class="chip">${item}</span>`).join("");
+  $("xhsTitles").innerHTML = uniqueList(titles).map((item) => `<span class="chip">${safeText(item)}</span>`).join("");
   $("xhsBody").value = body;
   $("xhsTags").innerHTML = tags.map((item) => `<span class="chip">${safeText(item)}</span>`).join("");
+  renderXhsPhotoAdvice({ template, templateData, primaryHotspot });
+}
+
+function chooseXhsTemplate(data) {
+  const selected = $("xhsTemplate")?.value || "auto";
+  if (selected !== "auto") return xhsTemplateLibrary.find((item) => item.id === selected) || xhsTemplateLibrary[0];
+  const combined = [data.category, data.city, ...data.keywords, ...data.points, ...data.audience, data.style, data.address].join(" ");
+  return xhsTemplateLibrary.find((item) => item.match.test(combined)) || xhsTemplateLibrary[2];
+}
+
+function templateGuide(id) {
+  const guides = {
+    localGuide: "适合搜索流量，先把城市、商圈、品类和决策问题讲清楚。",
+    valueList: "适合套餐、人均、午餐和打工人场景，重点写价格和份量证据。",
+    realVisit: "适合探店记录，按到店顺序写真实体验。",
+    officeMeal: "适合写字楼、午餐和外卖高频消费，重点看效率。",
+    nightSnack: "适合夜宵、烧烤、火锅和晚间聚会，重点写氛围。",
+    dateGathering: "适合约会、生日、朋友聚餐，重点写环境和组合。",
+    familyKids: "适合亲子家庭，重点写省心、不辣、停车和座位。",
+    healthyLight: "适合轻食、茶饮、低负担内容，避免功效化承诺。",
+    newProduct: "适合新品、听劝、投票互动，结尾要留问题。",
+    avoidPit: "适合测评和点单攻略，写事实，不攻击。"
+  };
+  return guides[id] || guides.realVisit;
+}
+
+function renderXhsPhotoAdvice({ template, templateData, primaryHotspot }) {
+  const photoLines = template.photo(templateData);
+  const coverLine = template.cover(templateData);
+  const keywordLine = templateData.keywordLine;
   $("xhsVisual").innerHTML = [
-    `<p>封面文案：${safeText(primaryHotspot.coverLine.replace("{city}", city).replace("{category}", category))}</p>`,
-    `<p>拍摄建议：${safeText(primaryHotspot.photoBrief)} 门头、产品近景、出餐过程、顾客用餐场景和菜单价格至少覆盖 3 类。</p>`,
-    "<p>热点融合边界：可以借用公开热点方向和搜索关键词，不复制他人标题正文，不编造体验。</p>"
+    `<p><strong>首图文字：</strong>${safeText(coverLine)}。文字不要超过 12 个字，优先放地域词、品类和场景。</p>`,
+    `<p><strong>拍摄主线：</strong>${safeText(primaryHotspot.photoBrief)} 当前模板要补充：${safeText(photoLines[0])}</p>`,
+    `<p><strong>必拍镜头：</strong>${photoLines.map(safeText).join("；")}</p>`,
+    `<p><strong>构图顺序：</strong>1 张首图抓点击，2-3 张证明${safeText(templateData.point)}，1 张菜单/价格/地址，1 张真实用餐状态。</p>`,
+    `<p><strong>搜索配合：</strong>图片角标和正文前 3 行都要出现「${safeText(keywordLine)}」里的核心词，但不要复制他人标题正文。</p>`
   ].join("");
+}
+
+function sentenceList(items, fallback) {
+  return uniqueList((items && items.length ? items : fallback).filter(Boolean)).slice(0, 4).join("、");
 }
 
 function xhsHotspotsFor({ category, city, keywords, points, audience, style }) {

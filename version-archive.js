@@ -3,20 +3,37 @@
 
   function fallbackHistory() {
     return {
-      currentVersion: "0.7.4",
-      updatedAt: "2026-06-22",
+      currentVersion: "0.7.7",
+      updatedAt: "2026-06-23",
       iterationRule: "每次功能更新都追加版本记录，保留上一版本基线、核心变化、验证结果和风险边界。",
       versions: [
         {
-          version: "0.7.4",
-          date: "2026-06-22",
-          baseline: "0.7.3",
-          title: "门店选址评估工具",
-          changes: ["新增门店选址评估工具。", "新增纯函数计算模块与 JSON Schema。", "新增选址评估 API 契约。"],
+          version: "0.7.7",
+          date: "2026-06-23",
+          baseline: "0.7.6",
+          title: "门店任务提醒工具",
+          changes: ["新增离线门店任务提醒工具。", "任务数据保存到浏览器 IndexedDB。", "支持周期提醒、逾期提醒和餐饮任务模板库。"],
           verification: ["版本档案读取失败时，不影响工具主体使用。"]
         }
       ]
     };
+  }
+
+  function publicChangeText(change) {
+    return String(change)
+      .replace(/JSON Schema/g, "数据结构")
+      .replace(/api\/\*\.js/gi, "服务文件")
+      .replace(/api\/[a-z0-9-]+\.js/gi, "服务文件")
+      .replace(/schemas\/[a-z0-9-]+\.schema\.json/gi, "字段配置")
+      .replace(/schema\.json/gi, "字段配置")
+      .replace(/JSON 校验/g, "格式校验")
+      .replace(/JSON/g, "数据")
+      .replace(/封面图生成能力/g, "封面拍摄指导能力")
+      .replace(/POST \/api\/[a-z0-9-]+/gi, "服务端测算")
+      .replace(/POST \/[a-z0-9-]+/gi, "服务端测算")
+      .replace(/API 契约/g, "复用能力")
+      .replace(/API 调用/g, "多端复用")
+      .replace(/API/g, "服务能力");
   }
 
   function injectStyles() {
@@ -60,8 +77,8 @@
           <article class="version-item">
             <h3>${safeText(item.version)} · ${safeText(item.title)}</h3>
             <p>日期：${safeText(item.date)}；对比：${safeText(item.baseline || "-")}</p>
-            <ul>${(item.changes || []).slice(0, 3).map((change) => `<li>${safeText(change)}</li>`).join("")}</ul>
-            <p>验证：${safeText((item.verification || []).join("；") || "待补充")}</p>
+            <ul>${(item.changes || []).slice(0, 3).map((change) => `<li>${safeText(publicChangeText(change))}</li>`).join("")}</ul>
+            <p>验证：${safeText(publicChangeText((item.verification || []).join("；") || "待补充"))}</p>
           </article>
         `).join("")}
       </div>

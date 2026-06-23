@@ -491,44 +491,36 @@
     }, true);
   }
 
-  let xhsPatchImage = null;
-  let xhsPatchFilename = "";
-
   function ensureXhsImageTool() {
     const visual = get("xhsVisual");
-    if (!visual || get("generateXhsImageBtn")) return;
+    if (!visual || get("xhsPhotoGuideTool")) return;
     const section = document.createElement("div");
     section.className = "xhs-cover-tool";
+    section.id = "xhsPhotoGuideTool";
     section.innerHTML = `
       <div class="section-title">
-        <h3>图片生成工具</h3>
-        <span id="xhsImageStatus">未上传产品图时，会自动生成简易海报图。</span>
+        <h3>图片拍摄意见指导</h3>
+        <span id="xhsImageStatus">按当前模板给店员一套可执行拍摄清单。</span>
       </div>
       <div class="form-grid compact-grid">
-        <label>产品实拍图<input id="xhsProductImage" type="file" accept="image/*"></label>
-        <label>封面版式<select id="xhsImageLayout"><option>产品大图</option><option>文字海报</option><option>门店场景</option></select></label>
+        <label>拍摄场景<select id="xhsImageLayout"><option>产品大图</option><option>门店场景</option><option>菜单价格</option><option>顾客视角</option></select></label>
         <label>画面色调<select id="xhsImageTone"><option>暖食欲</option><option>清爽干净</option><option>夜宵氛围</option><option>高质感</option></select></label>
-        <label>滤镜<select id="xhsImageFilter"><option>自然提亮</option><option>暖黄胶片</option><option>高对比鲜明</option><option>柔和奶油</option></select></label>
-        <button class="primary-button inline-button" type="button" id="generateXhsImageBtn">生成图片</button>
+        <label>镜头重点<select id="xhsImageFilter"><option>自然提亮</option><option>热气动态</option><option>份量对比</option><option>真实环境</option></select></label>
+        <button class="primary-button inline-button" type="button" id="refreshXhsPhotoGuideBtn">刷新指导</button>
       </div>
       <div class="xhs-cover-layout">
-        <canvas id="xhsCoverCanvas" width="1080" height="1440" aria-label="种草封面图预览"></canvas>
         <div class="xhs-image-actions">
-          <button class="ghost-button" type="button" id="downloadXhsCoverBtn">下载 PNG</button>
           <div class="advice-box xhs-cover-notes">
-            <p>竖版 3:4 图片，适合种草内容封面。上传产品图后会把实拍图、标题、卖点和标签合成一张图。</p>
-            <p>没有产品图时，工具会生成一张简易产品海报，适合先做选题测试或发给店员照着拍。</p>
+            <p>先拍真实素材，再做排版。至少准备首图、产品近景、菜单价格、门店环境和真实用餐状态 5 类照片。</p>
+            <p>不要用过度滤镜替代真实信息；拍摄目标是让顾客一眼看懂位置、品类、份量、价格和适合场景。</p>
           </div>
         </div>
       </div>
     `;
     visual.insertAdjacentElement("afterend", section);
-    get("generateXhsImageBtn")?.addEventListener("click", generateXhsImage);
-    get("downloadXhsCoverBtn")?.addEventListener("click", downloadXhsCover);
-    get("xhsProductImage")?.addEventListener("change", handleXhsImageUpload);
+    get("refreshXhsPhotoGuideBtn")?.addEventListener("click", generateXhsImage);
     ["xhsImageLayout", "xhsImageTone", "xhsImageFilter"].forEach((id) => get(id)?.addEventListener("change", generateXhsImage));
     patchXhsAdvice();
-    generateXhsImage();
   }
 
   function injectXhsStyles() {
@@ -537,13 +529,11 @@
     style.id = "xhs-image-patch-style";
     style.textContent = `
       .xhs-cover-tool { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 10px; }
-      .xhs-cover-layout { display: grid; grid-template-columns: minmax(260px, 360px) minmax(220px, 1fr); gap: 16px; align-items: start; margin-top: 16px; }
-      #xhsCoverCanvas { width: 100%; max-width: 360px; aspect-ratio: 3 / 4; border: 1px solid var(--line); border-radius: 8px; background: #fff7ee; box-shadow: 0 12px 28px rgba(30, 42, 34, 0.11); }
+      .xhs-cover-layout { display: grid; gap: 16px; align-items: start; margin-top: 16px; }
       .xhs-image-actions { display: grid; gap: 12px; align-content: start; }
       .xhs-cover-notes { margin-top: 0; }
       #xhsImageStatus { color: var(--muted); font-size: 12px; font-weight: 800; }
-      #xhsProductImage { min-height: 41px; padding: 8px 10px; }
-      @media (max-width: 720px) { .xhs-cover-layout { grid-template-columns: 1fr; } #xhsCoverCanvas { max-width: 100%; } }
+      @media (max-width: 720px) { .xhs-cover-layout { grid-template-columns: 1fr; } }
     `;
     document.head.appendChild(style);
   }
@@ -555,8 +545,12 @@
     const city = get("xhsCity")?.value.trim() || "本地";
     const point = splitList(get("xhsSellingPoints")?.value || "")[0] || "热乎现做";
     const keywords = splitList(get("xhsKeywords")?.value || "");
+    const layout = get("xhsImageLayout")?.value || "产品大图";
+    const tone = get("xhsImageTone")?.value || "暖食欲";
+    const focus = get("xhsImageFilter")?.value || "自然提亮";
+    const templateName = get("xhsTemplate")?.selectedOptions?.[0]?.textContent || "自动匹配";
     const hotspotText = get("xhsHotspots")?.innerText || "";
-    const hotspotName = (hotspotText.match(/^(地域美食|搜索攻略|生活记录|听劝互动|健康轻负担|周边赠品)/m) || [])[1] || "生活记录";
+    const hotspotName = (hotspotText.match(/(地域美食|搜索攻略|生活记录|听劝互动|健康轻负担|周边赠品)/) || [])[1] || "生活记录";
     const hotspotBriefs = {
       "地域美食": "先拍门头和周边街景，再拍招牌菜，把商圈、路线和附近场景交代清楚。",
       "搜索攻略": "补菜单价格、份量对比和桌面全景，让读者能快速判断值不值得去。",
@@ -568,9 +562,9 @@
     const keywordLine = keywords.length ? keywords.join("、") : `${city}${category}`;
     visual.innerHTML = [
       `<p><strong>封面文案：</strong>${city}${category}，${point}才舒服。</p>`,
-      `<p><strong>热点方向：</strong>${hotspotName}。围绕「${keywordLine}」拍，不照搬他人标题正文。</p>`,
+      `<p><strong>模板与热点：</strong>${templateName} / ${hotspotName}。围绕「${keywordLine}」拍，不照搬他人标题正文。</p>`,
       `<p><strong>拍摄建议：</strong>${hotspotBriefs[hotspotName]} 门头、产品近景、出餐过程、顾客用餐场景和菜单价格至少覆盖 3 类。</p>`,
-      `<p><strong>画面重点：</strong>把「${point}」拍成一眼能懂的证据，例如锅底、份量、菜单价格、食材细节或真实用餐状态。</p>`,
+      `<p><strong>本次拍法：</strong>${layout} + ${tone} + ${focus}。把「${point}」拍成一眼能懂的证据，例如锅底、份量、菜单价格、食材细节或真实用餐状态。</p>`,
       `<p><strong>热点融合边界：</strong>可以借用公开热点方向和搜索关键词，不复制他人标题正文，不编造体验。</p>`
     ].join("");
   }
@@ -610,12 +604,9 @@
   }
 
   function generateXhsImage() {
-    const canvas = get("xhsCoverCanvas");
-    if (!canvas) return;
     patchXhsAdvice();
-    drawXhsCover(canvas, getXhsData());
     const status = get("xhsImageStatus");
-    if (status) status.textContent = xhsPatchImage ? `已使用产品图：${xhsPatchFilename}` : "已生成无图简易海报。";
+    if (status) status.textContent = "已按当前模板和拍摄设置刷新指导。";
   }
 
   function drawXhsCover(canvas, data) {
@@ -797,16 +788,7 @@
   }
 
   function downloadXhsCover() {
-    const canvas = get("xhsCoverCanvas");
-    if (!canvas) return;
-    const city = get("xhsCity")?.value.trim() || "本地";
-    const category = get("xhsCategory")?.value.trim() || "种草封面";
-    const link = document.createElement("a");
-    link.href = canvas.toDataURL("image/png");
-    link.download = `${city}-${category}-封面图.png`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+    patchXhsAdvice();
   }
 
   function bind() {

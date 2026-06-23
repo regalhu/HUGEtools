@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>胡哥餐饮工具箱</title>
     <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="./styles.css?v=site-selection-1">
+    <link rel="stylesheet" href="./styles.css?v=xhs-template-1">
   </head>
   <body>
     <main class="app-shell">
@@ -29,9 +29,11 @@
           <button class="tool-tab" type="button" data-tool="yield">应产率与产能计算工具</button>
           <button class="tool-tab" type="button" data-tool="health">食材成本与经营健康度</button>
           <button class="tool-tab" type="button" data-tool="site">门店选址评估工具</button>
+          <button class="tool-tab" type="button" data-tool="recruitment">餐饮招募文案生成</button>
           <button class="tool-tab" type="button" data-tool="deal">团购套餐利润测算器</button>
           <button class="tool-tab" type="button" data-tool="xiaohongshu">种草类生成工具</button>
           <button class="tool-tab" type="button" data-tool="dianping">评价类生成工具</button>
+          <button class="tool-tab" type="button" data-tool="task-reminder">门店任务提醒工具</button>
           <button class="tool-tab" type="button" data-tool="schedule">单店排班工具</button>
         </nav>
 
@@ -231,7 +233,6 @@
               <p class="eyebrow">原料应产与瓶颈产能</p>
               <h2>餐饮经营决策辅助系统</h2>
             </div>
-            <button class="ghost-button" type="button" id="copyYieldPayloadBtn">复制 API 请求</button>
           </div>
           <div class="mode-switch" aria-label="决策测算模式">
             <button class="mode-button active" type="button" data-yield-mode="quick">快速模式</button>
@@ -318,14 +319,6 @@
             <div class="advice-box" id="yieldAdvice"></div>
           </section>
 
-          <section class="margin-section">
-            <div class="section-title">
-              <h3>JSON Schema 与 API 预留</h3>
-              <span>同一份 payload 可用于 POST /calculate-yield 或 POST /api/calculate-yield</span>
-            </div>
-            <textarea id="yieldPayloadPreview" rows="12" spellcheck="false"></textarea>
-            <div class="advice-box compact-advice" id="yieldApiNote"></div>
-          </section>
         </section>
 
         <section class="tool-panel" id="tool-health">
@@ -391,7 +384,6 @@
             </div>
             <div class="table-actions">
               <button class="ghost-button" type="button" id="loadSiteSampleBtn">载入示例</button>
-              <button class="ghost-button" type="button" id="copySitePayloadBtn">复制 API 请求</button>
             </div>
           </div>
 
@@ -483,14 +475,87 @@
           <div class="result-grid" id="siteResult"></div>
           <div class="structure-bars" id="siteScoreBars"></div>
           <div class="advice-box" id="siteRiskAdvice"></div>
+        </section>
+
+        <section class="tool-panel" id="tool-recruitment">
+          <div class="tool-heading">
+            <div>
+              <p class="eyebrow">门店招人和岗位发布</p>
+              <h2>餐饮公司各职级招募文案生成</h2>
+            </div>
+            <button class="ghost-button" type="button" id="copyRecruitmentBtn">复制招募文案</button>
+          </div>
 
           <section class="margin-section">
             <div class="section-title">
-              <h3>JSON Schema 与 API 预留</h3>
-              <span>同一份 payload 可用于 POST /calculate-site-selection 或 POST /api/calculate-site-selection</span>
+              <h3>招募基础</h3>
+              <span>按餐饮类目、职级和门店条件自动组织成可发布信息</span>
             </div>
-            <textarea id="sitePayloadPreview" rows="12" spellcheck="false"></textarea>
-            <div class="advice-box compact-advice" id="siteApiNote"></div>
+            <div class="form-grid">
+              <label>公司/门店名称<input id="recruitCompany" value="胡哥餐饮"></label>
+              <label>餐饮类目
+                <select id="recruitCategory">
+                  <option value="hotpot">火锅/重餐饮</option>
+                  <option value="fast_food">快餐简餐</option>
+                  <option value="chinese">中餐正餐</option>
+                  <option value="bbq">烧烤烤肉</option>
+                  <option value="drink">茶饮咖啡</option>
+                  <option value="bakery">烘焙甜品</option>
+                  <option value="noodle">粉面米饭</option>
+                  <option value="group_meal">团餐食堂</option>
+                  <option value="snack">小吃档口</option>
+                </select>
+              </label>
+              <label>招聘职级
+                <select id="recruitRank">
+                  <option value="server">服务员/传菜/迎宾</option>
+                  <option value="cashier">收银/点单</option>
+                  <option value="kitchen">后厨/切配/洗消</option>
+                  <option value="cook">厨师/炒锅/出品</option>
+                  <option value="chef_leader">厨师长/后厨主管</option>
+                  <option value="shift_leader">领班/班组长</option>
+                  <option value="store_manager">店长/储备店长</option>
+                  <option value="supervisor">运营督导</option>
+                  <option value="marketing">市场/团购运营</option>
+                  <option value="part_time">兼职/小时工</option>
+                </select>
+              </label>
+              <label>文案形式
+                <select id="recruitFormat">
+                  <option value="poster">门店海报</option>
+                  <option value="moments">朋友圈/社群</option>
+                  <option value="platform">招聘平台</option>
+                </select>
+              </label>
+              <label>城市/商圈<input id="recruitLocation" value="重庆观音桥"></label>
+              <label>招聘人数<input id="recruitCount" value="2人"></label>
+              <label>薪资范围<input id="recruitSalary" value="4500-6500元/月"></label>
+              <label>工作时间<input id="recruitSchedule" value="早晚班轮班，月休4天"></label>
+              <label>福利待遇<input id="recruitBenefits" value="包吃、绩效奖金、节日福利、晋升培训"></label>
+              <label>门店亮点<input id="recruitHighlights" value="出餐标准清楚、团队稳定、老板直接沟通"></label>
+              <label>联系人<input id="recruitContact" value="胡哥"></label>
+              <label>联系电话<input id="recruitPhone" value="请填写手机号"></label>
+            </div>
+          </section>
+
+          <section class="margin-section">
+            <div class="section-title">
+              <h3>岗位信息</h3>
+              <span>职责、要求、福利和发布口吻会随类目与职级变化</span>
+            </div>
+            <div class="result-grid" id="recruitmentSummary"></div>
+            <div class="advice-box" id="recruitmentTips"></div>
+          </section>
+
+          <section class="margin-section">
+            <div class="section-title">
+              <h3>自动排版文案</h3>
+              <span>可直接用于门店海报、朋友圈、社群或招聘平台</span>
+            </div>
+            <div class="recruitment-output">
+              <article class="recruitment-card" id="recruitmentPreview"></article>
+              <textarea id="recruitmentDraft" rows="14"></textarea>
+            </div>
           </section>
         </section>
 
@@ -648,6 +713,21 @@
             <label>搜索关键词<input id="xhsKeywords" placeholder="例如：周末聚餐、附近美食、夜宵、亲子"></label>
             <label>卖点<input id="xhsSellingPoints"></label>
             <label>目标人群<input id="xhsAudience" value="上班族、女生、夜宵人群"></label>
+            <label>文案模板
+              <select id="xhsTemplate">
+                <option value="auto">自动匹配</option>
+                <option value="localGuide">地域搜索攻略</option>
+                <option value="valueList">高性价比清单</option>
+                <option value="realVisit">真实探店体验</option>
+                <option value="officeMeal">上班族工作餐</option>
+                <option value="nightSnack">夜宵氛围</option>
+                <option value="dateGathering">约会聚餐</option>
+                <option value="familyKids">亲子家庭</option>
+                <option value="healthyLight">健康轻负担</option>
+                <option value="newProduct">新品听劝互动</option>
+                <option value="avoidPit">避坑对比测评</option>
+              </select>
+            </label>
             <label>风格
               <select id="xhsStyle">
                 <option>种草</option>
@@ -659,7 +739,7 @@
             <label>门店地址<input id="xhsAddress" value="写字楼附近"></label>
           </div>
           <div class="content-output">
-            <h3>公开种草方向</h3>
+            <h3>10 套模板与公开种草方向</h3>
             <div class="advice-box" id="xhsHotspots"></div>
             <h3>种草标题</h3>
             <div class="chips" id="xhsTitles"></div>
@@ -667,7 +747,7 @@
             <textarea id="xhsBody" rows="8"></textarea>
             <h3>种草标签</h3>
             <div class="chips" id="xhsTags"></div>
-            <h3>封面文案与拍摄建议</h3>
+            <h3>图片拍摄意见指导</h3>
             <div class="advice-box" id="xhsVisual"></div>
           </div>
         </section>
@@ -715,6 +795,127 @@
           </div>
         </section>
 
+        <section class="tool-panel" id="tool-task-reminder">
+          <div class="tool-heading">
+            <div>
+              <p class="eyebrow">离线本地提醒</p>
+              <h2>门店任务提醒工具</h2>
+            </div>
+            <div class="task-filterbar">
+              <select id="taskRoleFilter" aria-label="按角色筛选">
+                <option value="all">全部角色</option>
+              </select>
+              <select id="taskViewFilter" aria-label="按状态查看">
+                <option value="all">全部任务</option>
+                <option value="today">今日</option>
+                <option value="overdue">逾期</option>
+                <option value="completed">已完成</option>
+                <option value="active">启用中</option>
+              </select>
+            </div>
+          </div>
+
+          <section class="risk-banner task-privacy-note">
+            离线本地版：不登录、不上传、不调用外部 API。任务数据保存在本浏览器 IndexedDB；localStorage 只保存角色和视图筛选等轻量设置。
+          </section>
+
+          <div class="result-grid" id="taskReminderSummary"></div>
+
+          <section class="margin-section">
+            <div class="section-title">
+              <h3>内置模板库</h3>
+              <span>覆盖开店、闭店、收货、盘点、考勤、对账、温度记录和平台检查</span>
+            </div>
+            <div class="form-grid compact-grid">
+              <label>任务模板
+                <select id="taskTemplateSelect">
+                  <option value="">选择内置模板</option>
+                </select>
+              </label>
+            </div>
+          </section>
+
+          <section class="margin-section">
+            <div class="section-title">
+              <h3 id="taskFormTitle">新增任务</h3>
+              <span>支持一次性、每天、每周、每月指定日期、每月最后一天和自定义间隔</span>
+            </div>
+            <form id="taskReminderForm">
+              <div class="form-grid">
+                <label>任务名称<input id="taskTitle" maxlength="80" required placeholder="例如：冰箱温度记录"></label>
+                <label>负责角色<input id="taskRole" value="店长" maxlength="40" required></label>
+                <label>提醒周期
+                  <select id="taskScheduleType">
+                    <option value="once">一次性</option>
+                    <option value="daily" selected>每天</option>
+                    <option value="weekly">每周指定星期</option>
+                    <option value="monthly_date">每月指定日期</option>
+                    <option value="monthly_last">每月最后一天</option>
+                    <option value="custom_interval">自定义间隔</option>
+                  </select>
+                </label>
+                <label>提醒时间<input id="taskTime" type="time" value="09:00" required></label>
+                <label data-schedule-field="once">提醒日期<input id="taskDate" type="date"></label>
+                <label data-schedule-field="monthly_date">每月日期<input id="taskMonthDay" type="number" min="1" max="31" step="1" value="1"></label>
+                <label data-schedule-field="custom_interval">间隔数<input id="taskIntervalValue" type="number" min="1" max="365" step="1" value="1"></label>
+                <label data-schedule-field="custom_interval">间隔单位
+                  <select id="taskIntervalUnit">
+                    <option value="hours">小时</option>
+                    <option value="days" selected>天</option>
+                    <option value="weeks">周</option>
+                    <option value="months">月</option>
+                  </select>
+                </label>
+                <label data-schedule-field="custom_interval">开始日期<input id="taskStartDate" type="date"></label>
+                <label class="checkbox-label"><input id="taskEnabled" type="checkbox" checked>启用任务</label>
+                <label class="wide-field">任务说明<textarea id="taskDescription" rows="3" maxlength="600" placeholder="写清检查内容、交接要求或完成标准"></textarea></label>
+              </div>
+
+              <div class="weekday-picker" data-schedule-field="weekly">
+                <label><input type="checkbox" value="1" data-task-weekday checked>周一</label>
+                <label><input type="checkbox" value="2" data-task-weekday>周二</label>
+                <label><input type="checkbox" value="3" data-task-weekday>周三</label>
+                <label><input type="checkbox" value="4" data-task-weekday>周四</label>
+                <label><input type="checkbox" value="5" data-task-weekday>周五</label>
+                <label><input type="checkbox" value="6" data-task-weekday>周六</label>
+                <label><input type="checkbox" value="7" data-task-weekday>周日</label>
+              </div>
+
+              <div class="task-form-actions">
+                <button class="primary-button" type="submit" id="taskSaveBtn">保存任务</button>
+                <button class="ghost-button" type="button" id="taskReminderResetBtn">清空表单</button>
+              </div>
+            </form>
+          </section>
+
+          <section class="margin-section">
+            <div class="section-title">
+              <h3>任务列表</h3>
+              <span>页面打开时会检查逾期任务，之后每 60 秒检查一次到期任务</span>
+            </div>
+            <div class="task-list" id="taskReminderList"></div>
+          </section>
+
+          <section class="margin-section">
+            <div class="section-title">
+              <h3>已完成记录</h3>
+              <span>保留最近完成记录，便于门店交接复盘</span>
+            </div>
+            <div class="advice-box" id="taskCompletedHistory"></div>
+          </section>
+
+          <div class="task-alert-modal" id="taskAlertModal" hidden>
+            <div class="task-alert-card" role="dialog" aria-modal="true" aria-labelledby="taskAlertTitle">
+              <h3 id="taskAlertTitle">任务提醒</h3>
+              <div id="taskAlertBody"></div>
+              <div class="task-form-actions">
+                <button class="primary-button" type="button" id="taskAlertCompleteBtn">全部标记完成</button>
+                <button class="ghost-button" type="button" id="taskAlertCloseBtn">稍后处理</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section class="tool-panel" id="tool-schedule">
           <div class="tool-heading">
             <div>
@@ -754,10 +955,14 @@
       </footer>
     </main>
 
-    <script src="./yield-calculator.js?v=site-selection-1"></script>
-    <script src="./site-selection-calculator.js?v=site-selection-1"></script>
-    <script src="./app.js?v=site-selection-1"></script>
-    <script src="./slider-fix.js?v=site-selection-1"></script>
-    <script src="./version-archive.js?v=0.7.4"></script>
+    <script src="./yield-calculator.js?v=task-reminder-1"></script>
+    <script src="./site-selection-calculator.js?v=task-reminder-1"></script>
+    <script src="./app.js?v=task-reminder-1"></script>
+    <script src="./slider-fix.js?v=task-reminder-1"></script>
+    <script src="./task-reminder-storage.js?v=task-reminder-1"></script>
+    <script src="./task-reminder-scheduler.js?v=task-reminder-1"></script>
+    <script src="./task-reminder-ui.js?v=task-reminder-1"></script>
+    <script src="./task-reminder.js?v=task-reminder-1"></script>
+    <script src="./version-archive.js?v=0.7.7"></script>
   </body>
 </html>
