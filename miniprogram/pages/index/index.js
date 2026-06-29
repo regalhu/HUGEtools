@@ -4,7 +4,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 Page({
   data: {
-    version: "0.5.0-miniapp",
+    version: "0.7.8-miniapp",
     tools: [
       { key: "margin", label: "毛利" },
       { key: "deal", label: "团购" },
