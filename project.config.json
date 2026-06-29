@@ -2,13 +2,14 @@
   "description": "HUGEtools restaurant toolbox mini program",
   "miniprogramRoot": "miniprogram/",
   "projectname": "HUGEtools-wechat-miniapp",
-  "appid": "touristappid",
+  "appid": "wx4eacf000d15e7372",
   "setting": {
     "urlCheck": false,
     "es6": true,
     "enhance": true,
     "postcss": true,
-    "minified": true
+    "minified": true,
+    "minifyWXML": true
   },
   "compileType": "miniprogram"
 }
