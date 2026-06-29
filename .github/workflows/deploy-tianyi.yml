@@ -52,4 +52,4 @@ jobs:
         shell: bash
         run: |
           curl -fsS http://113.249.104.188:18089/health
-          curl -fsS http://113.249.104.188:18089/data/version-history.json | python3 -c 'import json, sys; data = json.load(sys.stdin); print(f"currentVersion={data.get(\"currentVersion\")}"); assert data.get("currentVersion"), "missing currentVersion"'
+          curl -fsS http://113.249.104.188:18089/data/version-history.json | python3 -c 'import json, sys; data = json.load(sys.stdin); print("currentVersion=%s" % data.get("currentVersion")); assert data.get("currentVersion"), "missing currentVersion"'
