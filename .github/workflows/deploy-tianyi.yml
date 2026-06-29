@@ -7,6 +7,10 @@ on:
         description: Branch to deploy from GitHub on the Tianyi server
         required: true
         default: main
+        type: choice
+        options:
+          - main
+          - staging
 
 permissions:
   contents: read
@@ -48,10 +52,4 @@ jobs:
         shell: bash
         run: |
           curl -fsS http://113.249.104.188:18089/health
-          curl -fsS http://113.249.104.188:18089/data/version-history.json | python3 - <<'PY'
-          import json, sys
-          data = json.load(sys.stdin)
-          print(f"currentVersion={data.get('currentVersion')}")
-          if not data.get("currentVersion"):
-              raise SystemExit("missing currentVersion")
-          PY
+          curl -fsS http://113.249.104.188:18089/data/version-history.json | python3 -c 'import json, sys; data = json.load(sys.stdin); print(f"currentVersion={data.get(\"currentVersion\")}"); assert data.get("currentVersion"), "missing currentVersion"'
