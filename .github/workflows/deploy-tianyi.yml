@@ -1,0 +1,57 @@
+name: Deploy Tianyi Cloud
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch to deploy from GitHub on the Tianyi server
+        required: true
+        default: main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tianyi-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy production
+    runs-on: ubuntu-latest
+    environment: tianyi-production
+    steps:
+      - name: Checkout selected branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Configure SSH
+        shell: bash
+        run: |
+          test -n "${{ secrets.TIANYI_SSH_PRIVATE_KEY }}"
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "${{ secrets.TIANYI_SSH_PRIVATE_KEY }}" > ~/.ssh/tianyi_ed25519
+          chmod 600 ~/.ssh/tianyi_ed25519
+          ssh-keyscan -p 22 113.249.104.188 >> ~/.ssh/known_hosts
+
+      - name: Run server-side GitHub deploy
+        shell: bash
+        run: |
+          ssh -i ~/.ssh/tianyi_ed25519 \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            root@113.249.104.188 \
+            "APP_DIR=/www/hugetools BRANCH='${{ inputs.branch }}' REMOTE=origin PUBLIC_PORT=18089 APP_PORT=18088 DOMAIN=113.249.104.188 bash /root/deploy.sh"
+
+      - name: Verify public deployment
+        shell: bash
+        run: |
+          curl -fsS http://113.249.104.188:18089/health
+          curl -fsS http://113.249.104.188:18089/data/version-history.json | python3 - <<'PY'
+          import json, sys
+          data = json.load(sys.stdin)
+          print(f"currentVersion={data.get('currentVersion')}")
+          if not data.get("currentVersion"):
+              raise SystemExit("missing currentVersion")
+          PY
