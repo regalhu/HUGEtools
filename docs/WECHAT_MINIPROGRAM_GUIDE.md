@@ -20,7 +20,7 @@ miniprogram/
 1. 打开微信开发者工具。
 2. 选择“导入项目”。
 3. 项目目录选择本仓库根目录：`/Users/regal.hugmail.com/Documents/Codex/2026-06-02/github/HUGEtools`。
-4. AppID 可先使用测试号或游客模式；正式发布前再替换为真实小程序 AppID。
+4. AppID 使用真实小程序 AppID：`wx4eacf000d15e7372`。
 5. 导入后编译运行首页：`pages/index/index`。
 
 ## 已迁移工具
@@ -41,4 +41,4 @@ miniprogram/
 
 - 小程序版优先迁移 MVP 核心测算能力，网页高级成本卡中的原料库、BOM 明细和图片封面 canvas 生成尚未完整迁移。
 - 导出 CSV/Excel 能力在小程序端暂未实现，后续可改为复制结果、生成本地文件或接入云函数。
-- 当前 `project.config.json` 使用 `touristappid`，正式发布前需要替换为真实小程序 AppID。
+- 当前 `project.config.json` 已使用真实小程序 AppID：`wx4eacf000d15e7372`。
