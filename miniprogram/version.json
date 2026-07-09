@@ -1,27 +1,85 @@
 {
-  "webVersion": "0.7.9",
-  "miniProgramVersion": "0.7.9-miniapp.1",
+  "webVersion": "0.7.10",
+  "miniProgramVersion": "0.7.10-miniapp.1",
   "updatedAt": "2026-07-09",
   "miniprogramRoot": "miniprogram/",
-  "syncedToolCount": 13,
+  "syncedToolCount": 14,
   "unsyncedToolCount": 0,
   "tools": [
-    { "key": "margin", "name": "菜品毛利计算器", "status": "basic-functional" },
-    { "key": "loss", "name": "门店损耗记录工具", "status": "basic-functional" },
-    { "key": "yield", "name": "应产率与产能计算工具", "status": "basic-functional" },
-    { "key": "health", "name": "食材成本与经营健康度", "status": "basic-functional" },
-    { "key": "revenue", "name": "门店营业额联合分析", "status": "basic-functional" },
-    { "key": "site", "name": "门店选址评估工具", "status": "basic-functional" },
-    { "key": "recruitment", "name": "餐饮招募文案生成", "status": "basic-functional" },
-    { "key": "deal", "name": "团购套餐利润测算器", "status": "basic-functional" },
-    { "key": "xhs", "name": "种草类生成工具升级版", "status": "basic-functional" },
-    { "key": "dianping", "name": "评价类生成工具", "status": "basic-functional" },
-    { "key": "taskReminder", "name": "门店任务提醒工具", "status": "basic-functional-memory-only" },
-    { "key": "incentive", "name": "员工激励系统", "status": "basic-functional-memory-only" },
-    { "key": "schedule", "name": "单店排班工具", "status": "basic-functional" }
+    {
+      "key": "margin",
+      "name": "菜品毛利计算器",
+      "status": "basic-functional"
+    },
+    {
+      "key": "loss",
+      "name": "门店损耗记录工具",
+      "status": "basic-functional"
+    },
+    {
+      "key": "yield",
+      "name": "应产率与产能计算工具",
+      "status": "basic-functional"
+    },
+    {
+      "key": "health",
+      "name": "食材成本与经营健康度",
+      "status": "basic-functional"
+    },
+    {
+      "key": "revenue",
+      "name": "门店营业额联合分析",
+      "status": "basic-functional"
+    },
+    {
+      "key": "site",
+      "name": "门店选址评估工具",
+      "status": "basic-functional"
+    },
+    {
+      "key": "recruitment",
+      "name": "餐饮招募文案生成",
+      "status": "basic-functional"
+    },
+    {
+      "key": "deal",
+      "name": "团购套餐利润测算器",
+      "status": "basic-functional"
+    },
+    {
+      "key": "xhs",
+      "name": "种草类生成工具升级版",
+      "status": "basic-functional"
+    },
+    {
+      "key": "dianping",
+      "name": "评价类生成工具",
+      "status": "basic-functional"
+    },
+    {
+      "key": "taskReminder",
+      "name": "门店任务提醒工具",
+      "status": "basic-functional-memory-only"
+    },
+    {
+      "key": "incentive",
+      "name": "员工激励系统",
+      "status": "basic-functional-memory-only"
+    },
+    {
+      "key": "schedule",
+      "name": "单店排班工具",
+      "status": "basic-functional"
+    },
+    {
+      "key": "share",
+      "name": "分享二维码",
+      "status": "basic-functional-native-share-server-optional"
+    }
   ],
   "notes": [
     "2026-07-09 已同步 Web 端门店营业额联合分析基础能力。",
+    "2026-07-09 新增分享二维码工具：小程序端支持原生转发、复制路径、复制公网链接，并可在云服务器配置微信密钥后请求小程序码。",
     "小程序不使用 document、window、DOM 或 IndexedDB；新增工具采用 WXML、WXSS 和 Page JS 改写。",
     "任务提醒和员工激励第一版为页面内存版，可打开、输入、生成/计算基础结果；持久化和真正提醒调度后续再补。"
   ]

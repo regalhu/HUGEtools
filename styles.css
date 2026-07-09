@@ -177,6 +177,36 @@ textarea { resize: vertical; }
 .primary-button, .ghost-button { min-height: 40px; border: 1px solid transparent; border-radius: 8px; padding: 0 16px; font-weight: 800; }
 .primary-button { background: var(--ink); color: #fff; }
 .ghost-button { border-color: var(--line); background: #fff; color: var(--ink); }
+.wide-label { grid-column: span 2; }
+.share-grid { align-items: end; }
+.share-card {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 18px;
+  align-items: center;
+  margin-top: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfb;
+  padding: 16px;
+}
+.share-card strong {
+  display: block;
+  margin-bottom: 8px;
+}
+.share-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.share-qr {
+  width: 180px;
+  height: 180px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px;
+}
 .text-button {
   min-height: 32px;
   border: 1px solid var(--line);
@@ -591,6 +621,7 @@ th { color: var(--muted); font-size: 12px; }
   .tool-layout, .form-grid, .compact-grid, .result-grid, .revenue-analysis-grid { grid-template-columns: 1fr 1fr; }
   .tool-nav { position: static; grid-column: 1 / -1; }
   .incentive-record-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wide-label { grid-column: 1 / -1; }
 }
 
 @media (max-width: 720px) {
@@ -693,6 +724,15 @@ th { color: var(--muted); font-size: 12px; }
   .tool-layout, .form-grid, .compact-grid, .result-grid, .revenue-analysis-grid { grid-template-columns: 1fr; }
   .form-grid, .compact-grid, .ingredient-editor {
     gap: 10px;
+  }
+  .share-card {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+  .share-qr {
+    width: min(100%, 240px);
+    height: auto;
+    aspect-ratio: 1;
   }
   label {
     gap: 6px;

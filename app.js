@@ -5,6 +5,7 @@ const num = (id) => Number($(id).value) || 0;
 const text = (id) => $(id).value.trim();
 const splitList = (value) => value.split(/[,，\n]/).map((item) => item.trim()).filter(Boolean);
 const safeText = (value) => String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const defaultPublicShareUrl = "http://113.249.104.188:18089/";
 
 const lossRecords = [];
 let currentSchedule = [];
@@ -94,6 +95,10 @@ $("copyPostBtn").addEventListener("click", copyXhsPost);
 $("copyDianpingBtn").addEventListener("click", copyDianpingContent);
 $("exportScheduleBtn").addEventListener("click", exportSchedule);
 $("exportDealBtn").addEventListener("click", exportDealReport);
+$("refreshShareQrBtn").addEventListener("click", renderShareQr);
+$("copyShareLinkBtn").addEventListener("click", copyShareLink);
+$("nativeShareBtn").addEventListener("click", nativeShareToolbox);
+$("copyMiniProgramPathBtn").addEventListener("click", copyMiniProgramPath);
 $("addIngredientBtn").addEventListener("click", addIngredient);
 $("addBomBtn").addEventListener("click", addBomItem);
 $("applyYieldBtn").addEventListener("click", applyYieldTest);
@@ -146,6 +151,7 @@ applyLossStageTemplate();
 updateCustomLossFields();
 applyChannelTemplate();
 loadYieldSample();
+initShareTool();
 
 function recalculate() {
   renderMargin();
@@ -1994,6 +2000,62 @@ async function copyText(content) {
   }
   area.remove();
   return copied;
+}
+
+function initShareTool() {
+  const currentUrl = location.protocol === "http:" || location.protocol === "https:" ? location.href.split("#")[0] : "";
+  $("shareUrl").value = currentUrl || defaultPublicShareUrl;
+  $("miniProgramPath").value = "pages/index/index";
+  $("miniProgramScene").value = "share=home";
+  renderShareQr();
+}
+
+function renderShareQr() {
+  const shareUrl = text("shareUrl") || defaultPublicShareUrl;
+  const image = $("shareQrImage");
+  const status = $("shareQrStatus");
+  image.hidden = false;
+  image.alt = `分享二维码：${shareUrl}`;
+  image.src = `./api/share-qr.svg?text=${encodeURIComponent(shareUrl)}&t=${Date.now()}`;
+  status.textContent = "二维码已按当前分享链接生成。若当前环境是纯静态服务，请用 Node 服务启动后再刷新二维码。";
+}
+
+async function copyShareLink() {
+  const copied = await copyText(text("shareUrl") || defaultPublicShareUrl);
+  if (!copied) {
+    $("shareUrl").focus();
+    $("shareUrl").select();
+  }
+  $("copyShareLinkBtn").textContent = copied ? "已复制" : "已选中";
+  setTimeout(() => $("copyShareLinkBtn").textContent = "复制链接", 1200);
+}
+
+async function nativeShareToolbox() {
+  const shareUrl = text("shareUrl") || defaultPublicShareUrl;
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: "胡哥餐饮工具箱",
+        text: "给小餐饮老板马上能用的经营测算工具。",
+        url: shareUrl
+      });
+      $("shareQrStatus").textContent = "已打开系统分享面板。";
+      return;
+    } catch (_) {
+      $("shareQrStatus").textContent = "系统分享已取消，可直接复制链接或保存二维码。";
+      return;
+    }
+  }
+  await copyShareLink();
+  $("shareQrStatus").textContent = "当前浏览器不支持系统分享，已改为复制链接。";
+}
+
+async function copyMiniProgramPath() {
+  const path = text("miniProgramPath") || "pages/index/index";
+  const scene = text("miniProgramScene") || "share=home";
+  const copied = await copyText(`${path}?scene=${encodeURIComponent(scene)}`);
+  $("copyMiniProgramPathBtn").textContent = copied ? "已复制" : "已选中";
+  setTimeout(() => $("copyMiniProgramPathBtn").textContent = "复制小程序路径", 1200);
 }
 
 function renderSchedule() {

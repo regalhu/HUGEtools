@@ -3,16 +3,16 @@
 
   function fallbackHistory() {
     return {
-      currentVersion: "0.7.9",
+      currentVersion: "0.7.10",
       updatedAt: "2026-07-09",
       iterationRule: "每次功能更新都追加版本记录，保留上一版本基线、核心变化、验证结果和风险边界。",
       versions: [
         {
-          version: "0.7.9",
+          version: "0.7.10",
           date: "2026-07-09",
-          baseline: "0.7.8",
-          title: "门店营业额联合分析",
-          changes: ["新增门店营业额联合分析工具。", "支持门店名称标准化、可比营业额截取和覆盖率异常提示。", "同步 Web 和小程序端 13 个工具入口。"],
+          baseline: "0.7.9",
+          title: "微信小程序与网页分享二维码",
+          changes: ["新增分享二维码工具。", "Web 端可生成网页链接二维码。", "小程序端新增原生转发和服务端小程序码调用入口。"],
           verification: ["版本档案读取失败时，不影响工具主体使用。"]
         }
       ]

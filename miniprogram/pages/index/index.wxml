@@ -475,4 +475,29 @@
       </view>
     </view>
   </view>
+
+  <view wx:if="{{isShare}}" class="panel">
+    <view class="panel-head"><view><view class="eyebrow">合规分享工具</view><view class="panel-title">分享二维码</view></view></view>
+    <view class="advice">
+      <view>微信小程序内分享给其他微信用户，使用官方原生转发能力。</view>
+      <view>真正的小程序码需要云服务器调用微信服务端接口，不能把 AppSecret 写进小程序前端。</view>
+    </view>
+    <view class="share-actions">
+      <button class="primary" open-type="share">转发给微信好友</button>
+      <button class="ghost" bindtap="copyMiniProgramPath">复制小程序路径</button>
+      <button class="ghost" bindtap="copyPublicShareUrl">复制网页链接</button>
+    </view>
+    <view class="form-grid">
+      <view class="field full"><text>小程序页面路径</text><input value="{{share.path}}" data-section="share" data-field="path" bindinput="onInput" /></view>
+      <view class="field full"><text>scene 参数</text><input value="{{share.scene}}" maxlength="32" data-section="share" data-field="scene" bindinput="onInput" /></view>
+      <view class="field full"><text>云服务器地址</text><input value="{{share.serverBaseUrl}}" data-section="share" data-field="serverBaseUrl" bindinput="onInput" /></view>
+      <view class="field full"><text>网页分享链接</text><input value="{{share.publicUrl}}" data-section="share" data-field="publicUrl" bindinput="onInput" /></view>
+    </view>
+    <button class="primary wide" bindtap="generateMiniProgramCode">生成小程序码</button>
+    <view class="list-card">
+      <view class="section-title">生成状态</view>
+      <view class="empty">{{share.status}}</view>
+      <image wx:if="{{share.miniCodeImage}}" class="mini-code-image" src="{{share.miniCodeImage}}" mode="aspectFit" show-menu-by-longpress="true"></image>
+    </view>
+  </view>
 </view>

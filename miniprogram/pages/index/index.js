@@ -4,7 +4,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 Page({
   data: {
-    version: "0.7.9-miniapp.1",
+    version: "0.7.10-miniapp.1",
     tools: [
       { key: "margin", label: "毛利" },
       { key: "loss", label: "损耗" },
@@ -18,7 +18,8 @@ Page({
       { key: "dianping", label: "评价" },
       { key: "taskReminder", label: "任务" },
       { key: "incentive", label: "激励" },
-      { key: "schedule", label: "排班" }
+      { key: "schedule", label: "排班" },
+      { key: "share", label: "分享" }
     ],
     activeTool: "margin",
     isMargin: true,
@@ -34,6 +35,7 @@ Page({
     isTaskReminder: false,
     isIncentive: false,
     isSchedule: false,
+    isShare: false,
     marginTypeOptions: [
       { label: "单品", value: "single" },
       { label: "套餐", value: "combo" },
@@ -259,11 +261,38 @@ Page({
       restDays: 1,
       hasPartTime: true
     },
-    scheduleResult: {}
+    scheduleResult: {},
+    share: {
+      title: "胡哥餐饮工具箱",
+      path: "pages/index/index",
+      scene: "share=home",
+      publicUrl: "http://113.249.104.188:18089/",
+      serverBaseUrl: "http://113.249.104.188:18089",
+      status: "可直接点“转发给微信好友”。小程序码需要云服务器配置 WECHAT_APPID 和 WECHAT_APPSECRET 后生成。",
+      miniCodeImage: ""
+    }
   },
 
   onLoad() {
+    if (wx.showShareMenu) {
+      wx.showShareMenu({ menus: ["shareAppMessage", "shareTimeline"] });
+    }
     this.recalculateAll();
+  },
+
+  onShareAppMessage() {
+    return {
+      title: this.data.share.title,
+      path: `${this.data.share.path}?scene=${encodeURIComponent(this.data.share.scene)}`,
+      imageUrl: ""
+    };
+  },
+
+  onShareTimeline() {
+    return {
+      title: this.data.share.title,
+      query: `scene=${encodeURIComponent(this.data.share.scene)}`
+    };
   },
 
   onToolTap(event) {
@@ -282,7 +311,8 @@ Page({
       isDianping: activeTool === "dianping",
       isTaskReminder: activeTool === "taskReminder",
       isIncentive: activeTool === "incentive",
-      isSchedule: activeTool === "schedule"
+      isSchedule: activeTool === "schedule",
+      isShare: activeTool === "share"
     });
   },
 
@@ -495,5 +525,51 @@ Page({
     this.setData({
       incentiveRecords: this.data.incentiveRecords.filter((item) => item.id !== id)
     }, () => this.recalculateAll());
+  },
+
+  copyMiniProgramPath() {
+    const data = `${this.data.share.path}?scene=${encodeURIComponent(this.data.share.scene)}`;
+    wx.setClipboardData({
+      data,
+      success: () => wx.showToast({ title: "已复制路径", icon: "success" })
+    });
+  },
+
+  copyPublicShareUrl() {
+    wx.setClipboardData({
+      data: this.data.share.publicUrl,
+      success: () => wx.showToast({ title: "已复制链接", icon: "success" })
+    });
+  },
+
+  generateMiniProgramCode() {
+    const endpoint = `${this.data.share.serverBaseUrl.replace(/\/$/, "")}/api/miniprogram-code`;
+    this.setData({ "share.status": "正在请求云服务器生成小程序码..." });
+    wx.request({
+      url: endpoint,
+      method: "POST",
+      data: {
+        page: this.data.share.path,
+        scene: this.data.share.scene
+      },
+      success: (response) => {
+        const payload = response.data || {};
+        if (response.statusCode >= 200 && response.statusCode < 300 && payload.imageBase64) {
+          this.setData({
+            "share.miniCodeImage": `data:${payload.contentType || "image/png"};base64,${payload.imageBase64}`,
+            "share.status": "小程序码已生成，可长按图片保存或转发。"
+          });
+          return;
+        }
+        this.setData({
+          "share.status": payload.message || "云服务器暂未配置微信小程序码生成能力，请先使用原生转发。"
+        });
+      },
+      fail: () => {
+        this.setData({
+          "share.status": "无法连接云服务器生成小程序码。请确认开发工具已允许请求，且服务器域名/HTTPS 已配置。"
+        });
+      }
+    });
   }
 });

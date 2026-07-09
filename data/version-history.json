@@ -1,18 +1,38 @@
 {
   "product": "胡哥餐饮工具箱",
-  "currentVersion": "0.7.9",
+  "currentVersion": "0.7.10",
   "miniProgram": {
-    "webVersion": "0.7.9",
-    "miniProgramVersion": "0.7.9-miniapp.1",
-    "syncedToolCount": 13,
+    "webVersion": "0.7.10",
+    "miniProgramVersion": "0.7.10-miniapp.1",
+    "syncedToolCount": 14,
     "unsyncedToolCount": 0,
     "miniprogramRoot": "miniprogram/",
     "updatedAt": "2026-07-09",
-    "note": "微信开发者工具编译 miniprogram/ 目录；本记录用于区分 Web 端版本与小程序端同步进度。"
+    "note": "微信开发者工具编译 miniprogram/ 目录；本记录用于区分 Web 端版本、小程序端同步进度与分享能力边界。"
   },
   "updatedAt": "2026-07-09",
   "iterationRule": "每次功能更新都追加版本记录，保留上一版本基线、核心变化、验证结果和风险边界，便于后续按版本对比迭代。",
   "versions": [
+    {
+      "version": "0.7.10",
+      "date": "2026-07-09",
+      "baseline": "0.7.9",
+      "title": "微信小程序与网页分享二维码",
+      "changes": [
+        "新增分享二维码工具，Web 端可生成当前公网链接二维码、复制链接并调用系统分享面板。",
+        "新增服务端 /api/share-qr.svg 接口，用 qrcode 生成普通网页链接 SVG 二维码。",
+        "新增服务端 /api/miniprogram-code 接口，用于在服务器配置 WECHAT_APPID 和 WECHAT_APPSECRET 后调用微信 /wxa/getwxacodeunlimit 生成小程序码。",
+        "小程序端新增“分享”工具入口，支持 open-type=\"share\" 原生转发给微信好友、复制小程序路径、复制公网链接和可选请求云端生成小程序码。",
+        "明确合规边界：小程序转发可在前端使用官方开放能力；真正小程序码属于微信服务端接口，AppSecret 不得进入 Web 或小程序前端包。"
+      ],
+      "verification": [
+        "server.js、app.js、slider-fix.js、version-archive.js、miniprogram/app.js、miniprogram/pages/index/index.js 和 miniprogram/utils/calc.js 通过 node --check。",
+        "data/version-history.json、miniprogram/version.json、project.config.json、miniprogram/app.json 和 package.json 通过 JSON 校验。",
+        "本地 Node 服务验证 /api/share-qr.svg 可返回 SVG 二维码，/api/miniprogram-code 在未配置微信密钥时返回 501 wechat_not_configured。",
+        "微信开发者工具 CLI preview 成功生成 0.7.10 小程序预览二维码。"
+      ],
+      "riskBoundary": "Web 端二维码是网页链接二维码；微信小程序码生成依赖云服务器环境变量 WECHAT_APPID/WECHAT_APPSECRET 以及微信后台合法域名/HTTPS 配置。未配置前，小程序端仍可使用原生转发和复制路径。"
+    },
     {
       "version": "0.7.9",
       "date": "2026-07-09",

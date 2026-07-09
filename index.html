@@ -37,6 +37,7 @@
           <button class="tool-tab" type="button" data-tool="task-reminder">门店任务提醒工具</button>
           <button class="tool-tab" type="button" data-tool="incentive">员工激励系统</button>
           <button class="tool-tab" type="button" data-tool="schedule">单店排班工具</button>
+          <button class="tool-tab" type="button" data-tool="share">分享二维码</button>
         </nav>
 
         <section class="tool-panel active" id="tool-margin">
@@ -1174,6 +1175,51 @@
           </div>
           <div class="advice-box" id="scheduleAdvice"></div>
         </section>
+
+        <section class="tool-panel" id="tool-share">
+          <div class="tool-heading">
+            <div>
+              <p class="eyebrow">合规分享工具</p>
+              <h2>分享二维码</h2>
+            </div>
+            <button class="ghost-button" type="button" id="nativeShareBtn">系统分享</button>
+          </div>
+
+          <section class="margin-section">
+            <div class="section-title">
+              <h3>网页分享二维码</h3>
+              <span>用于浏览器访问 HUGEtools 公网页面</span>
+            </div>
+            <div class="form-grid share-grid">
+              <label class="wide-label">分享链接<input id="shareUrl" value="http://113.249.104.188:18089/"></label>
+              <button class="primary-button inline-button" type="button" id="refreshShareQrBtn">生成二维码</button>
+              <button class="ghost-button inline-button" type="button" id="copyShareLinkBtn">复制链接</button>
+            </div>
+            <div class="share-card">
+              <img id="shareQrImage" class="share-qr" alt="分享二维码" hidden>
+              <div>
+                <strong>当前生成的是网页链接二维码</strong>
+                <p id="shareQrStatus">等待生成二维码。</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="margin-section">
+            <div class="section-title">
+              <h3>微信小程序分享说明</h3>
+              <span>小程序码需要服务端调用微信接口</span>
+            </div>
+            <div class="form-grid share-grid">
+              <label>小程序页面路径<input id="miniProgramPath" value="pages/index/index"></label>
+              <label>scene 参数<input id="miniProgramScene" value="share=home" maxlength="32"></label>
+              <button class="ghost-button inline-button" type="button" id="copyMiniProgramPathBtn">复制小程序路径</button>
+            </div>
+            <div class="advice-box">
+              <p>微信小程序内分享给好友，应使用小程序原生转发能力；生成真正可扫码打开小程序的小程序码，需要服务器保存 AppID/AppSecret 并调用微信服务端接口，不能把密钥写进前端网页或小程序包。</p>
+              <p>本版本已新增服务端 `/api/miniprogram-code` 接口，云服务器配置 `WECHAT_APPID` 和 `WECHAT_APPSECRET` 后，小程序端可调用该接口生成小程序码。</p>
+            </div>
+          </section>
+        </section>
       </section>
 
       <footer class="site-footer">
@@ -1182,18 +1228,18 @@
       </footer>
     </main>
 
-    <script src="./yield-calculator.js?v=revenue-1"></script>
-    <script src="./site-selection-calculator.js?v=revenue-1"></script>
-    <script src="./app.js?v=revenue-1"></script>
-    <script src="./slider-fix.js?v=revenue-1"></script>
-    <script src="./revenue-analysis.js?v=revenue-1"></script>
-    <script src="./task-reminder-storage.js?v=revenue-1"></script>
-    <script src="./task-reminder-scheduler.js?v=revenue-1"></script>
-    <script src="./task-reminder-ui.js?v=revenue-1"></script>
-    <script src="./task-reminder.js?v=revenue-1"></script>
-    <script src="./incentive-system-engine.js?v=revenue-1"></script>
-    <script src="./incentive-system-ui.js?v=revenue-1"></script>
-    <script src="./incentive-system.js?v=revenue-1"></script>
-    <script src="./version-archive.js?v=0.7.9"></script>
+    <script src="./yield-calculator.js?v=share-1"></script>
+    <script src="./site-selection-calculator.js?v=share-1"></script>
+    <script src="./app.js?v=share-1"></script>
+    <script src="./slider-fix.js?v=share-1"></script>
+    <script src="./revenue-analysis.js?v=share-1"></script>
+    <script src="./task-reminder-storage.js?v=share-1"></script>
+    <script src="./task-reminder-scheduler.js?v=share-1"></script>
+    <script src="./task-reminder-ui.js?v=share-1"></script>
+    <script src="./task-reminder.js?v=share-1"></script>
+    <script src="./incentive-system-engine.js?v=share-1"></script>
+    <script src="./incentive-system-ui.js?v=share-1"></script>
+    <script src="./incentive-system.js?v=share-1"></script>
+    <script src="./version-archive.js?v=0.7.10"></script>
   </body>
 </html>
