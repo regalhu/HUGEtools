@@ -1,9 +1,40 @@
 {
   "product": "胡哥餐饮工具箱",
-  "currentVersion": "0.7.8",
-  "updatedAt": "2026-06-23",
+  "currentVersion": "0.7.9",
+  "miniProgram": {
+    "webVersion": "0.7.9",
+    "miniProgramVersion": "0.7.9-miniapp.1",
+    "syncedToolCount": 13,
+    "unsyncedToolCount": 0,
+    "miniprogramRoot": "miniprogram/",
+    "updatedAt": "2026-07-09",
+    "note": "微信开发者工具编译 miniprogram/ 目录；本记录用于区分 Web 端版本与小程序端同步进度。"
+  },
+  "updatedAt": "2026-07-09",
   "iterationRule": "每次功能更新都追加版本记录，保留上一版本基线、核心变化、验证结果和风险边界，便于后续按版本对比迭代。",
   "versions": [
+    {
+      "version": "0.7.9",
+      "date": "2026-07-09",
+      "baseline": "0.7.8",
+      "title": "门店营业额联合分析",
+      "changes": [
+        "参考辛香汇工作助手的门店营业额联合分析模块，新增胡哥餐饮工具的门店营业额联合分析工具。",
+        "支持粘贴门店主数据、门店日营业额数据和菜品销售事实数据，并按标准门店名称和销售月份关联。",
+        "内置门店名称标准化规则：金沙百联统一为金山百联，新街口统一为南京新街口，宝山共康绿地营业额统一关联宝山共康菜品销售。",
+        "支持从营业额文件名中的 0515、0605、0615 等 4 位数字识别可比口径起始日期，且营业额起始日早于菜品销售起始日时按菜品销售起始日截取。",
+        "输出门店月度联合分析、菜品销售金额 Top、营业额覆盖率 Top、门店日均营业额排行、地域汇总、市场层级汇总和月报素材。",
+        "菜品销售金额 / 可比营业额超过 105% 标记为口径异常，主菜单匹配率低于 75% 标记为主菜单匹配偏低，非整月样本不进入完整月日均营业额排行。",
+        "同步小程序端新增门店营业额联合分析基础面板，小程序工具数从 12 个更新为 13 个。"
+      ],
+      "verification": [
+        "revenue-analysis.js、app.js、slider-fix.js、version-archive.js、miniprogram/pages/index/index.js 和 miniprogram/utils/calc.js 通过 node --check。",
+        "data/version-history.json、miniprogram/version.json、project.config.json 和 miniprogram/app.json 通过 JSON 校验。",
+        "Node 直接调用 HugeToolsRevenueAnalysis.analyze 验证示例数据可输出门店月度联合分析、覆盖率异常、主菜单匹配偏低和月报素材。",
+        "小程序端 analyzeRevenue 示例验证可输出 13 工具版本下的营业额联合分析基础结果。"
+      ],
+      "riskBoundary": "营业额联合分析只用于销售结构覆盖率和口径核查，不输出毛利率、利润贡献、菜品淘汰、出品效率或供应链风险结论；无法匹配的门店不自动合并。"
+    },
     {
       "version": "0.7.8",
       "date": "2026-06-23",

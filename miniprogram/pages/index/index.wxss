@@ -163,6 +163,11 @@
   width: 100%;
 }
 
+.switch-field {
+  align-items: center;
+  grid-template-columns: 1fr auto;
+}
+
 input, textarea {
   min-height: 76rpx;
   border: 1rpx solid #dce5dd;
@@ -178,6 +183,18 @@ textarea {
   min-height: 132rpx;
   padding: 16rpx 18rpx;
   line-height: 1.55;
+}
+
+.picker-input {
+  min-height: 76rpx;
+  border: 1rpx solid #dce5dd;
+  border-radius: 14rpx;
+  background: #ffffff;
+  color: #17211c;
+  padding: 18rpx;
+  font-size: 26rpx;
+  font-weight: 700;
+  line-height: 1.35;
 }
 
 .metric-grid {
@@ -371,6 +388,10 @@ textarea {
   min-height: 300rpx;
   background: #fbfcfb;
   color: #17211c;
+}
+
+.gap {
+  margin-top: 22rpx;
 }
 
 .schedule-day {

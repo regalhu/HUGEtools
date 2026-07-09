@@ -4,19 +4,35 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 Page({
   data: {
-    version: "0.7.8-miniapp",
+    version: "0.7.9-miniapp.1",
     tools: [
       { key: "margin", label: "毛利" },
-      { key: "deal", label: "团购" },
       { key: "loss", label: "损耗" },
-      { key: "xhs", label: "小红书" },
+      { key: "yield", label: "应产率" },
+      { key: "health", label: "经营健康" },
+      { key: "revenue", label: "营业额" },
+      { key: "site", label: "选址" },
+      { key: "recruitment", label: "招募" },
+      { key: "deal", label: "团购" },
+      { key: "xhs", label: "种草" },
+      { key: "dianping", label: "评价" },
+      { key: "taskReminder", label: "任务" },
+      { key: "incentive", label: "激励" },
       { key: "schedule", label: "排班" }
     ],
     activeTool: "margin",
     isMargin: true,
     isDeal: false,
     isLoss: false,
+    isYield: false,
+    isHealth: false,
+    isRevenue: false,
+    isSite: false,
+    isRecruitment: false,
     isXhs: false,
+    isDianping: false,
+    isTaskReminder: false,
+    isIncentive: false,
     isSchedule: false,
     marginTypeOptions: [
       { label: "单品", value: "single" },
@@ -105,7 +121,91 @@ Page({
     },
     lossRecords: [],
     lossResult: {},
+    yieldForm: {
+      materialName: "鸡腿肉",
+      purchaseWeight: 10,
+      purchaseCost: 180,
+      yieldRate: 72,
+      lossRate: 5,
+      productName: "招牌鸡腿饭",
+      usageGram: 120,
+      sellingPrice: 28
+    },
+    yieldResult: {},
+    health: {
+      revenue: "",
+      openingInventory: "",
+      periodPurchases: "",
+      endingInventory: "",
+      includeTrackedLoss: true,
+      manualLossCost: "",
+      compCost: "",
+      staffMealCost: "",
+      surplusCost: "",
+      laborCost: "",
+      theoreticalFoodCost: "",
+      foodRedline: 35,
+      primeRedline: 65
+    },
+    healthResult: {},
+    revenue: {
+      fileName: "宝山共康绿地0605营业额.xlsx",
+      storeMasterText: "门店,地域,城市,市场层级\n宝山共康,上海区域,上海,成熟市场\n金山百联,上海区域,上海,成长市场",
+      revenueText: "门店,日期,营业额,订单数\n宝山共康绿地,2026-06-05,12800,310\n宝山共康绿地,2026-06-06,13600,328\n金沙百联,2026-06-01,9600,220",
+      dishText: "门店,日期,菜品,主菜单,销售金额\n宝山共康,2026-06-05,招牌辣子鸡,是,4200\n宝山共康,2026-06-06,口水鸡,是,3100\n金山百联,2026-06-01,宫保鸡丁,是,5600"
+    },
+    revenueResult: {},
+    site: {
+      avgTicket: 45,
+      dailyOrders: 120,
+      businessDays: 30,
+      grossMarginRate: 62,
+      monthlyRent: 18000,
+      propertyFee: 1200,
+      laborCost: 28000,
+      utilitiesCost: 4500,
+      marketingCost: 3000,
+      transferFee: 60000,
+      decorationCost: 120000,
+      equipmentCost: 50000,
+      depositMonths: 2,
+      license: true,
+      exhaust: true,
+      waterDrainage: true,
+      trafficScore: 4,
+      customerScore: 4,
+      competitionScore: 3,
+      visibilityScore: 4
+    },
+    siteResult: {},
+    recruitment: {
+      category: "快餐简餐",
+      rank: "服务员",
+      format: "门店海报",
+      company: "胡哥餐饮",
+      location: "门店附近",
+      count: "2 人",
+      salary: "4500-6500 元/月",
+      schedule: "早晚轮班，月休 4 天",
+      benefits: "包吃,绩效奖金,晋升培训",
+      contact: "店长",
+      phone: ""
+    },
+    recruitmentResult: {},
+    xhsTemplateOptions: [
+      "地域搜索攻略",
+      "性价比清单",
+      "真实探店记录",
+      "工作餐推荐",
+      "夜宵场景",
+      "约会聚餐",
+      "亲子家庭",
+      "健康轻负担",
+      "新品互动",
+      "避坑测评"
+    ],
     xhs: {
+      templateIndex: 0,
       category: "",
       city: "杭州",
       sellingPoints: "",
@@ -114,6 +214,41 @@ Page({
       address: "写字楼附近"
     },
     xhsResult: {},
+    dianping: {
+      mode: "customer",
+      category: "门店",
+      items: "",
+      visitDate: "",
+      spend: "",
+      sentiment: "positive",
+      taste: "",
+      service: "",
+      issues: "",
+      focus: ""
+    },
+    dianpingResult: {},
+    taskForm: {
+      name: "闭店检查",
+      role: "店长",
+      dueDate: today(),
+      dueTime: "22:00",
+      priority: "高",
+      frequency: "每天",
+      note: "检查水电气、冷柜温度、门店卫生和现金交接。"
+    },
+    taskRecords: [],
+    taskResult: {},
+    incentiveForm: {
+      employee: "",
+      role: "前厅",
+      taskName: "今日任务",
+      onTimeScore: 90,
+      qualityScore: 90,
+      completionScore: 95,
+      basePoints: 10
+    },
+    incentiveRecords: [],
+    incentiveResult: {},
     schedule: {
       openTime: "10:00",
       closeTime: "22:00",
@@ -138,7 +273,15 @@ Page({
       isMargin: activeTool === "margin",
       isDeal: activeTool === "deal",
       isLoss: activeTool === "loss",
+      isYield: activeTool === "yield",
+      isHealth: activeTool === "health",
+      isRevenue: activeTool === "revenue",
+      isSite: activeTool === "site",
+      isRecruitment: activeTool === "recruitment",
       isXhs: activeTool === "xhs",
+      isDianping: activeTool === "dianping",
+      isTaskReminder: activeTool === "taskReminder",
+      isIncentive: activeTool === "incentive",
       isSchedule: activeTool === "schedule"
     });
   },
@@ -160,6 +303,12 @@ Page({
       if (section === "margin" && field === "sceneIndex") this.applySceneTemplate();
       else this.recalculateAll();
     });
+  },
+
+  onSwitchChange(event) {
+    const section = event.currentTarget.dataset.section;
+    const field = event.currentTarget.dataset.field;
+    this.setData({ [`${section}.${field}`]: Boolean(event.detail.value) }, () => this.recalculateAll());
   },
 
   onMarginTypeTap(event) {
@@ -189,7 +338,15 @@ Page({
       giftResult: calc.calculateGift(this.data.gift),
       dealResult: calc.calculateDeal(this.data.deal),
       lossResult: calc.summarizeLoss(this.data.lossRecords),
+      yieldResult: calc.calculateYield(this.data.yieldForm),
+      healthResult: calc.calculateHealth(this.data.health, this.data.lossRecords),
+      revenueResult: calc.analyzeRevenue(this.data.revenue),
+      siteResult: calc.calculateSite(this.data.site),
+      recruitmentResult: calc.generateRecruitment(this.data.recruitment),
       xhsResult: calc.generateXhs(this.data.xhs),
+      dianpingResult: calc.generateDianping(this.data.dianping),
+      taskResult: calc.summarizeTasks(this.data.taskRecords),
+      incentiveResult: calc.calculateIncentive(this.data.incentiveRecords),
       scheduleResult: calc.generateSchedule(this.data.schedule)
     });
   },
@@ -272,5 +429,71 @@ Page({
       data: this.data.xhsResult.copyText,
       success: () => wx.showToast({ title: "已复制", icon: "success" })
     });
+  },
+
+  copyRecruitment() {
+    wx.setClipboardData({
+      data: this.data.recruitmentResult.draft,
+      success: () => wx.showToast({ title: "已复制", icon: "success" })
+    });
+  },
+
+  copyDianping() {
+    wx.setClipboardData({
+      data: this.data.dianpingResult.draft,
+      success: () => wx.showToast({ title: "已复制", icon: "success" })
+    });
+  },
+
+  addTaskRecord() {
+    const form = this.data.taskForm;
+    if (!form.name || !form.role) {
+      wx.showToast({ title: "请补齐任务名称和角色", icon: "none" });
+      return;
+    }
+    const taskRecords = [{
+      id: Date.now(),
+      status: "pending",
+      ...form
+    }].concat(this.data.taskRecords);
+    this.setData({ taskRecords }, () => this.recalculateAll());
+    wx.showToast({ title: "已新增任务", icon: "success" });
+  },
+
+  completeTaskRecord(event) {
+    const id = Number(event.currentTarget.dataset.id);
+    const taskRecords = this.data.taskRecords.map((item) => item.id === id ? { ...item, status: "done" } : item);
+    this.setData({ taskRecords }, () => this.recalculateAll());
+  },
+
+  deleteTaskRecord(event) {
+    const id = Number(event.currentTarget.dataset.id);
+    this.setData({
+      taskRecords: this.data.taskRecords.filter((item) => item.id !== id)
+    }, () => this.recalculateAll());
+  },
+
+  addIncentiveRecord() {
+    const form = this.data.incentiveForm;
+    if (!form.employee || !form.taskName) {
+      wx.showToast({ title: "请补齐员工和任务", icon: "none" });
+      return;
+    }
+    const scored = calc.scoreIncentive(form);
+    const incentiveRecords = [{
+      id: Date.now(),
+      ...form,
+      score: scored.score,
+      points: scored.points
+    }].concat(this.data.incentiveRecords);
+    this.setData({ incentiveRecords }, () => this.recalculateAll());
+    wx.showToast({ title: "已评分", icon: "success" });
+  },
+
+  deleteIncentiveRecord(event) {
+    const id = Number(event.currentTarget.dataset.id);
+    this.setData({
+      incentiveRecords: this.data.incentiveRecords.filter((item) => item.id !== id)
+    }, () => this.recalculateAll());
   }
 });

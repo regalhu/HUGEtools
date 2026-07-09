@@ -182,12 +182,157 @@
     </view>
   </view>
 
+  <view wx:if="{{isYield}}" class="panel">
+    <view class="panel-head"><view><view class="eyebrow">经营测算工具</view><view class="panel-title">应产率与产能计算工具</view></view></view>
+    <view class="form-grid">
+      <view class="field"><text>原料名称</text><input value="{{yieldForm.materialName}}" data-section="yieldForm" data-field="materialName" bindinput="onInput" /></view>
+      <view class="field"><text>采购重量 kg</text><input type="digit" value="{{yieldForm.purchaseWeight}}" data-section="yieldForm" data-field="purchaseWeight" data-type="number" bindinput="onInput" /></view>
+      <view class="field"><text>采购金额</text><input type="digit" value="{{yieldForm.purchaseCost}}" data-section="yieldForm" data-field="purchaseCost" data-type="number" bindinput="onInput" /></view>
+      <view class="field"><text>出成率 %</text><input type="digit" value="{{yieldForm.yieldRate}}" data-section="yieldForm" data-field="yieldRate" data-type="number" bindinput="onInput" /></view>
+      <view class="field"><text>损耗率 %</text><input type="digit" value="{{yieldForm.lossRate}}" data-section="yieldForm" data-field="lossRate" data-type="number" bindinput="onInput" /></view>
+      <view class="field"><text>菜品名称</text><input value="{{yieldForm.productName}}" data-section="yieldForm" data-field="productName" bindinput="onInput" /></view>
+      <view class="field"><text>每份用量 g</text><input type="digit" value="{{yieldForm.usageGram}}" data-section="yieldForm" data-field="usageGram" data-type="number" bindinput="onInput" /></view>
+      <view class="field"><text>售价</text><input type="digit" value="{{yieldForm.sellingPrice}}" data-section="yieldForm" data-field="sellingPrice" data-type="number" bindinput="onInput" /></view>
+    </view>
+    <view class="metric-grid">
+      <view wx:for="{{yieldResult.cards}}" wx:key="label" class="metric {{item.level}}">
+        <text>{{item.label}}</text>
+        <view>{{item.value}}</view>
+      </view>
+    </view>
+    <view class="list-card">
+      <view class="section-title">测算明细</view>
+      <view wx:for="{{yieldResult.rows}}" wx:key="label" class="saved-row">
+        <view>{{item.label}}</view>
+        <view class="saved-meta">{{item.value}}</view>
+      </view>
+    </view>
+    <view class="advice"><view wx:for="{{yieldResult.advice}}" wx:key="*this">{{item}}</view></view>
+  </view>
+
+  <view wx:if="{{isHealth}}" class="panel">
+    <view class="panel-head"><view><view class="eyebrow">经营测算工具</view><view class="panel-title">食材成本与经营健康度</view></view></view>
+    <view class="form-grid">
+      <view class="field"><text>营业收入</text><input type="digit" value="{{health.revenue}}" data-section="health" data-field="revenue" data-type="number" bindinput="onInput" /></view>
+      <view class="field"><text>期初库存</text><input type="digit" value="{{health.openingInventory}}" data-section="health" data-field="openingInventory" data-type="number" bindinput="onInput" /></view>
+      <view class="field"><text>当期采购</text><input type="digit" value="{{health.periodPurchases}}" data-section="health" data-field="periodPurchases" data-type="number" bindinput="onInput" /></view>
+      <view class="field"><text>期末库存</text><input type="digit" value="{{health.endingInventory}}" data-section="health" data-field="endingInventory" data-type="number" bindinput="onInput" /></view>
+      <view class="field"><text>人工成本</text><input type="digit" value="{{health.laborCost}}" data-section="health" data-field="laborCost" data-type="number" bindinput="onInput" /></view>
+      <view class="field"><text>理论食材成本</text><input type="digit" value="{{health.theoreticalFoodCost}}" data-section="health" data-field="theoreticalFoodCost" data-type="number" bindinput="onInput" /></view>
+      <view class="field"><text>手工损耗</text><input type="digit" value="{{health.manualLossCost}}" data-section="health" data-field="manualLossCost" data-type="number" bindinput="onInput" /></view>
+      <view class="field"><text>赠送/试吃</text><input type="digit" value="{{health.compCost}}" data-section="health" data-field="compCost" data-type="number" bindinput="onInput" /></view>
+      <view class="field switch-field"><text>计入损耗记录</text><switch checked="{{health.includeTrackedLoss}}" data-section="health" data-field="includeTrackedLoss" bindchange="onSwitchChange" /></view>
+      <view class="field"><text>食材红线 %</text><input type="digit" value="{{health.foodRedline}}" data-section="health" data-field="foodRedline" data-type="number" bindinput="onInput" /></view>
+    </view>
+    <view class="metric-grid">
+      <view wx:for="{{healthResult.cards}}" wx:key="label" class="metric {{item.level}}">
+        <text>{{item.label}}</text>
+        <view>{{item.value}}</view>
+      </view>
+      <view wx:for="{{healthResult.varianceCards}}" wx:key="label" class="metric {{item.level}}">
+        <text>{{item.label}}</text>
+        <view>{{item.value}}</view>
+      </view>
+    </view>
+    <view class="advice"><view wx:for="{{healthResult.advice}}" wx:key="*this">{{item}}</view></view>
+  </view>
+
+  <view wx:if="{{isRevenue}}" class="panel">
+    <view class="panel-head"><view><view class="eyebrow">经营测算工具</view><view class="panel-title">门店营业额联合分析</view></view></view>
+    <view class="form-grid">
+      <view class="field full"><text>营业额文件名</text><input value="{{revenue.fileName}}" data-section="revenue" data-field="fileName" bindinput="onInput" /></view>
+      <view class="field full"><text>门店主数据</text><textarea value="{{revenue.storeMasterText}}" data-section="revenue" data-field="storeMasterText" bindinput="onInput"></textarea></view>
+      <view class="field full"><text>门店日营业额数据</text><textarea value="{{revenue.revenueText}}" data-section="revenue" data-field="revenueText" bindinput="onInput"></textarea></view>
+      <view class="field full"><text>菜品销售事实数据</text><textarea value="{{revenue.dishText}}" data-section="revenue" data-field="dishText" bindinput="onInput"></textarea></view>
+    </view>
+    <view class="advice">
+      <view>菜品销售金额/营业额仅作为销售结构覆盖率参考，不等于真实营业贡献率，不等于毛利率，不等于利润贡献。</view>
+    </view>
+    <view class="metric-grid">
+      <view wx:for="{{revenueResult.cards}}" wx:key="label" class="metric {{item.level}}">
+        <text>{{item.label}}</text>
+        <view>{{item.value}}</view>
+      </view>
+    </view>
+    <view class="list-card">
+      <view class="section-title">门店月度联合分析</view>
+      <view wx:if="{{!revenueResult.rows.length}}" class="empty">暂无联合分析结果。</view>
+      <view wx:for="{{revenueResult.rows}}" wx:key="key" class="saved-row">
+        <view>{{item.store}} · {{item.month}}</view>
+        <view class="saved-meta">可比营业额 {{item.revenueText}} · 菜品销售 {{item.salesText}} · 覆盖率 {{item.coverageText}}</view>
+        <view class="saved-note">{{item.status}}</view>
+      </view>
+    </view>
+    <view class="list-card">
+      <view class="section-title">月报素材</view>
+      <textarea class="output-area" value="{{revenueResult.report}}" disabled></textarea>
+    </view>
+  </view>
+
+  <view wx:if="{{isSite}}" class="panel">
+    <view class="panel-head"><view><view class="eyebrow">经营测算工具</view><view class="panel-title">门店选址评估工具</view></view></view>
+    <view class="form-grid">
+      <view class="field"><text>客单价</text><input type="digit" value="{{site.avgTicket}}" data-section="site" data-field="avgTicket" data-type="number" bindinput="onInput" /></view>
+      <view class="field"><text>日订单</text><input type="number" value="{{site.dailyOrders}}" data-section="site" data-field="dailyOrders" data-type="number" bindinput="onInput" /></view>
+      <view class="field"><text>月营业天数</text><input type="number" value="{{site.businessDays}}" data-section="site" data-field="businessDays" data-type="number" bindinput="onInput" /></view>
+      <view class="field"><text>毛利率 %</text><input type="digit" value="{{site.grossMarginRate}}" data-section="site" data-field="grossMarginRate" data-type="number" bindinput="onInput" /></view>
+      <view class="field"><text>月租金</text><input type="digit" value="{{site.monthlyRent}}" data-section="site" data-field="monthlyRent" data-type="number" bindinput="onInput" /></view>
+      <view class="field"><text>物业费</text><input type="digit" value="{{site.propertyFee}}" data-section="site" data-field="propertyFee" data-type="number" bindinput="onInput" /></view>
+      <view class="field"><text>人工成本</text><input type="digit" value="{{site.laborCost}}" data-section="site" data-field="laborCost" data-type="number" bindinput="onInput" /></view>
+      <view class="field"><text>水电杂费</text><input type="digit" value="{{site.utilitiesCost}}" data-section="site" data-field="utilitiesCost" data-type="number" bindinput="onInput" /></view>
+      <view class="field"><text>转让费</text><input type="digit" value="{{site.transferFee}}" data-section="site" data-field="transferFee" data-type="number" bindinput="onInput" /></view>
+      <view class="field"><text>装修投入</text><input type="digit" value="{{site.decorationCost}}" data-section="site" data-field="decorationCost" data-type="number" bindinput="onInput" /></view>
+      <view class="field switch-field"><text>可办证</text><switch checked="{{site.license}}" data-section="site" data-field="license" bindchange="onSwitchChange" /></view>
+      <view class="field switch-field"><text>有排烟</text><switch checked="{{site.exhaust}}" data-section="site" data-field="exhaust" bindchange="onSwitchChange" /></view>
+      <view class="field switch-field"><text>上下水</text><switch checked="{{site.waterDrainage}}" data-section="site" data-field="waterDrainage" bindchange="onSwitchChange" /></view>
+      <view class="field"><text>客流评分 1-5</text><input type="digit" value="{{site.trafficScore}}" data-section="site" data-field="trafficScore" data-type="number" bindinput="onInput" /></view>
+      <view class="field"><text>客群评分 1-5</text><input type="digit" value="{{site.customerScore}}" data-section="site" data-field="customerScore" data-type="number" bindinput="onInput" /></view>
+      <view class="field"><text>竞争评分 1-5</text><input type="digit" value="{{site.competitionScore}}" data-section="site" data-field="competitionScore" data-type="number" bindinput="onInput" /></view>
+    </view>
+    <view class="metric-grid">
+      <view wx:for="{{siteResult.cards}}" wx:key="label" class="metric {{item.level}}">
+        <text>{{item.label}}</text>
+        <view>{{item.value}}</view>
+      </view>
+    </view>
+    <view class="advice"><view wx:for="{{siteResult.advice}}" wx:key="*this">{{item}}</view></view>
+  </view>
+
+  <view wx:if="{{isRecruitment}}" class="panel">
+    <view class="panel-head">
+      <view><view class="eyebrow">内容生成工具</view><view class="panel-title">餐饮招募文案生成</view></view>
+      <button class="ghost small" bindtap="copyRecruitment">复制</button>
+    </view>
+    <view class="form-grid">
+      <view class="field"><text>餐饮类目</text><input value="{{recruitment.category}}" data-section="recruitment" data-field="category" bindinput="onInput" /></view>
+      <view class="field"><text>招聘职级</text><input value="{{recruitment.rank}}" data-section="recruitment" data-field="rank" bindinput="onInput" /></view>
+      <view class="field"><text>发布形式</text><input value="{{recruitment.format}}" data-section="recruitment" data-field="format" bindinput="onInput" /></view>
+      <view class="field"><text>公司/门店</text><input value="{{recruitment.company}}" data-section="recruitment" data-field="company" bindinput="onInput" /></view>
+      <view class="field"><text>地点</text><input value="{{recruitment.location}}" data-section="recruitment" data-field="location" bindinput="onInput" /></view>
+      <view class="field"><text>人数</text><input value="{{recruitment.count}}" data-section="recruitment" data-field="count" bindinput="onInput" /></view>
+      <view class="field"><text>薪资</text><input value="{{recruitment.salary}}" data-section="recruitment" data-field="salary" bindinput="onInput" /></view>
+      <view class="field"><text>联系人</text><input value="{{recruitment.contact}}" data-section="recruitment" data-field="contact" bindinput="onInput" /></view>
+      <view class="field full"><text>福利亮点</text><textarea value="{{recruitment.benefits}}" data-section="recruitment" data-field="benefits" bindinput="onInput"></textarea></view>
+    </view>
+    <view class="metric-grid">
+      <view wx:for="{{recruitmentResult.cards}}" wx:key="label" class="metric {{item.level}}">
+        <text>{{item.label}}</text>
+        <view>{{item.value}}</view>
+      </view>
+    </view>
+    <textarea class="output-area gap" value="{{recruitmentResult.draft}}" disabled></textarea>
+    <view class="advice"><view wx:for="{{recruitmentResult.advice}}" wx:key="*this">{{item}}</view></view>
+  </view>
+
   <view wx:if="{{isXhs}}" class="panel">
     <view class="panel-head">
       <view><view class="eyebrow">内容营销工具</view><view class="panel-title">小红书餐饮图文生成器</view></view>
       <button class="ghost small" bindtap="copyXhsPost">复制</button>
     </view>
     <view class="form-grid">
+      <picker class="field" range="{{xhsTemplateOptions}}" value="{{xhs.templateIndex}}" data-section="xhs" data-field="templateIndex" bindchange="onPickerChange">
+        <view><text>模板</text><view class="picker-input">{{xhsResult.templateName}}</view></view>
+      </picker>
       <view class="field"><text>门店品类</text><input value="{{xhs.category}}" data-section="xhs" data-field="category" bindinput="onInput" /></view>
       <view class="field"><text>城市</text><input value="{{xhs.city}}" data-section="xhs" data-field="city" bindinput="onInput" /></view>
       <view class="field"><text>卖点</text><input value="{{xhs.sellingPoints}}" data-section="xhs" data-field="sellingPoints" bindinput="onInput" /></view>
@@ -204,6 +349,99 @@
       <view class="chip blue" wx:for="{{xhsResult.tags}}" wx:key="*this">{{item}}</view>
       <view class="section-title gap">封面与拍摄建议</view>
       <view class="advice flat"><view wx:for="{{xhsResult.visual}}" wx:key="*this">{{item}}</view></view>
+    </view>
+  </view>
+
+  <view wx:if="{{isDianping}}" class="panel">
+    <view class="panel-head">
+      <view><view class="eyebrow">内容生成工具</view><view class="panel-title">评价类生成工具</view></view>
+      <button class="ghost small" bindtap="copyDianping">复制</button>
+    </view>
+    <view class="form-grid">
+      <view class="field"><text>模式 customer/reply</text><input value="{{dianping.mode}}" data-section="dianping" data-field="mode" bindinput="onInput" /></view>
+      <view class="field"><text>门店/品类</text><input value="{{dianping.category}}" data-section="dianping" data-field="category" bindinput="onInput" /></view>
+      <view class="field"><text>消费项目</text><input value="{{dianping.items}}" data-section="dianping" data-field="items" bindinput="onInput" /></view>
+      <view class="field"><text>消费日期</text><input value="{{dianping.visitDate}}" data-section="dianping" data-field="visitDate" bindinput="onInput" /></view>
+      <view class="field"><text>金额/人均</text><input value="{{dianping.spend}}" data-section="dianping" data-field="spend" bindinput="onInput" /></view>
+      <view class="field"><text>情绪</text><input value="{{dianping.sentiment}}" data-section="dianping" data-field="sentiment" bindinput="onInput" /></view>
+      <view class="field full"><text>口味/产品细节</text><textarea value="{{dianping.taste}}" data-section="dianping" data-field="taste" bindinput="onInput"></textarea></view>
+      <view class="field full"><text>服务/环境细节</text><textarea value="{{dianping.service}}" data-section="dianping" data-field="service" bindinput="onInput"></textarea></view>
+      <view class="field full"><text>问题或重点</text><textarea value="{{dianping.issues}}" data-section="dianping" data-field="issues" bindinput="onInput"></textarea></view>
+    </view>
+    <view class="metric-grid">
+      <view wx:for="{{dianpingResult.cards}}" wx:key="label" class="metric {{item.level}}">
+        <text>{{item.label}}</text>
+        <view>{{item.value}}</view>
+      </view>
+    </view>
+    <textarea class="output-area gap" value="{{dianpingResult.draft}}" disabled></textarea>
+    <view class="advice flat gap"><view wx:for="{{dianpingResult.photoIdeas}}" wx:key="*this">{{item}}</view></view>
+    <view class="advice"><view wx:for="{{dianpingResult.compliance}}" wx:key="*this">{{item}}</view></view>
+  </view>
+
+  <view wx:if="{{isTaskReminder}}" class="panel">
+    <view class="panel-head"><view><view class="eyebrow">管理工具</view><view class="panel-title">门店任务提醒工具</view></view></view>
+    <view class="form-grid">
+      <view class="field"><text>任务名称</text><input value="{{taskForm.name}}" data-section="taskForm" data-field="name" bindinput="onInput" /></view>
+      <view class="field"><text>角色</text><input value="{{taskForm.role}}" data-section="taskForm" data-field="role" bindinput="onInput" /></view>
+      <view class="field"><text>到期日期</text><input value="{{taskForm.dueDate}}" data-section="taskForm" data-field="dueDate" bindinput="onInput" /></view>
+      <view class="field"><text>时间</text><input value="{{taskForm.dueTime}}" data-section="taskForm" data-field="dueTime" bindinput="onInput" /></view>
+      <view class="field"><text>优先级</text><input value="{{taskForm.priority}}" data-section="taskForm" data-field="priority" bindinput="onInput" /></view>
+      <view class="field"><text>周期</text><input value="{{taskForm.frequency}}" data-section="taskForm" data-field="frequency" bindinput="onInput" /></view>
+      <view class="field full"><text>备注</text><textarea value="{{taskForm.note}}" data-section="taskForm" data-field="note" bindinput="onInput"></textarea></view>
+    </view>
+    <button class="primary wide" bindtap="addTaskRecord">新增任务</button>
+    <view class="metric-grid">
+      <view wx:for="{{taskResult.cards}}" wx:key="label" class="metric {{item.level}}">
+        <text>{{item.label}}</text>
+        <view>{{item.value}}</view>
+      </view>
+    </view>
+    <view class="advice"><view wx:for="{{taskResult.advice}}" wx:key="*this">{{item}}</view></view>
+    <view class="list-card">
+      <view class="section-title">任务列表</view>
+      <view wx:if="{{!taskRecords.length}}" class="empty">还没有任务。</view>
+      <view wx:for="{{taskRecords}}" wx:key="id" class="saved-row">
+        <view>{{item.name}} · {{item.role}} · {{item.priority}}</view>
+        <view class="saved-meta">{{item.dueDate}} {{item.dueTime}} · {{item.frequency}} · {{item.status}}</view>
+        <view class="saved-note">{{item.note}}</view>
+        <view class="row-actions">
+          <button class="ghost small" data-id="{{item.id}}" bindtap="completeTaskRecord">完成</button>
+          <button class="danger small" data-id="{{item.id}}" bindtap="deleteTaskRecord">删除</button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{isIncentive}}" class="panel">
+    <view class="panel-head"><view><view class="eyebrow">管理工具</view><view class="panel-title">员工激励系统</view></view></view>
+    <view class="form-grid">
+      <view class="field"><text>员工姓名</text><input value="{{incentiveForm.employee}}" data-section="incentiveForm" data-field="employee" bindinput="onInput" /></view>
+      <view class="field"><text>角色</text><input value="{{incentiveForm.role}}" data-section="incentiveForm" data-field="role" bindinput="onInput" /></view>
+      <view class="field"><text>任务</text><input value="{{incentiveForm.taskName}}" data-section="incentiveForm" data-field="taskName" bindinput="onInput" /></view>
+      <view class="field"><text>准时分</text><input type="digit" value="{{incentiveForm.onTimeScore}}" data-section="incentiveForm" data-field="onTimeScore" data-type="number" bindinput="onInput" /></view>
+      <view class="field"><text>质量分</text><input type="digit" value="{{incentiveForm.qualityScore}}" data-section="incentiveForm" data-field="qualityScore" data-type="number" bindinput="onInput" /></view>
+      <view class="field"><text>完成分</text><input type="digit" value="{{incentiveForm.completionScore}}" data-section="incentiveForm" data-field="completionScore" data-type="number" bindinput="onInput" /></view>
+      <view class="field"><text>基础积分</text><input type="digit" value="{{incentiveForm.basePoints}}" data-section="incentiveForm" data-field="basePoints" data-type="number" bindinput="onInput" /></view>
+    </view>
+    <button class="primary wide" bindtap="addIncentiveRecord">记录评分</button>
+    <view class="metric-grid">
+      <view wx:for="{{incentiveResult.cards}}" wx:key="label" class="metric {{item.level}}">
+        <text>{{item.label}}</text>
+        <view>{{item.value}}</view>
+      </view>
+    </view>
+    <view class="advice"><view wx:for="{{incentiveResult.advice}}" wx:key="*this">{{item}}</view></view>
+    <view class="list-card">
+      <view class="section-title">积分记录</view>
+      <view wx:if="{{!incentiveRecords.length}}" class="empty">还没有评分记录。</view>
+      <view wx:for="{{incentiveRecords}}" wx:key="id" class="saved-row">
+        <view>{{item.employee}} · {{item.role}} · {{item.taskName}}</view>
+        <view class="saved-meta">评分 {{item.score}} · 积分 {{item.points}}</view>
+        <view class="row-actions">
+          <button class="danger small" data-id="{{item.id}}" bindtap="deleteIncentiveRecord">删除</button>
+        </view>
+      </view>
     </view>
   </view>
 

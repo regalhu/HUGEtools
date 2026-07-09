@@ -1,13 +1,13 @@
 {
   "name": "hugetools",
-  "version": "0.7.8",
+  "version": "0.7.9",
   "private": true,
   "description": "HUGEtools catering SaaS deployment service",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "webhook": "node webhook.js",
-    "check": "node --check server.js && node --check webhook.js && node --check yield-calculator.js && node --check site-selection-calculator.js && node --check app.js && node --check api/calculate-yield.js && node --check api/calculate-site-selection.js"
+    "check": "node --check server.js && node --check webhook.js && node --check yield-calculator.js && node --check site-selection-calculator.js && node --check revenue-analysis.js && node --check app.js && node --check api/calculate-yield.js && node --check api/calculate-site-selection.js"
   },
   "dependencies": {
     "express": "^4.19.2"

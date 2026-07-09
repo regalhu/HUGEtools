@@ -28,6 +28,7 @@
           <button class="tool-tab" type="button" data-tool="loss">门店损耗记录工具</button>
           <button class="tool-tab" type="button" data-tool="yield">应产率与产能计算工具</button>
           <button class="tool-tab" type="button" data-tool="health">食材成本与经营健康度</button>
+          <button class="tool-tab" type="button" data-tool="revenue">门店营业额联合分析</button>
           <button class="tool-tab" type="button" data-tool="site">门店选址评估工具</button>
           <button class="tool-tab" type="button" data-tool="recruitment">餐饮招募文案生成</button>
           <button class="tool-tab" type="button" data-tool="deal">团购套餐利润测算器</button>
@@ -375,6 +376,103 @@
           <div class="result-grid" id="healthResult"></div>
           <div class="result-grid secondary-result" id="varianceResult"></div>
           <div class="advice-box" id="healthAdvice"></div>
+        </section>
+
+        <section class="tool-panel" id="tool-revenue">
+          <div class="tool-heading">
+            <div>
+              <p class="eyebrow">销售结构与营业额口径</p>
+              <h2>门店营业额联合分析</h2>
+            </div>
+            <div class="table-actions">
+              <button class="ghost-button" type="button" id="loadRevenueSampleBtn">载入示例</button>
+              <button class="primary-button" type="button" id="analyzeRevenueBtn">重新分析</button>
+            </div>
+          </div>
+
+          <section class="margin-section">
+            <div class="section-title">
+              <h3>数据粘贴与口径规则</h3>
+              <span>营业额与菜品销售按标准门店名和销售日期关联，不自动合并无法匹配门店</span>
+            </div>
+            <div class="form-grid">
+              <label>营业额文件名
+                <input id="revenueFileName" value="宝山共康绿地0605营业额.xlsx" placeholder="例如：宝山共康绿地0605营业额.xlsx">
+              </label>
+              <label>地域筛选
+                <input id="revenueRegionFilter" placeholder="留空为全部">
+              </label>
+              <label>城市筛选
+                <input id="revenueCityFilter" placeholder="留空为全部">
+              </label>
+              <label>月份筛选
+                <input id="revenueMonthFilter" placeholder="例如 2026-06，留空为全部">
+              </label>
+              <label class="wide-field">门店主数据，可选
+                <textarea id="storeMasterText" rows="4" placeholder="门店,地域,城市,市场层级&#10;宝山共康,上海区域,上海,成熟市场"></textarea>
+              </label>
+              <label class="wide-field">门店日营业额数据
+                <textarea id="storeRevenueText" rows="8" placeholder="门店,日期,营业额,订单数,堂食收入,外卖收入"></textarea>
+              </label>
+              <label class="wide-field">菜品销售事实数据
+                <textarea id="dishSalesText" rows="8" placeholder="门店,日期,菜品,主菜单,销售金额,销售份数"></textarea>
+              </label>
+            </div>
+            <div class="advice-box compact-advice">
+              <p>菜品销售金额/营业额仅作为销售结构覆盖率参考，不等于真实营业贡献率，不等于毛利率，不等于利润贡献。</p>
+            </div>
+          </section>
+
+          <div class="result-grid" id="revenueSummary"></div>
+          <div class="advice-box" id="revenueBoundary"></div>
+
+          <section class="margin-section">
+            <div class="section-title">
+              <h3>门店月度联合分析</h3>
+              <span>按标准门店名、月份和可比日期截取后的营业额合并</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>门店</th><th>月份</th><th>可比期间</th><th>可比营业额</th><th>菜品销售额</th><th>覆盖率</th><th>订单/日均</th><th>状态</th></tr>
+                </thead>
+                <tbody id="revenueMonthlyRows"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="margin-section">
+            <div class="section-title">
+              <h3>排行与汇总</h3>
+              <span>输出菜品销售金额 Top、营业额覆盖率 Top、门店日均营业额、地域和市场层级汇总</span>
+            </div>
+            <div class="revenue-analysis-grid">
+              <div>
+                <h3>菜品销售金额 Top</h3>
+                <div class="table-wrap compact-table"><table><thead><tr><th>菜品</th><th>销售额</th><th>门店数</th></tr></thead><tbody id="revenueDishTopRows"></tbody></table></div>
+              </div>
+              <div>
+                <h3>覆盖率 Top</h3>
+                <div class="table-wrap compact-table"><table><thead><tr><th>门店</th><th>月份</th><th>覆盖率</th><th>状态</th></tr></thead><tbody id="revenueCoverageRows"></tbody></table></div>
+              </div>
+              <div>
+                <h3>门店日均营业额排行</h3>
+                <div class="table-wrap compact-table"><table><thead><tr><th>门店</th><th>月份</th><th>日均营业额</th><th>完整月</th></tr></thead><tbody id="revenueDailyRankRows"></tbody></table></div>
+              </div>
+              <div>
+                <h3>地域与市场层级汇总</h3>
+                <div class="table-wrap compact-table"><table><thead><tr><th>维度</th><th>营业额</th><th>菜品销售额</th><th>覆盖率</th></tr></thead><tbody id="revenueSegmentRows"></tbody></table></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="margin-section content-output">
+            <div class="section-title">
+              <h3>月报素材</h3>
+              <span>可复制到经营月报，只保留覆盖率和口径说明，不输出利润结论</span>
+            </div>
+            <textarea id="revenueReportDraft" rows="8" readonly></textarea>
+          </section>
         </section>
 
         <section class="tool-panel" id="tool-site">
@@ -1084,17 +1182,18 @@
       </footer>
     </main>
 
-    <script src="./yield-calculator.js?v=incentive-1"></script>
-    <script src="./site-selection-calculator.js?v=incentive-1"></script>
-    <script src="./app.js?v=incentive-1"></script>
-    <script src="./slider-fix.js?v=incentive-1"></script>
-    <script src="./task-reminder-storage.js?v=incentive-1"></script>
-    <script src="./task-reminder-scheduler.js?v=incentive-1"></script>
-    <script src="./task-reminder-ui.js?v=incentive-1"></script>
-    <script src="./task-reminder.js?v=incentive-1"></script>
-    <script src="./incentive-system-engine.js?v=incentive-1"></script>
-    <script src="./incentive-system-ui.js?v=incentive-1"></script>
-    <script src="./incentive-system.js?v=incentive-1"></script>
-    <script src="./version-archive.js?v=0.7.8"></script>
+    <script src="./yield-calculator.js?v=revenue-1"></script>
+    <script src="./site-selection-calculator.js?v=revenue-1"></script>
+    <script src="./app.js?v=revenue-1"></script>
+    <script src="./slider-fix.js?v=revenue-1"></script>
+    <script src="./revenue-analysis.js?v=revenue-1"></script>
+    <script src="./task-reminder-storage.js?v=revenue-1"></script>
+    <script src="./task-reminder-scheduler.js?v=revenue-1"></script>
+    <script src="./task-reminder-ui.js?v=revenue-1"></script>
+    <script src="./task-reminder.js?v=revenue-1"></script>
+    <script src="./incentive-system-engine.js?v=revenue-1"></script>
+    <script src="./incentive-system-ui.js?v=revenue-1"></script>
+    <script src="./incentive-system.js?v=revenue-1"></script>
+    <script src="./version-archive.js?v=0.7.9"></script>
   </body>
 </html>

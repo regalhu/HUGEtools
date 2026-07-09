@@ -190,15 +190,28 @@ function generateXhs(input) {
   const audience = splitList(input.audience);
   const style = input.style || "种草";
   const address = input.address || "门店附近";
+  const templateNames = [
+    "地域搜索攻略",
+    "性价比清单",
+    "真实探店记录",
+    "工作餐推荐",
+    "夜宵场景",
+    "约会聚餐",
+    "亲子家庭",
+    "健康轻负担",
+    "新品互动",
+    "避坑测评"
+  ];
+  const templateName = templateNames[Number(input.templateIndex) || 0] || templateNames[0];
   const titles = [
+    `${templateName}｜${city}${category}可以这样拍`,
     `${city}${category}，这碗真的适合下班来吃`,
-    `别只会点外卖了，${category}现做才香`,
     `${audience[0] || "上班族"}可以收藏的${category}小店`,
     `${style}｜${points[0] || "现做现吃"}的${category}`,
     `${city}吃饭灵感：一碗热乎的${category}`
   ];
   const body = [
-    `今天想写一家适合${audience.join("、") || "日常吃饭"}的${category}。`,
+    `今天用「${templateName}」角度写一家适合${audience.join("、") || "日常吃饭"}的${category}。`,
     `我最喜欢的是${points.join("、") || "出品稳定、价格清楚、吃起来舒服"}，不是那种只适合拍照的店，是真的能解决一顿饭。`,
     `如果你在${address}附近，午餐、晚餐或者夜宵都可以考虑。第一次来建议先点招牌款，再按口味加小吃或饮品。`,
     "小提醒：高峰期最好错开一点，出餐体验会更稳。"
@@ -208,11 +221,361 @@ function generateXhs(input) {
     titles,
     body,
     tags,
+    templateName,
+    templates: templateNames,
     visual: [
       `封面文案：${city}${category}，${points[0] || "热乎现做"}才舒服。`,
+      `模板镜头：${templateName}要有一个强场景开头，再补产品近景、出餐过程、菜单价格和真实用餐环境。`,
       "拍摄建议：门头一张、产品近景一张、出餐过程一张、顾客用餐场景一张，最后补一张菜单或价格信息。"
     ],
     copyText: `${titles.join("\n")}\n\n${body}\n\n${tags.join(" ")}`
+  };
+}
+
+function calculateYield(input) {
+  const purchaseWeight = Number(input.purchaseWeight) || 0;
+  const purchaseCost = Number(input.purchaseCost) || 0;
+  const yieldRate = Math.min(Math.max((Number(input.yieldRate) || 80) / 100, 0), 1);
+  const lossRate = Math.min(Math.max((Number(input.lossRate) || 0) / 100, 0), 1);
+  const usageKg = Math.max((Number(input.usageGram) || 0) / 1000, 0);
+  const sellingPrice = Number(input.sellingPrice) || 0;
+  const netWeight = cents(purchaseWeight * yieldRate * (1 - lossRate));
+  const capacity = usageKg ? Math.floor(netWeight / usageKg) : 0;
+  const unitCost = usageKg && netWeight ? cents(purchaseCost / netWeight * usageKg) : 0;
+  const grossProfit = cents(sellingPrice - unitCost);
+  const grossRate = sellingPrice ? grossProfit / sellingPrice * 100 : 0;
+  const materialName = input.materialName || "核心原料";
+  return {
+    cards: [
+      { label: "净料重量", value: `${netWeight.toFixed(2)} kg`, level: netWeight ? "good" : "warn" },
+      { label: "理论产能", value: `${capacity} 份`, level: capacity >= 50 ? "good" : capacity >= 20 ? "warn" : "bad" },
+      { label: "单份成本", value: money(unitCost), level: unitCost && sellingPrice && grossRate < 55 ? "warn" : "good" },
+      { label: "理论毛利", value: `${money(grossProfit)} / ${percentText(grossRate)}`, level: levelByRate(grossRate, 55) }
+    ],
+    rows: [
+      { label: "瓶颈原料", value: materialName },
+      { label: "每份用量", value: `${Number(input.usageGram) || 0} g` },
+      { label: "采购成本", value: money(purchaseCost) }
+    ],
+    advice: [
+      capacity ? `当前按「${materialName}」测算最多约 ${capacity} 份，备货和售卖上限先按这个数保守安排。` : "请补齐采购重量和每份用量，才能形成产能判断。",
+      grossRate && grossRate < 55 ? "理论毛利率低于 55%，建议复核出成率、单份克重、售价或采购价。" : "毛利结构暂时可控，后续可扩展多原料 BOM。"
+    ]
+  };
+}
+
+function calculateHealth(input, lossRecords) {
+  const revenue = Number(input.revenue) || 0;
+  const openingInventory = Number(input.openingInventory) || 0;
+  const periodPurchases = Number(input.periodPurchases) || 0;
+  const endingInventory = Number(input.endingInventory) || 0;
+  const trackedLoss = (lossRecords || []).reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+  const adjustment = cents((input.includeTrackedLoss ? trackedLoss : 0) + (Number(input.manualLossCost) || 0) + (Number(input.compCost) || 0) + (Number(input.staffMealCost) || 0) - (Number(input.surplusCost) || 0));
+  const actualCogs = cents(openingInventory + periodPurchases - endingInventory + adjustment);
+  const grossProfit = cents(revenue - actualCogs);
+  const foodCostRate = revenue ? actualCogs / revenue * 100 : 0;
+  const grossMarginRate = revenue ? grossProfit / revenue * 100 : 0;
+  const laborCost = Number(input.laborCost) || 0;
+  const primeCost = cents(actualCogs + laborCost);
+  const primeCostRate = revenue ? primeCost / revenue * 100 : 0;
+  const theoreticalFoodCost = Number(input.theoreticalFoodCost) || 0;
+  const variance = theoreticalFoodCost ? cents(actualCogs - theoreticalFoodCost) : 0;
+  const foodRedline = Number(input.foodRedline) || 35;
+  const primeRedline = Number(input.primeRedline) || 65;
+  const foodLevel = actualCogs < 0 ? "bad" : foodCostRate <= foodRedline ? "good" : foodCostRate <= foodRedline + 5 ? "warn" : "bad";
+  const primeLevel = primeCostRate <= primeRedline ? "good" : primeCostRate <= primeRedline + 5 ? "warn" : "bad";
+  const advice = [];
+  if (!revenue && !periodPurchases) advice.push("录入营业收入、期初库存、当期采购和期末库存后，会形成食材成本率与 Prime Cost。");
+  if (foodCostRate > foodRedline) advice.push(`食材成本率高于 ${foodRedline}%，优先检查采购价、盘点、报损赠送和菜品克重。`);
+  if (primeCostRate > primeRedline) advice.push(`Prime Cost 高于 ${primeRedline}%，需要同时看食材成本和排班人工。`);
+  if (theoreticalFoodCost && variance > 0) advice.push(`实际食材成本比理论成本高 ${money(variance)}，重点排查损耗、盘亏或漏记销售。`);
+  if (!advice.length) advice.push("当前经营健康度暂未触发红线，可以继续用损耗和标准菜谱校准。");
+  return {
+    cards: [
+      { label: "实际食材成本", value: money(actualCogs), level: foodLevel },
+      { label: "食材成本率", value: percentText(foodCostRate), level: foodLevel },
+      { label: "毛利", value: `${money(grossProfit)} / ${percentText(grossMarginRate)}`, level: grossProfit >= 0 ? "good" : "bad" },
+      { label: "Prime Cost", value: `${money(primeCost)} / ${percentText(primeCostRate)}`, level: primeLevel }
+    ],
+    varianceCards: [
+      { label: "理论食材成本", value: money(theoreticalFoodCost), level: "good" },
+      { label: "成本差异", value: money(variance), level: variance <= 0 ? "good" : "warn" },
+      { label: "损耗记录联动", value: money(trackedLoss), level: trackedLoss > revenue * 0.02 && revenue ? "bad" : "good" },
+      { label: "调整项合计", value: money(adjustment), level: adjustment > revenue * 0.03 && revenue ? "warn" : "good" }
+    ],
+    advice
+  };
+}
+
+function calculateSite(input) {
+  const monthlyRevenue = (Number(input.avgTicket) || 0) * (Number(input.dailyOrders) || 0) * (Number(input.businessDays) || 30);
+  const rentCost = (Number(input.monthlyRent) || 0) + (Number(input.propertyFee) || 0);
+  const grossProfit = monthlyRevenue * ((Number(input.grossMarginRate) || 60) / 100);
+  const fixedCost = rentCost + (Number(input.laborCost) || 0) + (Number(input.utilitiesCost) || 0) + (Number(input.marketingCost) || 0);
+  const monthlyNetProfit = cents(grossProfit - fixedCost);
+  const rentRate = monthlyRevenue ? rentCost / monthlyRevenue * 100 : 0;
+  const contribution = (Number(input.avgTicket) || 0) * ((Number(input.grossMarginRate) || 60) / 100);
+  const breakEvenDailyOrders = contribution ? fixedCost / contribution / (Number(input.businessDays) || 30) : 0;
+  const investment = (Number(input.transferFee) || 0) + (Number(input.decorationCost) || 0) + (Number(input.equipmentCost) || 0) + (Number(input.monthlyRent) || 0) * (Number(input.depositMonths) || 2);
+  const paybackMonths = monthlyNetProfit > 0 ? investment / monthlyNetProfit : 0;
+  const conditionScore = ["license", "exhaust", "waterDrainage"].reduce((sum, key) => sum + (input[key] ? 8 : -12), 0);
+  const trafficScore = (Number(input.trafficScore) || 3) * 6 + (Number(input.customerScore) || 3) * 6 + (Number(input.competitionScore) || 3) * 4 + (Number(input.visibilityScore) || 3) * 4;
+  const financeScore = rentRate <= 10 ? 24 : rentRate <= 15 ? 14 : 4;
+  const profitScore = monthlyNetProfit > 0 ? 18 : 0;
+  const finalScore = Math.min(Math.max(Math.round(conditionScore + trafficScore + financeScore + profitScore), 0), 100);
+  const verdict = finalScore >= 75 ? "优先考虑" : finalScore >= 60 ? "可谈判进入" : finalScore >= 45 ? "谨慎观察" : "不建议进入";
+  const risks = [];
+  if (!input.license) risks.push("证照条件不明确。");
+  if (!input.exhaust) risks.push("排烟条件不满足。");
+  if (!input.waterDrainage) risks.push("上下水条件需确认。");
+  if (rentRate > 15) risks.push("租售比高于 15%。");
+  if (monthlyNetProfit <= 0) risks.push("按当前假设月净利润不为正。");
+  return {
+    cards: [
+      { label: "选址结论", value: verdict, level: finalScore >= 60 ? "good" : finalScore >= 45 ? "warn" : "bad" },
+      { label: "综合评分", value: `${finalScore} 分`, level: finalScore >= 60 ? "good" : "warn" },
+      { label: "租售比", value: percentText(rentRate), level: rentRate <= 10 ? "good" : rentRate <= 15 ? "warn" : "bad" },
+      { label: "月净利润", value: money(monthlyNetProfit), level: monthlyNetProfit > 0 ? "good" : "bad" },
+      { label: "保本日订单", value: `${cents(breakEvenDailyOrders)} 单`, level: breakEvenDailyOrders <= (Number(input.dailyOrders) || 0) * 0.8 ? "good" : "warn" },
+      { label: "回本周期", value: paybackMonths ? `${cents(paybackMonths)} 月` : "无法回本", level: paybackMonths && paybackMonths <= 18 ? "good" : "warn" }
+    ],
+    advice: [
+      risks.length ? `风险：${risks.join(" ")}` : "红线条件暂未触发，建议继续做午晚高峰和周末踩点。",
+      `谈判重点：月租、物业费、免租期、递增比例、排烟/上下水/电力和证照责任要写入合同附件。`
+    ]
+  };
+}
+
+function generateRecruitment(input) {
+  const category = input.category || "快餐简餐";
+  const rank = input.rank || "服务员";
+  const company = input.company || "本店";
+  const location = input.location || "门店附近";
+  const count = input.count || "若干";
+  const salary = input.salary || "面议";
+  const schedule = input.schedule || "按门店班次安排";
+  const benefits = splitList(input.benefits || "包吃,绩效奖金,晋升培训");
+  const contact = input.contact || "负责人";
+  const phone = input.phone || "到店咨询";
+  const duties = [`负责${category}门店${rank}当班工作`, "按标准完成出品、服务、清洁或备货动作", "配合店长完成高峰期协作和食品安全检查"];
+  const requirements = ["身体健康，守时靠谱", "能接受餐饮门店排班", "重视卫生、安全和顾客体验"];
+  const draft = [
+    `${company} 招 ${rank}`,
+    `类目：${category}`,
+    `人数：${count}`,
+    `薪资：${salary}`,
+    `地点：${location}`,
+    `时间：${schedule}`,
+    "",
+    "岗位职责：",
+    ...duties.map((item, index) => `${index + 1}. ${item}`),
+    "",
+    "任职要求：",
+    ...requirements.map((item, index) => `${index + 1}. ${item}`),
+    "",
+    `福利亮点：${benefits.join("、")}`,
+    `联系：${contact} ${phone}`
+  ].join("\n");
+  return {
+    cards: [
+      { label: "餐饮类目", value: category, level: "good" },
+      { label: "招聘职级", value: rank, level: "good" },
+      { label: "发布形式", value: input.format || "门店海报", level: "warn" },
+      { label: "招募重点", value: benefits[0] || "岗位清楚", level: "good" }
+    ],
+    duties,
+    requirements,
+    draft,
+    advice: ["发布前补齐真实手机号、详细地址、休息制度和社保/住宿等硬信息。"]
+  };
+}
+
+function generateDianping(input) {
+  const details = [input.items, input.taste, input.service, input.focus || input.issues].filter(Boolean).length;
+  const modeLabel = input.mode === "merchantReply" ? "商家回复" : "真实体验评价";
+  const riskLevel = details >= 3 ? "低" : details >= 2 ? "中" : "高";
+  const introMap = { positive: "这次整体体验比较满意。", neutral: "这次体验中规中矩。", mixed: "这次有满意的地方，也有需要改进的地方。", negative: "这次体验不太理想。" };
+  let draft;
+  if (input.mode === "merchantReply") {
+    draft = [
+      input.sentiment === "negative" ? "很抱歉这次没有给您带来满意体验。" : "感谢您分享这次真实体验。",
+      input.items ? `您提到的「${input.items}」我们已经记录。` : "",
+      input.taste ? `关于产品反馈：${input.taste}` : "",
+      input.service ? `关于服务/环境反馈：${input.service}` : "",
+      input.issues ? `关于「${input.issues}」，我们会反馈给门店复盘并尽快优化。` : "我们会继续保持出品和服务稳定。"
+    ].filter(Boolean).join("\n\n");
+  } else {
+    draft = details ? [
+      input.visitDate ? `${input.visitDate} 到店体验，${introMap[input.sentiment] || introMap.neutral}` : (introMap[input.sentiment] || introMap.neutral),
+      input.items ? `实际消费：${input.items}${input.spend ? `，金额约 ${input.spend}` : ""}。` : "",
+      input.taste ? `口味/产品：${input.taste}` : "",
+      input.service ? `服务/环境：${input.service}` : "",
+      input.issues ? `不足/建议：${input.issues}` : "",
+      input.focus ? `补充感受：${input.focus}` : ""
+    ].filter(Boolean).join("\n\n") : "请先补充真实消费项目、口味/产品细节、服务/环境细节或希望表达的重点。";
+  }
+  return {
+    cards: [
+      { label: "真实细节完整度", value: `${details}/4`, level: details >= 3 ? "good" : details >= 2 ? "warn" : "bad" },
+      { label: "草稿类型", value: modeLabel, level: "good" },
+      { label: "合规风险", value: riskLevel, level: riskLevel === "低" ? "good" : riskLevel === "中" ? "warn" : "bad" },
+      { label: "建议图片", value: "3 张", level: "good" }
+    ],
+    draft,
+    photoIdeas: [
+      input.items ? `产品近景：拍清楚「${input.items}」的真实份量、摆盘和状态。` : "产品近景：拍实际消费的菜品或套餐。",
+      "环境照片：拍门头、座位区、菜单价格或排队动线。",
+      "细节照片：可补充小票、取餐号、调料台、餐具或包装，注意遮挡隐私。"
+    ],
+    compliance: [
+      "只整理本人真实体验或商家对真实评价的回复，不替顾客写评。",
+      "不要承诺返现、赠品、折扣来换评价。",
+      "没有实际体验的菜品、服务、环境细节不要补写。"
+    ]
+  };
+}
+
+function summarizeTasks(records) {
+  const tasks = records || [];
+  const pending = tasks.filter((item) => item.status !== "done").length;
+  const urgent = tasks.filter((item) => item.priority === "高" && item.status !== "done").length;
+  return {
+    cards: [
+      { label: "任务总数", value: `${tasks.length} 项`, level: tasks.length ? "good" : "warn" },
+      { label: "待完成", value: `${pending} 项`, level: pending ? "warn" : "good" },
+      { label: "高优先级", value: `${urgent} 项`, level: urgent ? "bad" : "good" },
+      { label: "本地状态", value: "仅本页内存", level: "warn" }
+    ],
+    advice: [pending ? "先处理高优先级和今天到期任务，完成后可在列表中点完成。" : "当前任务都已完成，可以继续新增周期性门店动作。"]
+  };
+}
+
+function calculateIncentive(records) {
+  const list = records || [];
+  const totalPoints = list.reduce((sum, item) => sum + (Number(item.points) || 0), 0);
+  const avgScore = list.length ? list.reduce((sum, item) => sum + (Number(item.score) || 0), 0) / list.length : 0;
+  const best = list.slice().sort((a, b) => (b.points || 0) - (a.points || 0))[0];
+  return {
+    cards: [
+      { label: "评分记录", value: `${list.length} 条`, level: list.length ? "good" : "warn" },
+      { label: "平均评分", value: percentText(avgScore), level: avgScore >= 85 ? "good" : avgScore >= 70 ? "warn" : "bad" },
+      { label: "累计积分", value: `${cents(totalPoints)} 分`, level: "good" },
+      { label: "当前领先", value: best ? best.employee : "暂无", level: best ? "good" : "warn" }
+    ],
+    advice: [list.length ? "积分用于执行激励参考，不直接等同工资；低分任务应进入带教和复盘。" : "先录入员工任务评分，即可生成积分和排行榜。"]
+  };
+}
+
+function scoreIncentive(input) {
+  const onTime = Number(input.onTimeScore) || 0;
+  const quality = Number(input.qualityScore) || 0;
+  const completion = Number(input.completionScore) || 0;
+  const basePoints = Number(input.basePoints) || 10;
+  const score = cents(onTime * 0.3 + quality * 0.45 + completion * 0.25);
+  const points = cents(basePoints * score / 100);
+  return { score, points };
+}
+
+function analyzeRevenue(input) {
+  const alias = { "金沙百联": "金山百联", "新街口": "南京新街口", "宝山共康绿地": "宝山共康" };
+  const normalizeStore = (name) => alias[String(name || "").trim()] || String(name || "").trim();
+  const rowsFromText = (value) => {
+    const lines = String(value || "").split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    if (!lines.length) return [];
+    const header = lines[0].split(/\t|,/).map((item) => item.trim());
+    return lines.slice(1).map((line) => {
+      const cells = line.split(/\t|,/).map((item) => item.trim());
+      return header.reduce((row, key, index) => {
+        row[key] = cells[index] || "";
+        return row;
+      }, {});
+    });
+  };
+  const monthOf = (dateText) => String(dateText || "").slice(0, 7);
+  const startMatch = String(input.fileName || "").match(/(?:^|\D)(\d{2})(\d{2})(?:\D|$)/);
+  const fileStart = startMatch ? `${new Date().getFullYear()}-${startMatch[1]}-${startMatch[2]}` : "";
+  const masterRows = rowsFromText(input.storeMasterText);
+  const masterMap = {};
+  masterRows.forEach((row) => {
+    const store = normalizeStore(row["门店"]);
+    if (store) masterMap[store] = { region: row["地域"] || "未分区", city: row["城市"] || "未标注", market: row["市场层级"] || "未分层" };
+  });
+  const revenueRows = rowsFromText(input.revenueText).map((row) => ({
+    store: normalizeStore(row["门店"]),
+    date: row["日期"],
+    month: monthOf(row["日期"]),
+    revenue: Number(row["营业额"]) || 0,
+    orders: Number(row["订单数"]) || 0
+  })).filter((row) => row.store && row.date);
+  const dishRows = rowsFromText(input.dishText).map((row) => ({
+    store: normalizeStore(row["门店"]),
+    date: row["日期"],
+    month: monthOf(row["日期"]),
+    dish: row["菜品"] || "未命名菜品",
+    isMainMenu: /^(是|true|1|yes)$/i.test(String(row["主菜单"] || "")),
+    sales: Number(row["销售金额"]) || 0
+  })).filter((row) => row.store && row.date);
+  const group = {};
+  revenueRows.forEach((row) => {
+    const key = `${row.store}__${row.month}`;
+    group[key] = group[key] || { store: row.store, month: row.month, revenueRows: [], dishRows: [] };
+    group[key].revenueRows.push(row);
+  });
+  dishRows.forEach((row) => {
+    const key = `${row.store}__${row.month}`;
+    group[key] = group[key] || { store: row.store, month: row.month, revenueRows: [], dishRows: [] };
+    group[key].dishRows.push(row);
+  });
+  const rows = Object.values(group).map((item) => {
+    const dishStart = item.dishRows.map((row) => row.date).sort()[0] || "";
+    const comparableStart = [fileStart, dishStart].filter(Boolean).sort().slice(-1)[0] || "";
+    const comparableRevenueRows = comparableStart ? item.revenueRows.filter((row) => row.date >= comparableStart) : item.revenueRows;
+    const revenue = cents(comparableRevenueRows.reduce((sum, row) => sum + row.revenue, 0));
+    const sales = cents(item.dishRows.reduce((sum, row) => sum + row.sales, 0));
+    const mainSales = cents(item.dishRows.filter((row) => row.isMainMenu).reduce((sum, row) => sum + row.sales, 0));
+    const coverage = revenue ? sales / revenue * 100 : 0;
+    const mainRate = sales ? mainSales / sales * 100 : 0;
+    const status = [];
+    if (!item.revenueRows.length || !item.dishRows.length) status.push("门店未匹配");
+    if (sales && item.revenueRows.length && !revenue) status.push("可比营业额为空");
+    if (coverage > 105) status.push("口径异常");
+    if (sales && mainRate < 75) status.push("主菜单匹配偏低");
+    if (comparableRevenueRows.length < 28) status.push("非整月样本");
+    if (!status.length) status.push("口径正常");
+    return {
+      key: `${item.store}-${item.month}`,
+      store: item.store,
+      month: item.month,
+      revenue,
+      sales,
+      coverage,
+      revenueText: money(revenue),
+      salesText: money(sales),
+      coverageText: percentText(coverage),
+      status: status.join(" / "),
+      master: masterMap[item.store] || {}
+    };
+  });
+  const totalRevenue = cents(rows.reduce((sum, row) => sum + row.revenue, 0));
+  const totalSales = cents(rows.reduce((sum, row) => sum + row.sales, 0));
+  const coverage = totalRevenue ? totalSales / totalRevenue * 100 : 0;
+  const abnormal = rows.filter((row) => row.status !== "口径正常" && row.status !== "非整月样本").length;
+  return {
+    rows,
+    cards: [
+      { label: "纳入门店", value: `${new Set(rows.map((row) => row.store)).size} 家`, level: rows.length ? "good" : "warn" },
+      { label: "可比营业额", value: money(totalRevenue), level: totalRevenue ? "good" : "warn" },
+      { label: "菜品销售金额", value: money(totalSales), level: totalSales ? "good" : "warn" },
+      { label: "覆盖率", value: percentText(coverage), level: coverage > 105 ? "bad" : coverage >= 75 ? "good" : "warn" }
+    ],
+    report: [
+      "门店营业额联合分析素材",
+      `可比营业额：${money(totalRevenue)}`,
+      `菜品销售金额：${money(totalSales)}`,
+      `菜品销售金额/营业额覆盖率：${percentText(coverage)}`,
+      abnormal ? `需核查口径：${rows.filter((row) => row.status !== "口径正常").map((row) => `${row.store}${row.month}${row.status}`).join("；")}` : "本次未发现覆盖率超过 105% 或主菜单匹配偏低的异常口径。",
+      "边界：覆盖率仅作销售结构参考，不等于真实营业贡献率、毛利率或利润贡献。"
+    ].join("\n")
   };
 }
 
@@ -263,5 +626,14 @@ module.exports = {
   calculateDeal,
   summarizeLoss,
   generateXhs,
+  calculateYield,
+  calculateHealth,
+  calculateSite,
+  generateRecruitment,
+  generateDianping,
+  summarizeTasks,
+  calculateIncentive,
+  scoreIncentive,
+  analyzeRevenue,
   generateSchedule
 };

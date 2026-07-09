@@ -223,6 +223,33 @@ th { color: var(--muted); font-size: 12px; }
 .structure-row strong { color: var(--ink); text-align: right; }
 .bottleneck-row .structure-fill { background: var(--red); }
 .bottleneck-row strong { color: var(--red); }
+.revenue-analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.compact-table table {
+  min-width: 520px;
+}
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  border-radius: 999px;
+  background: var(--green-soft);
+  color: var(--green);
+  padding: 3px 9px;
+  font-size: 12px;
+  font-weight: 900;
+}
+.status-pill.warn {
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+.status-pill.bad {
+  background: var(--red-soft);
+  color: var(--red);
+}
 .recruitment-output {
   display: grid;
   grid-template-columns: minmax(280px, 0.9fr) minmax(320px, 1.1fr);
@@ -561,7 +588,7 @@ th { color: var(--muted); font-size: 12px; }
 }
 
 @media (max-width: 1080px) {
-  .tool-layout, .form-grid, .compact-grid, .result-grid { grid-template-columns: 1fr 1fr; }
+  .tool-layout, .form-grid, .compact-grid, .result-grid, .revenue-analysis-grid { grid-template-columns: 1fr 1fr; }
   .tool-nav { position: static; grid-column: 1 / -1; }
   .incentive-record-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -663,7 +690,7 @@ th { color: var(--muted); font-size: 12px; }
     font-size: 11px;
     line-height: 1.45;
   }
-  .tool-layout, .form-grid, .compact-grid, .result-grid { grid-template-columns: 1fr; }
+  .tool-layout, .form-grid, .compact-grid, .result-grid, .revenue-analysis-grid { grid-template-columns: 1fr; }
   .form-grid, .compact-grid, .ingredient-editor {
     gap: 10px;
   }
