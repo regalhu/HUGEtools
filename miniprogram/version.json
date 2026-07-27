@@ -1,11 +1,16 @@
 {
-  "webVersion": "0.7.10",
-  "miniProgramVersion": "0.7.10-miniapp.1",
-  "updatedAt": "2026-07-09",
+  "webVersion": "0.8.0",
+  "miniProgramVersion": "0.8.0-miniapp.1",
+  "updatedAt": "2026-07-27",
   "miniprogramRoot": "miniprogram/",
-  "syncedToolCount": 14,
+  "syncedToolCount": 15,
   "unsyncedToolCount": 0,
   "tools": [
+    {
+      "key": "operations",
+      "name": "营运工作台",
+      "status": "local-persistent-functional"
+    },
     {
       "key": "margin",
       "name": "菜品毛利计算器",
@@ -59,12 +64,12 @@
     {
       "key": "taskReminder",
       "name": "门店任务提醒工具",
-      "status": "basic-functional-memory-only"
+      "status": "local-persistent-functional"
     },
     {
       "key": "incentive",
       "name": "员工激励系统",
-      "status": "basic-functional-memory-only"
+      "status": "local-persistent-functional"
     },
     {
       "key": "schedule",
@@ -78,9 +83,11 @@
     }
   ],
   "notes": [
+    "2026-07-27 新增营运工作台：会议、日志、资料、培训和日报在微信本机持久化，并汇总现有任务与激励模块。",
+    "2026-07-27 营业额分析增加折后收入、到手收入、到手率和到手收入预算；缺失数据不按 0 计算。",
     "2026-07-09 已同步 Web 端门店营业额联合分析基础能力。",
     "2026-07-09 新增分享二维码工具：小程序端支持原生转发、复制路径、复制公网链接，并可在云服务器配置微信密钥后请求小程序码。",
     "小程序不使用 document、window、DOM 或 IndexedDB；新增工具采用 WXML、WXSS 和 Page JS 改写。",
-    "任务提醒和员工激励第一版为页面内存版，可打开、输入、生成/计算基础结果；持久化和真正提醒调度后续再补。"
+    "任务提醒和员工激励已升级为微信本机持久化；小程序关闭后重新打开仍可读取记录，但不提供后台主动通知。"
   ]
 }

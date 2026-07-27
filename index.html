@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>胡哥餐饮工具箱</title>
     <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="./styles.css?v=xhs-template-1">
+    <link rel="stylesheet" href="./styles.css?v=0.8.0-r2">
   </head>
   <body>
     <main class="app-shell">
@@ -19,16 +19,17 @@
       </header>
 
       <section class="risk-banner" aria-label="使用边界">
-        本工具为本地浏览器计算器，不采集、不上传、不保存你的门店数据；平台费率和测算结果仅用于经营估算，请以商家后台账单、合同和实际采购价为准。
+        本工具不采集、不上传门店经营数据；营运记录、任务和激励数据仅保存在当前浏览器。平台费率和测算结果仅用于经营估算，请以商家后台账单、合同和实际采购价为准。
       </section>
 
       <section class="tool-layout">
         <nav class="tool-nav" aria-label="工具列表">
-          <button class="tool-tab active" type="button" data-tool="margin">菜品毛利计算器</button>
+          <button class="tool-tab active" type="button" data-tool="operations">营运工作台</button>
+          <button class="tool-tab" type="button" data-tool="margin">菜品毛利计算器</button>
           <button class="tool-tab" type="button" data-tool="loss">门店损耗记录工具</button>
           <button class="tool-tab" type="button" data-tool="yield">应产率与产能计算工具</button>
           <button class="tool-tab" type="button" data-tool="health">食材成本与经营健康度</button>
-          <button class="tool-tab" type="button" data-tool="revenue">门店营业额联合分析</button>
+          <button class="tool-tab" type="button" data-tool="revenue">经营分析与老板简报</button>
           <button class="tool-tab" type="button" data-tool="site">门店选址评估工具</button>
           <button class="tool-tab" type="button" data-tool="recruitment">餐饮招募文案生成</button>
           <button class="tool-tab" type="button" data-tool="deal">团购套餐利润测算器</button>
@@ -40,7 +41,160 @@
           <button class="tool-tab" type="button" data-tool="share">分享二维码</button>
         </nav>
 
-        <section class="tool-panel active" id="tool-margin">
+        <section class="tool-panel active" id="tool-operations">
+          <div class="tool-heading">
+            <div>
+              <p class="eyebrow">日常管理 · 会议 · 复盘 · 培训</p>
+              <h2>营运工作台</h2>
+              <p class="tool-subtitle" id="workbenchTodayHint"></p>
+            </div>
+            <div class="table-actions">
+              <button class="ghost-button" type="button" data-open-tool="task-reminder">打开任务提醒</button>
+              <button class="ghost-button" type="button" data-open-tool="incentive">打开员工激励</button>
+            </div>
+          </div>
+
+          <section class="risk-banner task-privacy-note">
+            本模块参考辛香汇工作助手的营运闭环设计，只在当前浏览器保存会议、日志、资料和培训记录；不含账号、云同步、后台权限和附件上传。
+          </section>
+
+          <div class="mode-strip workbench-tabs" role="group" aria-label="营运工作台页面">
+            <button class="mode-button active" type="button" data-workbench-view="overview">今日总览</button>
+            <button class="mode-button" type="button" data-workbench-view="meetings">会议纪要</button>
+            <button class="mode-button" type="button" data-workbench-view="logs">每日日志</button>
+            <button class="mode-button" type="button" data-workbench-view="resources">资料库</button>
+            <button class="mode-button" type="button" data-workbench-view="training">培训反馈</button>
+            <button class="mode-button" type="button" data-workbench-view="report">日报导出</button>
+          </div>
+
+          <section data-workbench-panel="overview">
+            <div class="result-grid workbench-summary" id="workbenchSummary"></div>
+            <div class="workbench-entry-grid">
+              <button type="button" class="workbench-entry" data-workbench-view="meetings">
+                <span>01</span><strong>记录会议</strong><small>日期 + 上午/下午，议题、责任人、计划完成时间和进度</small>
+              </button>
+              <button type="button" class="workbench-entry" data-workbench-view="logs">
+                <span>02</span><strong>写每日日志</strong><small>完成事项、问题和明日重点</small>
+              </button>
+              <button type="button" class="workbench-entry" data-open-tool="task-reminder">
+                <span>03</span><strong>跟进任务</strong><small>复用现有周期任务、逾期恢复和本地提醒</small>
+              </button>
+              <button type="button" class="workbench-entry" data-open-tool="incentive">
+                <span>04</span><strong>培训与激励</strong><small>复用现有任务评分、积分和排行榜</small>
+              </button>
+              <button type="button" class="workbench-entry" data-workbench-view="resources">
+                <span>05</span><strong>沉淀资料</strong><small>分类保存标准、经验和来源</small>
+              </button>
+              <button type="button" class="workbench-entry" data-workbench-view="report">
+                <span>06</span><strong>生成日报</strong><small>汇总当日会议、日志、培训和任务状态</small>
+              </button>
+            </div>
+            <div class="advice-box">
+              <p><strong>闭环原则：</strong>记录事实 → 明确责任人和完成时间 → 任务跟进 → 培训/激励 → 日报复盘。</p>
+              <p>本地记录缺失时显示“未读取/未填写”，不会自动按 0 或“已完成”处理。</p>
+            </div>
+          </section>
+
+          <section data-workbench-panel="meetings" hidden>
+            <section class="margin-section">
+              <div class="section-title"><h3>新增会议纪要</h3><span>时间采用“日期 + 上午/下午”，便于门店快速记录</span></div>
+              <form id="workbenchMeetingForm">
+                <div class="form-grid">
+                  <label>会议日期<input id="meetingDate" name="date" type="date" required></label>
+                  <label>会议时段
+                    <select name="period"><option>上午</option><option>下午</option></select>
+                  </label>
+                  <label>会议名称<input name="title" maxlength="80" required placeholder="例如：周营运复盘会"></label>
+                  <label>议题负责人<input name="owner" maxlength="40" placeholder="例如：店长"></label>
+                  <label class="wide-field">会议摘要<textarea name="summary" rows="3" maxlength="800" placeholder="只记录已确认事实和明确结论"></textarea></label>
+                  <label class="wide-field">当期/专项议题<textarea name="topic" rows="3" maxlength="500" placeholder="写清问题、动作和验收标准"></textarea></label>
+                  <label>计划完成日期<input id="meetingTopicDueDate" name="dueDate" type="date"></label>
+                  <label>当前进度
+                    <select name="progress"><option>待开始</option><option>进行中</option><option>待验收</option><option>已完成</option></select>
+                  </label>
+                </div>
+                <div class="task-form-actions"><button class="primary-button" type="submit">保存会议纪要</button></div>
+              </form>
+            </section>
+            <div class="workbench-record-list" id="workbenchMeetingList"></div>
+          </section>
+
+          <section data-workbench-panel="logs" hidden>
+            <section class="margin-section">
+              <div class="section-title"><h3>新增每日日志</h3><span>聚焦今天完成了什么、卡在哪里、明天抓什么</span></div>
+              <form id="workbenchLogForm">
+                <div class="form-grid">
+                  <label>日志日期<input id="workLogDate" name="date" type="date" required></label>
+                  <label>日志标题<input name="title" maxlength="80" value="门店营运日志"></label>
+                  <label class="wide-field">今日完成<textarea name="completed" rows="3" maxlength="800" required></textarea></label>
+                  <label class="wide-field">问题与风险<textarea name="issue" rows="3" maxlength="800"></textarea></label>
+                  <label class="wide-field">明日重点<textarea name="next" rows="3" maxlength="800"></textarea></label>
+                </div>
+                <div class="task-form-actions"><button class="primary-button" type="submit">保存日志</button></div>
+              </form>
+            </section>
+            <div class="workbench-record-list" id="workbenchLogList"></div>
+          </section>
+
+          <section data-workbench-panel="resources" hidden>
+            <section class="margin-section">
+              <div class="section-title"><h3>新增资料记录</h3><span>保留来源，避免把经验或传闻写成制度事实</span></div>
+              <form id="workbenchResourceForm">
+                <div class="form-grid">
+                  <label>分类
+                    <select name="category"><option>营运标准</option><option>菜品与成本</option><option>服务与客诉</option><option>食品安全</option><option>培训材料</option><option>其他</option></select>
+                  </label>
+                  <label>资料标题<input name="title" maxlength="100" required></label>
+                  <label class="wide-field">资料内容<textarea name="content" rows="5" maxlength="1600"></textarea></label>
+                  <label class="wide-field">来源/适用范围<input name="source" maxlength="300" placeholder="例如：公司制度名称、供应商文件、门店实测日期"></label>
+                </div>
+                <div class="task-form-actions"><button class="primary-button" type="submit">保存资料</button></div>
+              </form>
+            </section>
+            <div class="workbench-record-list" id="workbenchResourceList"></div>
+          </section>
+
+          <section data-workbench-panel="training" hidden>
+            <section class="margin-section">
+              <div class="section-title"><h3>新增培训反馈</h3><span>培训评分与员工激励分开：此处记录课程反馈，激励模块记录任务执行</span></div>
+              <form id="workbenchTrainingForm">
+                <div class="form-grid">
+                  <label>培训日期<input id="trainingDate" name="date" type="date" required></label>
+                  <label>培训主题<input name="session" maxlength="100" required></label>
+                  <label>讲师<input name="trainer" maxlength="60"></label>
+                  <label>评分
+                    <select name="score"><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select>
+                  </label>
+                  <label>是否需要复训
+                    <select name="retrain"><option>否</option><option>是</option></select>
+                  </label>
+                  <label class="wide-field">反馈与行动建议<textarea name="feedback" rows="4" maxlength="1000"></textarea></label>
+                </div>
+                <div class="task-form-actions"><button class="primary-button" type="submit">保存培训反馈</button></div>
+              </form>
+            </section>
+            <div class="workbench-record-list" id="workbenchTrainingList"></div>
+          </section>
+
+          <section data-workbench-panel="report" hidden>
+            <section class="margin-section workbench-report-card" id="workbenchPrintableReport">
+              <div class="section-title"><h3>每日营运简报</h3><span>未填写或未读取的数据不会按 0 推断</span></div>
+              <div class="form-grid compact-grid">
+                <label>经营日期<input id="workbenchReportDate" type="date"></label>
+              </div>
+              <textarea id="workbenchReportDraft" rows="22" readonly></textarea>
+              <div class="task-form-actions">
+                <button class="primary-button" type="button" id="buildWorkbenchReportBtn">重新生成</button>
+                <button class="ghost-button" type="button" id="copyWorkbenchReportBtn">复制</button>
+                <button class="ghost-button" type="button" id="downloadWorkbenchReportBtn">下载 TXT</button>
+                <button class="ghost-button" type="button" id="printWorkbenchReportBtn">打印/保存 PDF</button>
+              </div>
+              <p class="form-note" id="workbenchReportStatus"></p>
+            </section>
+          </section>
+        </section>
+
+        <section class="tool-panel" id="tool-margin">
           <div class="tool-heading">
             <div>
               <p class="eyebrow">成本利润工具</p>
@@ -382,8 +536,8 @@
         <section class="tool-panel" id="tool-revenue">
           <div class="tool-heading">
             <div>
-              <p class="eyebrow">销售结构与营业额口径</p>
-              <h2>门店营业额联合分析</h2>
+              <p class="eyebrow">经营事实 · 预算 · 菜品销售结构</p>
+              <h2>经营分析与老板简报</h2>
             </div>
             <div class="table-actions">
               <button class="ghost-button" type="button" id="loadRevenueSampleBtn">载入示例</button>
@@ -398,7 +552,7 @@
             </div>
             <div class="form-grid">
               <label>营业额文件名
-                <input id="revenueFileName" value="宝山共康绿地0605营业额.xlsx" placeholder="例如：宝山共康绿地0605营业额.xlsx">
+                <input id="revenueFileName" value="多店营业额.xlsx" placeholder="例如：宝山共康绿地0605营业额.xlsx">
               </label>
               <label>地域筛选
                 <input id="revenueRegionFilter" placeholder="留空为全部">
@@ -413,7 +567,10 @@
                 <textarea id="storeMasterText" rows="4" placeholder="门店,地域,城市,市场层级&#10;宝山共康,上海区域,上海,成熟市场"></textarea>
               </label>
               <label class="wide-field">门店日营业额数据
-                <textarea id="storeRevenueText" rows="8" placeholder="门店,日期,营业额,订单数,堂食收入,外卖收入"></textarea>
+                <textarea id="storeRevenueText" rows="8" placeholder="门店,日期,折后营业收入,到手收入,订单数,堂食收入,外卖收入"></textarea>
+              </label>
+              <label class="wide-field">门店月度预算，可选
+                <textarea id="storeBudgetText" rows="5" placeholder="门店,月份,到手收入预算&#10;宝山共康,2026-06,420000"></textarea>
               </label>
               <label class="wide-field">菜品销售事实数据
                 <textarea id="dishSalesText" rows="8" placeholder="门店,日期,菜品,主菜单,销售金额,销售份数"></textarea>
@@ -435,7 +592,7 @@
             <div class="table-wrap">
               <table>
                 <thead>
-                  <tr><th>门店</th><th>月份</th><th>可比期间</th><th>可比营业额</th><th>菜品销售额</th><th>覆盖率</th><th>订单/日均</th><th>状态</th></tr>
+                  <tr><th>门店</th><th>月份</th><th>可比期间</th><th>折后收入</th><th>到手收入/到手率</th><th>预算达成</th><th>菜品销售额/覆盖率</th><th>订单/日均</th><th>状态</th></tr>
                 </thead>
                 <tbody id="revenueMonthlyRows"></tbody>
               </table>
@@ -1223,23 +1380,24 @@
       </section>
 
       <footer class="site-footer">
-        <span>安全边界：纯静态网页，无登录、无后台、无自动采集。</span>
+        <span>安全边界：本地优先，无登录、无后台、无自动采集；营运记录只保存在当前浏览器。</span>
         <span>费率、利润和建议仅供测算参考，不构成财务、法律或平台招商承诺。</span>
       </footer>
     </main>
 
     <script src="./yield-calculator.js?v=share-1"></script>
     <script src="./site-selection-calculator.js?v=share-1"></script>
-    <script src="./app.js?v=share-1"></script>
-    <script src="./slider-fix.js?v=share-1"></script>
-    <script src="./revenue-analysis.js?v=share-1"></script>
-    <script src="./task-reminder-storage.js?v=share-1"></script>
-    <script src="./task-reminder-scheduler.js?v=share-1"></script>
-    <script src="./task-reminder-ui.js?v=share-1"></script>
-    <script src="./task-reminder.js?v=share-1"></script>
-    <script src="./incentive-system-engine.js?v=share-1"></script>
-    <script src="./incentive-system-ui.js?v=share-1"></script>
-    <script src="./incentive-system.js?v=share-1"></script>
-    <script src="./version-archive.js?v=0.7.10"></script>
+    <script src="./app.js?v=0.8.0"></script>
+    <script src="./slider-fix.js?v=0.8.0"></script>
+    <script src="./revenue-analysis.js?v=0.8.0"></script>
+    <script src="./task-reminder-storage.js?v=0.8.0"></script>
+    <script src="./task-reminder-scheduler.js?v=0.8.0"></script>
+    <script src="./task-reminder-ui.js?v=0.8.0"></script>
+    <script src="./task-reminder.js?v=0.8.0"></script>
+    <script src="./incentive-system-engine.js?v=0.8.0"></script>
+    <script src="./incentive-system-ui.js?v=0.8.0"></script>
+    <script src="./incentive-system.js?v=0.8.0"></script>
+    <script src="./operations-workbench.js?v=0.8.0"></script>
+    <script src="./version-archive.js?v=0.8.0"></script>
   </body>
 </html>

@@ -85,6 +85,53 @@
   color: #247a4b;
 }
 
+.tool-tab.compact {
+  min-width: 104rpx;
+  min-height: 62rpx;
+  padding: 0 18rpx;
+  font-size: 24rpx;
+}
+
+.workbench-tabs {
+  margin: 22rpx 0;
+  white-space: nowrap;
+}
+
+.entry-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14rpx;
+  margin-top: 22rpx;
+}
+
+.entry-button {
+  display: grid;
+  gap: 10rpx;
+  min-height: 154rpx;
+  border: 1rpx solid #dce5dd;
+  border-radius: 16rpx;
+  background: #fbfcfb;
+  color: #17211c;
+  padding: 20rpx;
+  text-align: left;
+}
+
+.entry-button text {
+  font-size: 27rpx;
+  font-weight: 900;
+}
+
+.entry-button view {
+  color: #66736b;
+  font-size: 23rpx;
+  line-height: 1.5;
+}
+
+.report-area {
+  min-height: 720rpx;
+  margin-top: 22rpx;
+}
+
 .panel {
   border: 1rpx solid #dce5dd;
   border-radius: 16rpx;

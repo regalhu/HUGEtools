@@ -20,14 +20,21 @@
   ].join("\n");
 
   const SAMPLE_REVENUE = [
-    "门店,日期,营业额,订单数,堂食收入,外卖收入",
-    "宝山共康绿地,2026-06-05,12800,310,9200,3600",
-    "宝山共康绿地,2026-06-06,13600,328,9800,3800",
-    "宝山共康绿地,2026-06-07,14100,340,10100,4000",
-    "金沙百联,2026-06-01,9600,220,7100,2500",
-    "金沙百联,2026-06-02,9800,226,7200,2600",
-    "新街口,2026-06-01,16800,410,12300,4500",
-    "新街口,2026-06-02,17200,422,12600,4600"
+    "门店,日期,折后营业收入,到手收入,订单数,堂食收入,外卖收入",
+    "宝山共康绿地,2026-06-05,12800,11600,310,9200,3600",
+    "宝山共康绿地,2026-06-06,13600,12240,328,9800,3800",
+    "宝山共康绿地,2026-06-07,14100,12750,340,10100,4000",
+    "金沙百联,2026-06-01,9600,8640,220,7100,2500",
+    "金沙百联,2026-06-02,9800,8820,226,7200,2600",
+    "新街口,2026-06-01,16800,15120,410,12300,4500",
+    "新街口,2026-06-02,17200,15480,422,12600,4600"
+  ].join("\n");
+
+  const SAMPLE_BUDGET = [
+    "门店,月份,到手收入预算",
+    "宝山共康,2026-06,420000",
+    "金山百联,2026-06,300000",
+    "南京新街口,2026-06,520000"
   ].join("\n");
 
   const SAMPLE_DISH = [
@@ -160,17 +167,33 @@
       const date = parseDate(row["日期"] || row.date);
       const store = normalizeStoreName(row["门店"] || row.store);
       const master = storeMaster.get(store) || { store, region: "未分区", city: inferCity(store), market: "未分层" };
+      const takeHomeRaw = row["到手收入"] ?? row.takeHomeRevenue ?? "";
       return {
         store,
         date,
         month: monthKey(date),
-        revenue: Number(row["营业额"] || row.revenue) || 0,
+        revenue: Number(row["折后营业收入"] ?? row["营业额"] ?? row.revenue) || 0,
+        takeHomeRevenue: String(takeHomeRaw).trim() === "" ? null : Number(takeHomeRaw),
+        hasTakeHomeRevenue: String(takeHomeRaw).trim() !== "" && Number.isFinite(Number(takeHomeRaw)),
         orders: Number(row["订单数"] || row.orders) || 0,
         dineInRevenue: Number(row["堂食收入"] || row.dineInRevenue) || 0,
         deliveryRevenue: Number(row["外卖收入"] || row.deliveryRevenue) || 0,
         ...master
       };
     }).filter((row) => row.store && row.date);
+  }
+
+  function normalizeBudgetRows(rows) {
+    const map = new Map();
+    rows.forEach((row) => {
+      const store = normalizeStoreName(row["门店"] || row.store);
+      const month = String(row["月份"] || row.month || "").trim();
+      const raw = row["到手收入预算"] ?? row["预算"] ?? row.budget;
+      if (!store || !/^\d{4}-\d{2}$/.test(month) || String(raw ?? "").trim() === "") return;
+      const budget = Number(raw);
+      if (Number.isFinite(budget) && budget >= 0) map.set(`${store}__${month}`, budget);
+    });
+    return map;
   }
 
   function normalizeDishRows(rows, storeMaster) {
@@ -210,6 +233,7 @@
     const storeMaster = buildStoreMaster(parseTable(input.storeMasterText));
     const revenueRows = normalizeRevenueRows(parseTable(input.revenueText), storeMaster);
     const dishRows = normalizeDishRows(parseTable(input.dishText), storeMaster);
+    const budgetByStoreMonth = normalizeBudgetRows(parseTable(input.budgetText));
     const firstRevenueDate = revenueRows.map((row) => row.date).sort((a, b) => dateKey(a) - dateKey(b))[0];
     const comparableStartFromFile = parseComparableStart(input.fileName, firstRevenueDate?.getFullYear());
     const revenueByStoreMonth = groupBy(revenueRows, (row) => `${row.store}__${row.month}`);
@@ -223,6 +247,9 @@
       const comparableStart = [comparableStartFromFile, dishStart].filter(Boolean).sort((a, b) => dateKey(b) - dateKey(a))[0] || null;
       const comparableRevenueRows = comparableStart ? revenueGroup.filter((row) => dateKey(row.date) >= dateKey(comparableStart)) : revenueGroup;
       const comparableRevenue = sum(comparableRevenueRows, "revenue");
+      const takeHomeComplete = comparableRevenueRows.length > 0 && comparableRevenueRows.every((row) => row.hasTakeHomeRevenue);
+      const takeHomeRevenue = takeHomeComplete ? sum(comparableRevenueRows, "takeHomeRevenue") : null;
+      const takeHomeRate = takeHomeComplete && comparableRevenue ? takeHomeRevenue / comparableRevenue * 100 : null;
       const dishSales = sum(dishGroup, "salesAmount");
       const coverageRate = comparableRevenue ? dishSales / comparableRevenue * 100 : 0;
       const mainMenuSales = sum(dishGroup.filter((row) => row.isMainMenu), "salesAmount");
@@ -235,11 +262,18 @@
       if (coverageRate > 105) statuses.push("口径异常");
       if (dishSales && mainMenuRate < 75) statuses.push("主菜单匹配偏低");
       if (!fullMonth) statuses.push("非整月样本");
-      if (!statuses.length) statuses.push("口径正常");
       const orders = revenueGroup.reduce((total, row) => total + row.orders, 0);
       const avgRevenue = revenueDates.length ? comparableRevenue / revenueDates.length : 0;
       const minDate = revenueDates.slice().sort((a, b) => dateKey(a) - dateKey(b))[0];
       const maxDate = revenueDates.slice().sort((a, b) => dateKey(b) - dateKey(a))[0];
+      const monthlyBudget = budgetByStoreMonth.has(key) ? budgetByStoreMonth.get(key) : null;
+      const timeProgress = maxDate ? maxDate.getDate() / lastDayOfMonth(maxDate) : null;
+      const timeProgressBudget = monthlyBudget !== null && timeProgress !== null ? cents(monthlyBudget * timeProgress) : null;
+      const fullMonthBudgetAchievementRate = monthlyBudget > 0 && takeHomeRevenue !== null ? takeHomeRevenue / monthlyBudget * 100 : null;
+      const timeProgressBudgetAchievementRate = timeProgressBudget > 0 && takeHomeRevenue !== null ? takeHomeRevenue / timeProgressBudget * 100 : null;
+      if (!takeHomeComplete) statuses.push("到手收入不完整");
+      if (monthlyBudget === null) statuses.push("预算未接入");
+      if (!statuses.length) statuses.push("口径正常");
       return {
         store: reference.store || key.split("__")[0],
         month: reference.month || key.split("__")[1],
@@ -249,6 +283,14 @@
         comparableStart: isoDate(minDate || comparableStart),
         comparableEnd: isoDate(maxDate),
         comparableRevenue,
+        takeHomeRevenue,
+        takeHomeRate,
+        takeHomeComplete,
+        monthlyBudget,
+        timeProgress,
+        timeProgressBudget,
+        fullMonthBudgetAchievementRate,
+        timeProgressBudgetAchievementRate,
         dishSales,
         coverageRate,
         mainMenuRate,
@@ -262,13 +304,21 @@
     const coverageTop = monthly.slice().sort((a, b) => b.coverageRate - a.coverageRate).slice(0, 8);
     const dailyRank = monthly.filter((row) => row.fullMonth).sort((a, b) => b.avgRevenue - a.avgRevenue).slice(0, 8);
     const segmentRows = aggregateSegments(monthly);
+    const takeHomeComplete = monthly.length > 0 && monthly.every((row) => row.takeHomeComplete);
+    const budgetComplete = monthly.length > 0 && monthly.every((row) => row.monthlyBudget !== null);
     const summary = {
       storeCount: new Set(monthly.map((row) => row.store)).size,
       comparableRevenue: sum(monthly, "comparableRevenue"),
+      takeHomeRevenue: takeHomeComplete ? sum(monthly, "takeHomeRevenue") : null,
+      takeHomeComplete,
       dishSales: sum(monthly, "dishSales"),
-      abnormalCount: monthly.filter((row) => row.statuses.some((status) => status !== "口径正常" && status !== "非整月样本")).length
+      monthlyBudget: budgetComplete ? sum(monthly, "monthlyBudget") : null,
+      budgetComplete,
+      abnormalCount: monthly.filter((row) => row.statuses.some((status) => !["口径正常", "非整月样本", "到手收入不完整", "预算未接入"].includes(status))).length
     };
     summary.coverageRate = summary.comparableRevenue ? summary.dishSales / summary.comparableRevenue * 100 : 0;
+    summary.takeHomeRate = summary.takeHomeRevenue !== null && summary.comparableRevenue ? summary.takeHomeRevenue / summary.comparableRevenue * 100 : null;
+    summary.fullMonthBudgetAchievementRate = summary.monthlyBudget > 0 && summary.takeHomeRevenue !== null ? summary.takeHomeRevenue / summary.monthlyBudget * 100 : null;
     return {
       revenueRows,
       dishRows,
@@ -325,12 +375,16 @@
   }
 
   function buildReport(summary, monthly, segmentRows) {
-    const abnormal = monthly.filter((row) => row.statuses.some((status) => status !== "口径正常" && status !== "非整月样本"));
+    const abnormal = monthly.filter((row) => row.statuses.some((status) => !["口径正常", "非整月样本", "到手收入不完整", "预算未接入"].includes(status)));
     const bestSegment = segmentRows.slice().sort((a, b) => b.dishSales - a.dishSales)[0];
     return [
       "门店营业额联合分析素材",
       `纳入门店：${summary.storeCount} 家`,
-      `可比营业额：${money(summary.comparableRevenue)}`,
+      `折后营业收入：${money(summary.comparableRevenue)}`,
+      `到手收入：${summary.takeHomeRevenue === null ? "数据不完整，不计算" : money(summary.takeHomeRevenue)}`,
+      `到手率：${summary.takeHomeRate === null ? "不可计算" : percent(summary.takeHomeRate)}（到手收入 ÷ 折后营业收入 × 100%）`,
+      `当月预算：${summary.monthlyBudget === null ? "预算覆盖不完整，不计算" : money(summary.monthlyBudget)}`,
+      `全月预算达成率：${summary.fullMonthBudgetAchievementRate === null ? "不可计算" : percent(summary.fullMonthBudgetAchievementRate)}`,
       `菜品销售金额：${money(summary.dishSales)}`,
       `菜品销售金额/营业额覆盖率：${percent(summary.coverageRate)}`,
       bestSegment ? `销售金额最高维度：${bestSegment.label}，菜品销售额 ${money(bestSegment.dishSales)}。` : "",
@@ -350,13 +404,18 @@
   function render(result) {
     byId("revenueSummary").innerHTML = [
       metric("纳入门店", `${result.summary.storeCount} 家`, result.summary.storeCount ? "good" : "warn"),
-      metric("可比营业额", money(result.summary.comparableRevenue), result.summary.comparableRevenue ? "good" : "warn"),
+      metric("折后营业收入", money(result.summary.comparableRevenue), result.summary.comparableRevenue ? "good" : "warn"),
+      metric("到手收入", result.summary.takeHomeRevenue === null ? "不可计算" : money(result.summary.takeHomeRevenue), result.summary.takeHomeRevenue === null ? "warn" : "good"),
+      metric("到手率", result.summary.takeHomeRate === null ? "不可计算" : percent(result.summary.takeHomeRate), result.summary.takeHomeRate === null ? "warn" : "good"),
+      metric("当月预算", result.summary.monthlyBudget === null ? "覆盖不完整" : money(result.summary.monthlyBudget), result.summary.monthlyBudget === null ? "warn" : "good"),
+      metric("全月预算达成", result.summary.fullMonthBudgetAchievementRate === null ? "不可计算" : percent(result.summary.fullMonthBudgetAchievementRate), result.summary.fullMonthBudgetAchievementRate === null ? "warn" : result.summary.fullMonthBudgetAchievementRate >= 100 ? "good" : "warn"),
       metric("菜品销售金额", money(result.summary.dishSales), result.summary.dishSales ? "good" : "warn"),
       metric("覆盖率", percent(result.summary.coverageRate), result.summary.coverageRate > 105 ? "bad" : result.summary.coverageRate >= 75 ? "good" : "warn")
     ].join("");
     byId("revenueBoundary").innerHTML = [
       `<p>已应用门店标准化规则：金沙百联 → 金山百联；新街口 → 南京新街口；宝山共康绿地 → 宝山共康。</p>`,
       `<p>文件名 0515、0605、0615 等 4 位数字会作为可比营业额起始日期；若营业额起始日早于菜品销售起始日，则按菜品销售起始日截取。</p>`,
+      `<p>到手率 = 到手收入 ÷ 折后营业收入 × 100%；任一到手收入缺失时不计算。预算达成只使用已维护的到手收入预算，缺失预算不按 0 处理。</p>`,
       `<p>覆盖率超过 105% 标记为口径异常；主菜单匹配率低于 75% 标记为主菜单匹配偏低；非整月样本不进入完整月日均营业额排行。</p>`
     ].join("");
     renderRows("revenueMonthlyRows", result.monthly, [
@@ -364,8 +423,9 @@
       (row) => safeText(row.month),
       (row) => `${safeText(row.comparableStart || "-")} 至 ${safeText(row.comparableEnd || "-")}`,
       (row) => money(row.comparableRevenue),
-      (row) => money(row.dishSales),
-      (row) => percent(row.coverageRate),
+      (row) => row.takeHomeRevenue === null ? "不可计算" : `${money(row.takeHomeRevenue)} / ${percent(row.takeHomeRate)}`,
+      (row) => row.monthlyBudget === null ? "未接入" : `全月 ${percent(row.fullMonthBudgetAchievementRate)} / 时间进度 ${percent(row.timeProgressBudgetAchievementRate)}`,
+      (row) => `${money(row.dishSales)} / ${percent(row.coverageRate)}`,
       (row) => `${row.orders || 0} 单 / ${money(row.avgRevenue)}`,
       (row) => row.statuses.map(statusPill).join(" ")
     ], "暂无联合分析结果");
@@ -403,6 +463,7 @@
       monthFilter: byId("revenueMonthFilter")?.value || "",
       storeMasterText: byId("storeMasterText")?.value || "",
       revenueText: byId("storeRevenueText")?.value || "",
+      budgetText: byId("storeBudgetText")?.value || "",
       dishText: byId("dishSalesText")?.value || ""
     };
   }
@@ -414,8 +475,9 @@
   function loadSample() {
     byId("storeMasterText").value = SAMPLE_MASTER;
     byId("storeRevenueText").value = SAMPLE_REVENUE;
+    byId("storeBudgetText").value = SAMPLE_BUDGET;
     byId("dishSalesText").value = SAMPLE_DISH;
-    byId("revenueFileName").value = "宝山共康绿地0605营业额.xlsx";
+    byId("revenueFileName").value = "多店营业额.xlsx";
     renderCurrent();
   }
 
@@ -423,7 +485,7 @@
     if (!byId("tool-revenue")) return;
     byId("loadRevenueSampleBtn")?.addEventListener("click", loadSample);
     byId("analyzeRevenueBtn")?.addEventListener("click", renderCurrent);
-    ["revenueFileName", "revenueRegionFilter", "revenueCityFilter", "revenueMonthFilter", "storeMasterText", "storeRevenueText", "dishSalesText"].forEach((id) => {
+    ["revenueFileName", "revenueRegionFilter", "revenueCityFilter", "revenueMonthFilter", "storeMasterText", "storeRevenueText", "storeBudgetText", "dishSalesText"].forEach((id) => {
       byId(id)?.addEventListener("input", renderCurrent);
       byId(id)?.addEventListener("change", renderCurrent);
     });

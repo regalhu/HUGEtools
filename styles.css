@@ -119,6 +119,7 @@ h3 { margin: 18px 0 10px; color: #3d4b43; font-size: 15px; }
 
 .tool-panel {
   display: none;
+  min-width: 0;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--panel);
@@ -128,6 +129,50 @@ h3 { margin: 18px 0 10px; color: #3d4b43; font-size: 15px; }
 .tool-panel.active { display: block; }
 
 .tool-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+
+.tool-subtitle { margin: 8px 0 0; color: var(--muted); font-size: 13px; font-weight: 800; }
+.workbench-tabs { width: 100%; }
+.workbench-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.workbench-entry-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 20px 0;
+}
+.workbench-entry {
+  display: grid;
+  min-height: 150px;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: linear-gradient(145deg, #ffffff, #f7faf7);
+  color: var(--ink);
+  padding: 18px;
+  text-align: left;
+}
+.workbench-entry:hover { border-color: var(--green); transform: translateY(-1px); }
+.workbench-entry span { color: var(--green); font-size: 12px; font-weight: 900; letter-spacing: 0.12em; }
+.workbench-entry strong { font-size: 17px; }
+.workbench-entry small { font-size: 12px; line-height: 1.55; }
+.workbench-record-list { display: grid; gap: 14px; margin-top: 18px; }
+.workbench-record {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: start;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 18px;
+}
+.workbench-record h3 { margin: 10px 0 8px; }
+.workbench-record p { margin: 6px 0; color: var(--muted); line-height: 1.6; }
+.workbench-report-card textarea {
+  min-height: 430px;
+  margin-top: 16px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  line-height: 1.7;
+}
 
 .mode-strip, .mode-switch { display: inline-flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; border: 1px solid var(--line); border-radius: 8px; background: #f8faf8; padding: 6px; }
 .mode-button { min-height: 36px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); padding: 0 14px; font-weight: 800; }
@@ -139,7 +184,7 @@ body[data-yield-mode="standard"] .yield-pro-field {
   display: none;
 }
 
-.margin-section { border-top: 1px solid var(--line); padding-top: 18px; margin-top: 18px; }
+.margin-section { min-width: 0; border-top: 1px solid var(--line); padding-top: 18px; margin-top: 18px; }
 .margin-section:first-of-type { border-top: 0; padding-top: 0; }
 
 .section-title { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
@@ -258,6 +303,7 @@ th { color: var(--muted); font-size: 12px; }
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
 }
+.revenue-analysis-grid > div { min-width: 0; }
 .compact-table table {
   min-width: 520px;
 }
@@ -721,7 +767,7 @@ th { color: var(--muted); font-size: 12px; }
     font-size: 11px;
     line-height: 1.45;
   }
-  .tool-layout, .form-grid, .compact-grid, .result-grid, .revenue-analysis-grid { grid-template-columns: 1fr; }
+  .tool-layout, .form-grid, .compact-grid, .result-grid, .revenue-analysis-grid, .workbench-entry-grid { grid-template-columns: 1fr; }
   .form-grid, .compact-grid, .ingredient-editor {
     gap: 10px;
   }
@@ -812,6 +858,7 @@ th { color: var(--muted); font-size: 12px; }
     display: grid;
     grid-template-columns: 1fr;
   }
+  .workbench-record { grid-template-columns: 1fr; }
   .task-filterbar select {
     width: 100%;
   }
@@ -862,4 +909,18 @@ th { color: var(--muted); font-size: 12px; }
   }
   h1 { font-size: 24px; }
   .result-grid { grid-template-columns: 1fr; }
+}
+
+@media print {
+  body.printing-workbench-report > * { visibility: hidden; }
+  body.printing-workbench-report #workbenchPrintableReport,
+  body.printing-workbench-report #workbenchPrintableReport * { visibility: visible; }
+  body.printing-workbench-report #workbenchPrintableReport {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    box-shadow: none;
+  }
+  body.printing-workbench-report #workbenchPrintableReport .task-form-actions,
+  body.printing-workbench-report #workbenchPrintableReport .form-note { display: none; }
 }

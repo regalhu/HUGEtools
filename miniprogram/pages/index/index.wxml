@@ -3,12 +3,12 @@
     <view>
       <view class="eyebrow">MVP1 · 微信小程序版</view>
       <view class="title">胡哥餐饮工具箱</view>
-      <view class="tagline">给小餐饮老板马上能用的经营测算工具。</view>
+      <view class="tagline">把日常营运、经营分析和实用测算放在一个工具箱里。</view>
     </view>
     <view class="version">{{version}}</view>
   </view>
 
-  <view class="risk-banner">本小程序版本仅在本地进行测算，不接入平台账号，不抓取订单，不上传门店经营数据。</view>
+  <view class="risk-banner">本小程序不接入平台账号、不抓取订单、不上传门店经营数据；工作台记录仅保存在当前微信本机。</view>
 
   <scroll-view class="tool-tabs" scroll-x enhanced show-scrollbar="false">
     <view class="tabs-inner">
@@ -21,6 +21,131 @@
       >{{item.label}}</button>
     </view>
   </scroll-view>
+
+  <view wx:if="{{isOperations}}" class="panel">
+    <view class="panel-head">
+      <view>
+        <view class="eyebrow">日常管理 · 会议 · 复盘 · 培训</view>
+        <view class="panel-title">营运工作台</view>
+      </view>
+    </view>
+    <view class="advice">
+      <view>会议、日志、资料、培训、任务和激励记录只保存在当前微信本机；缺失数据不按 0 或已完成处理。</view>
+    </view>
+    <scroll-view class="workbench-tabs" scroll-x enhanced show-scrollbar="false">
+      <view class="tabs-inner">
+        <button
+          wx:for="{{workbenchViews}}"
+          wx:key="key"
+          class="tool-tab compact {{workbenchView === item.key ? 'active' : ''}}"
+          data-view="{{item.key}}"
+          bindtap="onWorkbenchViewTap"
+        >{{item.label}}</button>
+      </view>
+    </scroll-view>
+
+    <view wx:if="{{isWorkbenchOverview}}">
+      <view class="metric-grid">
+        <view class="metric {{meetingRecords.length ? 'good' : 'warn'}}"><text>会议记录</text><view>{{meetingRecords.length}}</view></view>
+        <view class="metric {{logRecords.length ? 'good' : 'warn'}}"><text>日志记录</text><view>{{logRecords.length}}</view></view>
+        <view class="metric {{taskRecords.length ? 'good' : 'warn'}}"><text>本地任务</text><view>{{taskRecords.length}}</view></view>
+        <view class="metric {{trainingRecords.length ? 'good' : 'warn'}}"><text>培训反馈</text><view>{{trainingRecords.length}}</view></view>
+      </view>
+      <view class="entry-grid">
+        <button class="entry-button" data-view="meetings" bindtap="onWorkbenchViewTap"><text>会议纪要</text><view>日期 + 上午/下午，责任人和进度</view></button>
+        <button class="entry-button" data-view="logs" bindtap="onWorkbenchViewTap"><text>每日日志</text><view>完成、问题和明日重点</view></button>
+        <button class="entry-button" data-tool="taskReminder" bindtap="openTool"><text>任务提醒</text><view>复用现有任务模块</view></button>
+        <button class="entry-button" data-tool="incentive" bindtap="openTool"><text>员工激励</text><view>复用评分和积分模块</view></button>
+        <button class="entry-button" data-view="resources" bindtap="onWorkbenchViewTap"><text>资料库</text><view>保留来源与适用范围</view></button>
+        <button class="entry-button" data-view="report" bindtap="onWorkbenchViewTap"><text>日报导出</text><view>汇总本机当日记录</view></button>
+      </view>
+    </view>
+
+    <view wx:if="{{isWorkbenchMeetings}}">
+      <view class="form-grid">
+        <view class="field"><text>会议日期</text><input value="{{meetingForm.date}}" data-section="meetingForm" data-field="date" bindinput="onInput" /></view>
+        <view class="field"><text>上午/下午</text><input value="{{meetingForm.period}}" data-section="meetingForm" data-field="period" bindinput="onInput" /></view>
+        <view class="field full"><text>会议名称</text><input value="{{meetingForm.title}}" data-section="meetingForm" data-field="title" bindinput="onInput" /></view>
+        <view class="field full"><text>当期/专项议题</text><textarea value="{{meetingForm.topic}}" data-section="meetingForm" data-field="topic" bindinput="onInput"></textarea></view>
+        <view class="field"><text>负责人</text><input value="{{meetingForm.owner}}" data-section="meetingForm" data-field="owner" bindinput="onInput" /></view>
+        <view class="field"><text>计划完成</text><input value="{{meetingForm.dueDate}}" data-section="meetingForm" data-field="dueDate" bindinput="onInput" /></view>
+        <view class="field full"><text>当前进度</text><input value="{{meetingForm.progress}}" data-section="meetingForm" data-field="progress" bindinput="onInput" /></view>
+      </view>
+      <view class="actions"><button class="primary wide" bindtap="addMeetingRecord">保存会议纪要</button></view>
+      <view class="list-card">
+        <view wx:if="{{!meetingRecords.length}}" class="empty">暂无会议纪要。</view>
+        <view wx:for="{{meetingRecords}}" wx:key="id" class="saved-row">
+          <view>{{item.date}} {{item.period}} · {{item.title}}</view>
+          <view class="saved-meta">{{item.topic || '未填写议题'}} · {{item.owner || '未指定负责人'}} · {{item.progress}}</view>
+          <button class="danger small" data-collection="meetingRecords" data-id="{{item.id}}" bindtap="deleteWorkbenchRecord">删除</button>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{isWorkbenchLogs}}">
+      <view class="form-grid">
+        <view class="field full"><text>日志日期</text><input value="{{logForm.date}}" data-section="logForm" data-field="date" bindinput="onInput" /></view>
+        <view class="field full"><text>今日完成</text><textarea value="{{logForm.completed}}" data-section="logForm" data-field="completed" bindinput="onInput"></textarea></view>
+        <view class="field full"><text>问题与风险</text><textarea value="{{logForm.issue}}" data-section="logForm" data-field="issue" bindinput="onInput"></textarea></view>
+        <view class="field full"><text>明日重点</text><textarea value="{{logForm.next}}" data-section="logForm" data-field="next" bindinput="onInput"></textarea></view>
+      </view>
+      <view class="actions"><button class="primary wide" bindtap="addLogRecord">保存日志</button></view>
+      <view class="list-card">
+        <view wx:if="{{!logRecords.length}}" class="empty">暂无每日日志。</view>
+        <view wx:for="{{logRecords}}" wx:key="id" class="saved-row">
+          <view>{{item.date}} · {{item.completed}}</view>
+          <view class="saved-meta">问题：{{item.issue || '无记录'}} · 明日：{{item.next || '未填写'}}</view>
+          <button class="danger small" data-collection="logRecords" data-id="{{item.id}}" bindtap="deleteWorkbenchRecord">删除</button>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{isWorkbenchResources}}">
+      <view class="form-grid">
+        <view class="field"><text>分类</text><input value="{{resourceForm.category}}" data-section="resourceForm" data-field="category" bindinput="onInput" /></view>
+        <view class="field"><text>资料标题</text><input value="{{resourceForm.title}}" data-section="resourceForm" data-field="title" bindinput="onInput" /></view>
+        <view class="field full"><text>资料内容</text><textarea value="{{resourceForm.content}}" data-section="resourceForm" data-field="content" bindinput="onInput"></textarea></view>
+        <view class="field full"><text>来源/适用范围</text><input value="{{resourceForm.source}}" data-section="resourceForm" data-field="source" bindinput="onInput" /></view>
+      </view>
+      <view class="actions"><button class="primary wide" bindtap="addResourceRecord">保存资料</button></view>
+      <view class="list-card">
+        <view wx:if="{{!resourceRecords.length}}" class="empty">暂无资料记录。</view>
+        <view wx:for="{{resourceRecords}}" wx:key="id" class="saved-row">
+          <view>{{item.category}} · {{item.title}}</view>
+          <view class="saved-meta">{{item.content || '未填写内容'}} · 来源：{{item.source || '未记录'}}</view>
+          <button class="danger small" data-collection="resourceRecords" data-id="{{item.id}}" bindtap="deleteWorkbenchRecord">删除</button>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{isWorkbenchTraining}}">
+      <view class="form-grid">
+        <view class="field"><text>培训日期</text><input value="{{trainingForm.date}}" data-section="trainingForm" data-field="date" bindinput="onInput" /></view>
+        <view class="field"><text>培训主题</text><input value="{{trainingForm.session}}" data-section="trainingForm" data-field="session" bindinput="onInput" /></view>
+        <view class="field"><text>讲师</text><input value="{{trainingForm.trainer}}" data-section="trainingForm" data-field="trainer" bindinput="onInput" /></view>
+        <view class="field"><text>评分 1-5</text><input type="number" value="{{trainingForm.score}}" data-section="trainingForm" data-field="score" data-type="number" bindinput="onInput" /></view>
+        <view class="field"><text>是否复训</text><input value="{{trainingForm.retrain}}" data-section="trainingForm" data-field="retrain" bindinput="onInput" /></view>
+        <view class="field full"><text>反馈与行动建议</text><textarea value="{{trainingForm.feedback}}" data-section="trainingForm" data-field="feedback" bindinput="onInput"></textarea></view>
+      </view>
+      <view class="actions"><button class="primary wide" bindtap="addTrainingRecord">保存培训反馈</button></view>
+      <view class="list-card">
+        <view wx:if="{{!trainingRecords.length}}" class="empty">暂无培训反馈。</view>
+        <view wx:for="{{trainingRecords}}" wx:key="id" class="saved-row">
+          <view>{{item.date}} · {{item.session}} · {{item.score}} 分</view>
+          <view class="saved-meta">讲师：{{item.trainer || '未填写'}} · 需复训：{{item.retrain}} · {{item.feedback || '未填写反馈'}}</view>
+          <button class="danger small" data-collection="trainingRecords" data-id="{{item.id}}" bindtap="deleteWorkbenchRecord">删除</button>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{isWorkbenchReport}}">
+      <view class="actions">
+        <button class="primary" bindtap="buildWorkbenchReport">重新生成</button>
+        <button class="ghost" bindtap="copyWorkbenchReport">复制日报</button>
+      </view>
+      <textarea class="output-area report-area" value="{{workbenchReport}}" disabled></textarea>
+    </view>
+  </view>
 
   <view wx:if="{{isMargin}}" class="panel">
     <view class="panel-head">
@@ -238,15 +363,17 @@
   </view>
 
   <view wx:if="{{isRevenue}}" class="panel">
-    <view class="panel-head"><view><view class="eyebrow">经营测算工具</view><view class="panel-title">门店营业额联合分析</view></view></view>
+    <view class="panel-head"><view><view class="eyebrow">经营事实 · 预算 · 菜品结构</view><view class="panel-title">经营分析与老板简报</view></view></view>
     <view class="form-grid">
       <view class="field full"><text>营业额文件名</text><input value="{{revenue.fileName}}" data-section="revenue" data-field="fileName" bindinput="onInput" /></view>
       <view class="field full"><text>门店主数据</text><textarea value="{{revenue.storeMasterText}}" data-section="revenue" data-field="storeMasterText" bindinput="onInput"></textarea></view>
       <view class="field full"><text>门店日营业额数据</text><textarea value="{{revenue.revenueText}}" data-section="revenue" data-field="revenueText" bindinput="onInput"></textarea></view>
+      <view class="field full"><text>门店月度到手收入预算</text><textarea value="{{revenue.budgetText}}" data-section="revenue" data-field="budgetText" bindinput="onInput"></textarea></view>
       <view class="field full"><text>菜品销售事实数据</text><textarea value="{{revenue.dishText}}" data-section="revenue" data-field="dishText" bindinput="onInput"></textarea></view>
     </view>
     <view class="advice">
       <view>菜品销售金额/营业额仅作为销售结构覆盖率参考，不等于真实营业贡献率，不等于毛利率，不等于利润贡献。</view>
+      <view>到手率 = 到手收入 ÷ 折后营业收入 × 100%；到手收入或预算缺失时不计算，不按 0 填充。</view>
     </view>
     <view class="metric-grid">
       <view wx:for="{{revenueResult.cards}}" wx:key="label" class="metric {{item.level}}">
@@ -259,7 +386,8 @@
       <view wx:if="{{!revenueResult.rows.length}}" class="empty">暂无联合分析结果。</view>
       <view wx:for="{{revenueResult.rows}}" wx:key="key" class="saved-row">
         <view>{{item.store}} · {{item.month}}</view>
-        <view class="saved-meta">可比营业额 {{item.revenueText}} · 菜品销售 {{item.salesText}} · 覆盖率 {{item.coverageText}}</view>
+        <view class="saved-meta">折后收入 {{item.revenueText}} · 到手收入 {{item.takeHomeText}} · 到手率 {{item.takeHomeRateText}}</view>
+        <view class="saved-note">全月预算达成 {{item.budgetAchievementText}} · 菜品销售 {{item.salesText}} · 覆盖率 {{item.coverageText}}</view>
         <view class="saved-note">{{item.status}}</view>
       </view>
     </view>

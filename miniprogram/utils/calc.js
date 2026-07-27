@@ -500,11 +500,22 @@ function analyzeRevenue(input) {
     const store = normalizeStore(row["门店"]);
     if (store) masterMap[store] = { region: row["地域"] || "未分区", city: row["城市"] || "未标注", market: row["市场层级"] || "未分层" };
   });
+  const budgetMap = {};
+  rowsFromText(input.budgetText).forEach((row) => {
+    const store = normalizeStore(row["门店"]);
+    const month = String(row["月份"] || "").trim();
+    const raw = row["到手收入预算"] ?? row["预算"];
+    if (store && /^\d{4}-\d{2}$/.test(month) && String(raw ?? "").trim() !== "") {
+      budgetMap[`${store}__${month}`] = Number(raw);
+    }
+  });
   const revenueRows = rowsFromText(input.revenueText).map((row) => ({
     store: normalizeStore(row["门店"]),
     date: row["日期"],
     month: monthOf(row["日期"]),
-    revenue: Number(row["营业额"]) || 0,
+    revenue: Number(row["折后营业收入"] ?? row["营业额"]) || 0,
+    takeHomeRevenue: String(row["到手收入"] ?? "").trim() === "" ? null : Number(row["到手收入"]),
+    hasTakeHomeRevenue: String(row["到手收入"] ?? "").trim() !== "" && Number.isFinite(Number(row["到手收入"])),
     orders: Number(row["订单数"]) || 0
   })).filter((row) => row.store && row.date);
   const dishRows = rowsFromText(input.dishText).map((row) => ({
@@ -531,6 +542,9 @@ function analyzeRevenue(input) {
     const comparableStart = [fileStart, dishStart].filter(Boolean).sort().slice(-1)[0] || "";
     const comparableRevenueRows = comparableStart ? item.revenueRows.filter((row) => row.date >= comparableStart) : item.revenueRows;
     const revenue = cents(comparableRevenueRows.reduce((sum, row) => sum + row.revenue, 0));
+    const takeHomeComplete = comparableRevenueRows.length > 0 && comparableRevenueRows.every((row) => row.hasTakeHomeRevenue);
+    const takeHomeRevenue = takeHomeComplete ? cents(comparableRevenueRows.reduce((sum, row) => sum + row.takeHomeRevenue, 0)) : null;
+    const takeHomeRate = takeHomeRevenue !== null && revenue ? takeHomeRevenue / revenue * 100 : null;
     const sales = cents(item.dishRows.reduce((sum, row) => sum + row.sales, 0));
     const mainSales = cents(item.dishRows.filter((row) => row.isMainMenu).reduce((sum, row) => sum + row.sales, 0));
     const coverage = revenue ? sales / revenue * 100 : 0;
@@ -541,15 +555,28 @@ function analyzeRevenue(input) {
     if (coverage > 105) status.push("口径异常");
     if (sales && mainRate < 75) status.push("主菜单匹配偏低");
     if (comparableRevenueRows.length < 28) status.push("非整月样本");
+    if (!takeHomeComplete) status.push("到手收入不完整");
+    const monthlyBudget = Object.prototype.hasOwnProperty.call(budgetMap, `${item.store}__${item.month}`)
+      ? budgetMap[`${item.store}__${item.month}`]
+      : null;
+    if (monthlyBudget === null) status.push("预算未接入");
     if (!status.length) status.push("口径正常");
+    const budgetAchievement = monthlyBudget > 0 && takeHomeRevenue !== null ? takeHomeRevenue / monthlyBudget * 100 : null;
     return {
       key: `${item.store}-${item.month}`,
       store: item.store,
       month: item.month,
       revenue,
+      takeHomeRevenue,
+      takeHomeRate,
+      monthlyBudget,
+      budgetAchievement,
       sales,
       coverage,
       revenueText: money(revenue),
+      takeHomeText: takeHomeRevenue === null ? "不可计算" : money(takeHomeRevenue),
+      takeHomeRateText: takeHomeRate === null ? "不可计算" : percentText(takeHomeRate),
+      budgetAchievementText: budgetAchievement === null ? "不可计算" : percentText(budgetAchievement),
       salesText: money(sales),
       coverageText: percentText(coverage),
       status: status.join(" / "),
@@ -557,20 +584,32 @@ function analyzeRevenue(input) {
     };
   });
   const totalRevenue = cents(rows.reduce((sum, row) => sum + row.revenue, 0));
+  const takeHomeComplete = rows.length > 0 && rows.every((row) => row.takeHomeRevenue !== null);
+  const totalTakeHome = takeHomeComplete ? cents(rows.reduce((sum, row) => sum + row.takeHomeRevenue, 0)) : null;
+  const takeHomeRate = totalTakeHome !== null && totalRevenue ? totalTakeHome / totalRevenue * 100 : null;
+  const budgetComplete = rows.length > 0 && rows.every((row) => row.monthlyBudget !== null);
+  const totalBudget = budgetComplete ? cents(rows.reduce((sum, row) => sum + row.monthlyBudget, 0)) : null;
+  const budgetAchievement = totalBudget > 0 && totalTakeHome !== null ? totalTakeHome / totalBudget * 100 : null;
   const totalSales = cents(rows.reduce((sum, row) => sum + row.sales, 0));
   const coverage = totalRevenue ? totalSales / totalRevenue * 100 : 0;
-  const abnormal = rows.filter((row) => row.status !== "口径正常" && row.status !== "非整月样本").length;
+  const abnormal = rows.filter((row) => /门店未匹配|可比营业额为空|口径异常|主菜单匹配偏低/.test(row.status)).length;
   return {
     rows,
     cards: [
       { label: "纳入门店", value: `${new Set(rows.map((row) => row.store)).size} 家`, level: rows.length ? "good" : "warn" },
-      { label: "可比营业额", value: money(totalRevenue), level: totalRevenue ? "good" : "warn" },
+      { label: "折后营业收入", value: money(totalRevenue), level: totalRevenue ? "good" : "warn" },
+      { label: "到手收入", value: totalTakeHome === null ? "不可计算" : money(totalTakeHome), level: totalTakeHome === null ? "warn" : "good" },
+      { label: "到手率", value: takeHomeRate === null ? "不可计算" : percentText(takeHomeRate), level: takeHomeRate === null ? "warn" : "good" },
+      { label: "全月预算达成", value: budgetAchievement === null ? "不可计算" : percentText(budgetAchievement), level: budgetAchievement === null ? "warn" : budgetAchievement >= 100 ? "good" : "warn" },
       { label: "菜品销售金额", value: money(totalSales), level: totalSales ? "good" : "warn" },
       { label: "覆盖率", value: percentText(coverage), level: coverage > 105 ? "bad" : coverage >= 75 ? "good" : "warn" }
     ],
     report: [
       "门店营业额联合分析素材",
-      `可比营业额：${money(totalRevenue)}`,
+      `折后营业收入：${money(totalRevenue)}`,
+      `到手收入：${totalTakeHome === null ? "数据不完整，不计算" : money(totalTakeHome)}`,
+      `到手率：${takeHomeRate === null ? "不可计算" : percentText(takeHomeRate)}（到手收入 ÷ 折后营业收入 × 100%）`,
+      `全月预算达成率：${budgetAchievement === null ? "不可计算" : percentText(budgetAchievement)}`,
       `菜品销售金额：${money(totalSales)}`,
       `菜品销售金额/营业额覆盖率：${percentText(coverage)}`,
       abnormal ? `需核查口径：${rows.filter((row) => row.status !== "口径正常").map((row) => `${row.store}${row.month}${row.status}`).join("；")}` : "本次未发现覆盖率超过 105% 或主菜单匹配偏低的异常口径。",

@@ -4,8 +4,9 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 Page({
   data: {
-    version: "0.7.10-miniapp.1",
+    version: "0.8.0-miniapp.1",
     tools: [
+      { key: "operations", label: "工作台" },
       { key: "margin", label: "毛利" },
       { key: "loss", label: "损耗" },
       { key: "yield", label: "应产率" },
@@ -21,8 +22,9 @@ Page({
       { key: "schedule", label: "排班" },
       { key: "share", label: "分享" }
     ],
-    activeTool: "margin",
-    isMargin: true,
+    activeTool: "operations",
+    isOperations: true,
+    isMargin: false,
     isDeal: false,
     isLoss: false,
     isYield: false,
@@ -36,6 +38,55 @@ Page({
     isIncentive: false,
     isSchedule: false,
     isShare: false,
+    workbenchViews: [
+      { key: "overview", label: "总览" },
+      { key: "meetings", label: "会议" },
+      { key: "logs", label: "日志" },
+      { key: "resources", label: "资料" },
+      { key: "training", label: "培训" },
+      { key: "report", label: "日报" }
+    ],
+    workbenchView: "overview",
+    isWorkbenchOverview: true,
+    isWorkbenchMeetings: false,
+    isWorkbenchLogs: false,
+    isWorkbenchResources: false,
+    isWorkbenchTraining: false,
+    isWorkbenchReport: false,
+    meetingForm: {
+      date: today(),
+      period: "上午",
+      title: "",
+      topic: "",
+      owner: "",
+      dueDate: today(),
+      progress: "待开始"
+    },
+    logForm: {
+      date: today(),
+      completed: "",
+      issue: "",
+      next: ""
+    },
+    resourceForm: {
+      category: "营运标准",
+      title: "",
+      content: "",
+      source: ""
+    },
+    trainingForm: {
+      date: today(),
+      session: "",
+      trainer: "",
+      score: 5,
+      retrain: "否",
+      feedback: ""
+    },
+    meetingRecords: [],
+    logRecords: [],
+    resourceRecords: [],
+    trainingRecords: [],
+    workbenchReport: "",
     marginTypeOptions: [
       { label: "单品", value: "single" },
       { label: "套餐", value: "combo" },
@@ -151,9 +202,10 @@ Page({
     },
     healthResult: {},
     revenue: {
-      fileName: "宝山共康绿地0605营业额.xlsx",
+      fileName: "多店营业额.xlsx",
       storeMasterText: "门店,地域,城市,市场层级\n宝山共康,上海区域,上海,成熟市场\n金山百联,上海区域,上海,成长市场",
-      revenueText: "门店,日期,营业额,订单数\n宝山共康绿地,2026-06-05,12800,310\n宝山共康绿地,2026-06-06,13600,328\n金沙百联,2026-06-01,9600,220",
+      revenueText: "门店,日期,折后营业收入,到手收入,订单数\n宝山共康绿地,2026-06-05,12800,11600,310\n宝山共康绿地,2026-06-06,13600,12240,328\n金沙百联,2026-06-01,9600,8640,220",
+      budgetText: "门店,月份,到手收入预算\n宝山共康,2026-06,420000\n金山百联,2026-06,300000",
       dishText: "门店,日期,菜品,主菜单,销售金额\n宝山共康,2026-06-05,招牌辣子鸡,是,4200\n宝山共康,2026-06-06,口水鸡,是,3100\n金山百联,2026-06-01,宫保鸡丁,是,5600"
     },
     revenueResult: {},
@@ -277,7 +329,9 @@ Page({
     if (wx.showShareMenu) {
       wx.showShareMenu({ menus: ["shareAppMessage", "shareTimeline"] });
     }
+    this.restoreLocalRecords();
     this.recalculateAll();
+    this.buildWorkbenchReport();
   },
 
   onShareAppMessage() {
@@ -299,6 +353,7 @@ Page({
     const activeTool = event.currentTarget.dataset.tool;
     this.setData({
       activeTool,
+      isOperations: activeTool === "operations",
       isMargin: activeTool === "margin",
       isDeal: activeTool === "deal",
       isLoss: activeTool === "loss",
@@ -313,6 +368,152 @@ Page({
       isIncentive: activeTool === "incentive",
       isSchedule: activeTool === "schedule",
       isShare: activeTool === "share"
+    });
+  },
+
+  onWorkbenchViewTap(event) {
+    const view = event.currentTarget.dataset.view;
+    this.setData({
+      workbenchView: view,
+      isWorkbenchOverview: view === "overview",
+      isWorkbenchMeetings: view === "meetings",
+      isWorkbenchLogs: view === "logs",
+      isWorkbenchResources: view === "resources",
+      isWorkbenchTraining: view === "training",
+      isWorkbenchReport: view === "report"
+    }, () => {
+      if (view === "report") this.buildWorkbenchReport();
+    });
+  },
+
+  openTool(event) {
+    const activeTool = event.currentTarget.dataset.tool;
+    this.onToolTap({ currentTarget: { dataset: { tool: activeTool } } });
+  },
+
+  restoreLocalRecords() {
+    try {
+      const stored = wx.getStorageSync("hugetools.operations.v1") || {};
+      this.setData({
+        meetingRecords: stored.meetingRecords || [],
+        logRecords: stored.logRecords || [],
+        resourceRecords: stored.resourceRecords || [],
+        trainingRecords: stored.trainingRecords || [],
+        taskRecords: stored.taskRecords || [],
+        incentiveRecords: stored.incentiveRecords || []
+      });
+    } catch {
+      wx.showToast({ title: "本地记录读取失败", icon: "none" });
+    }
+  },
+
+  persistLocalRecords() {
+    wx.setStorageSync("hugetools.operations.v1", {
+      meetingRecords: this.data.meetingRecords,
+      logRecords: this.data.logRecords,
+      resourceRecords: this.data.resourceRecords,
+      trainingRecords: this.data.trainingRecords,
+      taskRecords: this.data.taskRecords,
+      incentiveRecords: this.data.incentiveRecords
+    });
+  },
+
+  addMeetingRecord() {
+    const form = this.data.meetingForm;
+    if (!form.title) return wx.showToast({ title: "请填写会议名称", icon: "none" });
+    const meetingRecords = [{ id: Date.now(), ...form }, ...this.data.meetingRecords];
+    this.setData({
+      meetingRecords,
+      "meetingForm.title": "",
+      "meetingForm.topic": "",
+      "meetingForm.owner": ""
+    }, () => {
+      this.persistLocalRecords();
+      this.buildWorkbenchReport();
+    });
+  },
+
+  addLogRecord() {
+    const form = this.data.logForm;
+    if (!form.completed) return wx.showToast({ title: "请填写今日完成", icon: "none" });
+    const logRecords = [{ id: Date.now(), ...form }, ...this.data.logRecords];
+    this.setData({
+      logRecords,
+      "logForm.completed": "",
+      "logForm.issue": "",
+      "logForm.next": ""
+    }, () => {
+      this.persistLocalRecords();
+      this.buildWorkbenchReport();
+    });
+  },
+
+  addResourceRecord() {
+    const form = this.data.resourceForm;
+    if (!form.title) return wx.showToast({ title: "请填写资料标题", icon: "none" });
+    const resourceRecords = [{ id: Date.now(), ...form }, ...this.data.resourceRecords];
+    this.setData({
+      resourceRecords,
+      "resourceForm.title": "",
+      "resourceForm.content": "",
+      "resourceForm.source": ""
+    }, () => this.persistLocalRecords());
+  },
+
+  addTrainingRecord() {
+    const form = this.data.trainingForm;
+    if (!form.session) return wx.showToast({ title: "请填写培训主题", icon: "none" });
+    const trainingRecords = [{ id: Date.now(), ...form }, ...this.data.trainingRecords];
+    this.setData({
+      trainingRecords,
+      "trainingForm.session": "",
+      "trainingForm.trainer": "",
+      "trainingForm.feedback": ""
+    }, () => {
+      this.persistLocalRecords();
+      this.buildWorkbenchReport();
+    });
+  },
+
+  deleteWorkbenchRecord(event) {
+    const collection = event.currentTarget.dataset.collection;
+    const id = Number(event.currentTarget.dataset.id);
+    const current = this.data[collection] || [];
+    this.setData({ [collection]: current.filter((item) => item.id !== id) }, () => {
+      this.persistLocalRecords();
+      this.buildWorkbenchReport();
+    });
+  },
+
+  buildWorkbenchReport() {
+    const reportDate = today();
+    const meetings = this.data.meetingRecords.filter((item) => item.date === reportDate);
+    const logs = this.data.logRecords.filter((item) => item.date === reportDate);
+    const training = this.data.trainingRecords.filter((item) => item.date === reportDate);
+    const pendingTasks = this.data.taskRecords.filter((item) => item.status !== "done").length;
+    const report = [
+      `胡哥餐饮工具｜每日营运简报｜${reportDate.replace(/-/g, "")}`,
+      "",
+      `当日会议 ${meetings.length} 场；日志 ${logs.length} 条；培训反馈 ${training.length} 条；待完成任务 ${pendingTasks} 项。`,
+      "",
+      "会议与议题：",
+      ...(meetings.length ? meetings.map((item, index) => `${index + 1}. ${item.title}（${item.period}）｜${item.topic || "未填写议题"}｜负责人 ${item.owner || "未指定"}｜进度 ${item.progress}`) : ["当日无会议记录。"]),
+      "",
+      "工作日志：",
+      ...(logs.length ? logs.map((item, index) => `${index + 1}. 完成：${item.completed}｜问题：${item.issue || "无记录"}｜明日：${item.next || "未填写"}`) : ["当日无日志记录。"]),
+      "",
+      "培训反馈：",
+      ...(training.length ? training.map((item, index) => `${index + 1}. ${item.session}｜${item.score} 分｜需复训 ${item.retrain}｜${item.feedback || "未填写反馈"}`) : ["当日无培训反馈。"]),
+      "",
+      "口径说明：只汇总本机微信中的本地记录；缺失数据不按 0 推断。"
+    ].join("\n");
+    this.setData({ workbenchReport: report });
+  },
+
+  copyWorkbenchReport() {
+    wx.setClipboardData({
+      data: this.data.workbenchReport,
+      success: () => wx.showToast({ title: "日报已复制", icon: "success" })
     });
   },
 
@@ -486,21 +687,33 @@ Page({
       status: "pending",
       ...form
     }].concat(this.data.taskRecords);
-    this.setData({ taskRecords }, () => this.recalculateAll());
+    this.setData({ taskRecords }, () => {
+      this.recalculateAll();
+      this.persistLocalRecords();
+      this.buildWorkbenchReport();
+    });
     wx.showToast({ title: "已新增任务", icon: "success" });
   },
 
   completeTaskRecord(event) {
     const id = Number(event.currentTarget.dataset.id);
     const taskRecords = this.data.taskRecords.map((item) => item.id === id ? { ...item, status: "done" } : item);
-    this.setData({ taskRecords }, () => this.recalculateAll());
+    this.setData({ taskRecords }, () => {
+      this.recalculateAll();
+      this.persistLocalRecords();
+      this.buildWorkbenchReport();
+    });
   },
 
   deleteTaskRecord(event) {
     const id = Number(event.currentTarget.dataset.id);
     this.setData({
       taskRecords: this.data.taskRecords.filter((item) => item.id !== id)
-    }, () => this.recalculateAll());
+    }, () => {
+      this.recalculateAll();
+      this.persistLocalRecords();
+      this.buildWorkbenchReport();
+    });
   },
 
   addIncentiveRecord() {
@@ -516,7 +729,10 @@ Page({
       score: scored.score,
       points: scored.points
     }].concat(this.data.incentiveRecords);
-    this.setData({ incentiveRecords }, () => this.recalculateAll());
+    this.setData({ incentiveRecords }, () => {
+      this.recalculateAll();
+      this.persistLocalRecords();
+    });
     wx.showToast({ title: "已评分", icon: "success" });
   },
 
@@ -524,7 +740,10 @@ Page({
     const id = Number(event.currentTarget.dataset.id);
     this.setData({
       incentiveRecords: this.data.incentiveRecords.filter((item) => item.id !== id)
-    }, () => this.recalculateAll());
+    }, () => {
+      this.recalculateAll();
+      this.persistLocalRecords();
+    });
   },
 
   copyMiniProgramPath() {

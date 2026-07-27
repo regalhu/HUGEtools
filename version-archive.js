@@ -3,16 +3,16 @@
 
   function fallbackHistory() {
     return {
-      currentVersion: "0.7.10",
-      updatedAt: "2026-07-09",
+      currentVersion: "0.8.0",
+      updatedAt: "2026-07-27",
       iterationRule: "每次功能更新都追加版本记录，保留上一版本基线、核心变化、验证结果和风险边界。",
       versions: [
         {
-          version: "0.7.10",
-          date: "2026-07-09",
-          baseline: "0.7.9",
-          title: "微信小程序与网页分享二维码",
-          changes: ["新增分享二维码工具。", "Web 端可生成网页链接二维码。", "小程序端新增原生转发和服务端小程序码调用入口。"],
+          version: "0.8.0",
+          date: "2026-07-27",
+          baseline: "0.7.10",
+          title: "营运工作台与经营简报合并升级",
+          changes: ["新增营运工作台。", "经营分析增加到手率与预算达成。", "Web 与小程序同步本地持久化能力。"],
           verification: ["版本档案读取失败时，不影响工具主体使用。"]
         }
       ]
