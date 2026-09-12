@@ -1,6 +1,6 @@
 # HUGEtools 微信小程序版说明
 
-更新时间：2026-07-27
+更新时间：2026-09-12
 
 ## 目录
 
@@ -12,6 +12,9 @@ miniprogram/
   app.wxss
   sitemap.json
   pages/index/
+  pages/operations/
+  pages/dish-tracking/
+  pages/data-backup/
   utils/calc.js
 ```
 
@@ -22,6 +25,14 @@ miniprogram/
 3. 项目目录选择本仓库根目录：`/Users/regal.hugmail.com/Documents/Codex/2026-06-02/github/HUGEtools`。
 4. AppID 使用真实小程序 AppID：`wx4eacf000d15e7372`。
 5. 导入后编译运行首页：`pages/index/index`。
+
+## 0.9.0 新增入口
+
+- 执行闭环：`pages/operations/operations`，会议待办、多人进度、PDCA、范围与来源追溯。
+- 菜品跟踪：`pages/dish-tracking/dish-tracking`，来源导入、新品与常规独立选择、持续统计及覆盖核对。
+- 数据备份：`pages/data-backup/data-backup`，生成本机文件、复制备份、从文件或文本核对后恢复。恢复之前保留原始副本；网页与微信备份不可混用。
+
+首页保留原有工具；当前共有 18 个入口、4 个原生页面。菜单可横向滑动。
 
 ## 已迁移工具
 
@@ -50,6 +61,6 @@ miniprogram/
 ## 当前限制
 
 - 小程序版优先迁移 MVP 核心测算能力，网页高级成本卡中的原料库、BOM 明细和图片封面 canvas 生成尚未完整迁移。
-- 导出 CSV/Excel 能力在小程序端暂未实现，后续可改为复制结果、生成本地文件或接入云函数。
+- 执行闭环可复制当前范围文本/CSV；菜品可复制完整结果和来源；备份生成本机 JSON 文件。未提供原生 Excel/PDF 排版导出。
 - 真正的小程序码生成依赖微信服务端接口、合法域名/HTTPS 和服务器环境变量；小程序前端不得保存 AppSecret。
 - 当前 `project.config.json` 已使用真实小程序 AppID：`wx4eacf000d15e7372`。

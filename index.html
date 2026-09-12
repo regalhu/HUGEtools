@@ -5,17 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>胡哥餐饮工具箱</title>
     <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="./styles.css?v=0.8.0-r2">
+    <link rel="stylesheet" href="./styles.css?v=0.9.0-release2">
+    <link rel="stylesheet" href="./operations-center.css?v=0.9.0-release2">
+    <link rel="stylesheet" href="./dish-tracking.css?v=0.9.0-release2">
   </head>
   <body>
     <main class="app-shell">
       <header class="topbar">
         <div>
-          <p class="eyebrow">MVP1 · 小餐饮老板马上能用</p>
+          <p class="eyebrow">HUGE TOOLS / 0.9 · 餐饮经营工作站</p>
           <h1>胡哥餐饮工具箱</h1>
-          <p class="tagline">给不会用大系统的小餐饮老板，用得起、看得懂、马上能用的经营工具。</p>
+          <p class="tagline">把会议变成行动，把经营数据变成有依据的判断。</p>
         </div>
-        <div class="brand-note">不做大系统，只解决今天的问题</div>
+        <div class="brand-note">营运有闭环 · 数据有出处</div>
       </header>
 
       <section class="risk-banner" aria-label="使用边界">
@@ -24,7 +26,11 @@
 
       <section class="tool-layout">
         <nav class="tool-nav" aria-label="工具列表">
+          <div class="nav-label">日常营运</div>
           <button class="tool-tab active" type="button" data-tool="operations">营运工作台</button>
+          <button class="tool-tab" type="button" data-tool="operations-center">执行闭环 <span class="nav-new">新</span></button>
+          <button class="tool-tab" type="button" data-tool="dish-tracking">菜品跟踪 <span class="nav-new">新</span></button>
+          <div class="nav-label">经营工具</div>
           <button class="tool-tab" type="button" data-tool="margin">菜品毛利计算器</button>
           <button class="tool-tab" type="button" data-tool="loss">门店损耗记录工具</button>
           <button class="tool-tab" type="button" data-tool="yield">应产率与产能计算工具</button>
@@ -38,6 +44,8 @@
           <button class="tool-tab" type="button" data-tool="task-reminder">门店任务提醒工具</button>
           <button class="tool-tab" type="button" data-tool="incentive">员工激励系统</button>
           <button class="tool-tab" type="button" data-tool="schedule">单店排班工具</button>
+          <div class="nav-label">数据与分享</div>
+          <button class="tool-tab" type="button" data-tool="data-backup">数据备份</button>
           <button class="tool-tab" type="button" data-tool="share">分享二维码</button>
         </nav>
 
@@ -55,7 +63,7 @@
           </div>
 
           <section class="risk-banner task-privacy-note">
-            本模块参考辛香汇工作助手的营运闭环设计，只在当前浏览器保存会议、日志、资料和培训记录；不含账号、云同步、后台权限和附件上传。
+            从会议记录到执行跟进，再到经营复盘。记录保存在本机，可在「数据备份」中导出留存。
           </section>
 
           <div class="mode-strip workbench-tabs" role="group" aria-label="营运工作台页面">
@@ -68,26 +76,18 @@
           </div>
 
           <section data-workbench-panel="overview">
+            <div class="workbench-focus">
+              <div><p class="eyebrow">本轮升级 / 会议 · 行动 · 数据</p><h3>让每一件事，有跟进、有结果。</h3><p>先明确负责人和完成日期，再用同一范围的数据复盘。</p></div>
+              <button class="primary-button" data-open-tool="operations-center">进入执行闭环 →</button>
+            </div>
             <div class="result-grid workbench-summary" id="workbenchSummary"></div>
             <div class="workbench-entry-grid">
-              <button type="button" class="workbench-entry" data-workbench-view="meetings">
-                <span>01</span><strong>记录会议</strong><small>日期 + 上午/下午，议题、责任人、计划完成时间和进度</small>
-              </button>
-              <button type="button" class="workbench-entry" data-workbench-view="logs">
-                <span>02</span><strong>写每日日志</strong><small>完成事项、问题和明日重点</small>
-              </button>
-              <button type="button" class="workbench-entry" data-open-tool="task-reminder">
-                <span>03</span><strong>跟进任务</strong><small>复用现有周期任务、逾期恢复和本地提醒</small>
-              </button>
-              <button type="button" class="workbench-entry" data-open-tool="incentive">
-                <span>04</span><strong>培训与激励</strong><small>复用现有任务评分、积分和排行榜</small>
-              </button>
-              <button type="button" class="workbench-entry" data-workbench-view="resources">
-                <span>05</span><strong>沉淀资料</strong><small>分类保存标准、经验和来源</small>
-              </button>
-              <button type="button" class="workbench-entry" data-workbench-view="report">
-                <span>06</span><strong>生成日报</strong><small>汇总当日会议、日志、培训和任务状态</small>
-              </button>
+              <button type="button" class="workbench-entry" data-workbench-view="meetings"><span>01 / 记录</span><strong>会议与议题</strong><small>记录结论、责任与日期，转入执行跟进</small></button>
+              <button type="button" class="workbench-entry" data-open-tool="operations-center"><span>02 / 执行</span><strong>PDCA 与多人进度</strong><small>逐人跟进措施、检查与标准化，查看逾期</small></button>
+              <button type="button" class="workbench-entry" data-open-tool="dish-tracking"><span>03 / 经营</span><strong>新品与常规菜跟踪</strong><small>确认来源、独立选菜，按门店和日期看趋势</small></button>
+              <button type="button" class="workbench-entry" data-open-tool="revenue"><span>04 / 分析</span><strong>营业额与老板简报</strong><small>核对到手收入、预算和数据覆盖</small></button>
+              <button type="button" class="workbench-entry" data-workbench-view="report"><span>05 / 复盘</span><strong>每日营运简报</strong><small>汇总会议、日志、培训和当前执行状态</small></button>
+              <button type="button" class="workbench-entry" data-open-tool="data-backup"><span>06 / 留存</span><strong>本地备份与恢复</strong><small>导出记录，恢复前核对模块并留存副本</small></button>
             </div>
             <div class="advice-box">
               <p><strong>闭环原则：</strong>记录事实 → 明确责任人和完成时间 → 任务跟进 → 培训/激励 → 日报复盘。</p>
@@ -192,6 +192,19 @@
               <p class="form-note" id="workbenchReportStatus"></p>
             </section>
           </section>
+        </section>
+
+        <section class="tool-panel" id="tool-operations-center"><div id="operationsCenterRoot"></div></section>
+        <section class="tool-panel" id="tool-dish-tracking"><div id="dishTrackingRoot"></div></section>
+        <section class="tool-panel" id="tool-data-backup">
+          <div class="tool-heading"><div><p class="eyebrow">本机记录 · 自主留存</p><h2>数据备份与恢复</h2><p class="tool-subtitle">换设备前、清理浏览器前，先保留一份记录。</p></div></div>
+          <div class="advice-box"><p>备份包含工作台、执行闭环、菜品跟踪、已保存的营业额输入、任务和激励记录。计算器中尚未保存的临时输入不在备份范围。</p><p>网页和微信的旧版记录结构不同，请在同一端恢复；备份不会上传。</p></div>
+          <div class="backup-grid">
+            <section class="backup-card"><span class="eyebrow">01 / 保存</span><h3>导出当前记录</h3><p>生成带版本和日期的本地备份。若原内容损坏，会生成原始诊断副本供排查；诊断副本不能直接恢复。</p><button id="exportBackupBtn" class="primary-button">下载备份文件</button><button id="exportRawBackupBtn" class="ghost-button">导出原始诊断副本</button></section>
+            <section class="backup-card"><span class="eyebrow">02 / 核对</span><h3>恢复已有备份</h3><label>选择备份文件<input id="backupFile" type="file" accept=".json,application/json"></label><pre id="backupReview" class="backup-review"></pre><button id="restoreBackupBtn" class="primary-button" disabled>确认恢复所列模块</button></section>
+          </div>
+          <p id="backupStatus" class="save-status" role="status" aria-live="polite">恢复前会保留未经修改的原始诊断副本；恢复成功并核对后自动重新打开页面。</p>
+          <button id="recoveryBackupBtn" class="ghost-button">下载最近一次恢复前副本</button>
         </section>
 
         <section class="tool-panel" id="tool-margin">
@@ -552,7 +565,7 @@
             </div>
             <div class="form-grid">
               <label>营业额文件名
-                <input id="revenueFileName" value="多店营业额.xlsx" placeholder="例如：宝山共康绿地0605营业额.xlsx">
+                <input id="revenueFileName" value="" placeholder="例如：宝山共康绿地0605营业额.xlsx">
               </label>
               <label>地域筛选
                 <input id="revenueRegionFilter" placeholder="留空为全部">
@@ -1199,7 +1212,7 @@
             <section class="margin-section" data-incentive-panel="today">
               <div class="section-title">
                 <h3>今日任务页</h3>
-                <span>系统按周期自动生成执行记录，店长只需录入完成时间、质量分和是否遗漏</span>
+                <span>指定真实负责人后，点击“生成本期执行记录”，再记录完成时间、质量分和是否遗漏</span>
               </div>
               <div class="task-filterbar">
                 <select id="incentiveRoleFilter" aria-label="按角色筛选">
@@ -1387,17 +1400,25 @@
 
     <script src="./yield-calculator.js?v=share-1"></script>
     <script src="./site-selection-calculator.js?v=share-1"></script>
-    <script src="./app.js?v=0.8.0"></script>
-    <script src="./slider-fix.js?v=0.8.0"></script>
-    <script src="./revenue-analysis.js?v=0.8.0"></script>
-    <script src="./task-reminder-storage.js?v=0.8.0"></script>
-    <script src="./task-reminder-scheduler.js?v=0.8.0"></script>
-    <script src="./task-reminder-ui.js?v=0.8.0"></script>
-    <script src="./task-reminder.js?v=0.8.0"></script>
-    <script src="./incentive-system-engine.js?v=0.8.0"></script>
-    <script src="./incentive-system-ui.js?v=0.8.0"></script>
-    <script src="./incentive-system.js?v=0.8.0"></script>
-    <script src="./operations-workbench.js?v=0.8.0"></script>
-    <script src="./version-archive.js?v=0.8.0"></script>
+    <script src="./app.js?v=0.9.0-release2"></script>
+    <script src="./slider-fix.js?v=0.9.0-release2"></script>
+    <script src="./miniprogram/utils/revenue-core.js?v=0.9.0-release2"></script>
+    <script src="./revenue-analysis.js?v=0.9.0-release2"></script>
+    <script src="./task-reminder-storage.js?v=0.9.0-release2"></script>
+    <script src="./task-reminder-scheduler.js?v=0.9.0-release2"></script>
+    <script src="./task-reminder-ui.js?v=0.9.0-release2"></script>
+    <script src="./task-reminder.js?v=0.9.0-release2"></script>
+    <script src="./incentive-system-engine.js?v=0.9.0-release2"></script>
+    <script src="./incentive-system-ui.js?v=0.9.0-release2"></script>
+    <script src="./incentive-system.js?v=0.9.0-release2"></script>
+    <script src="./operations-workbench.js?v=0.9.0-release2"></script>
+    <script src="./miniprogram/utils/operations-core.js?v=0.9.0-release2"></script>
+    <script src="./operations-center.js?v=0.9.0-release2"></script>
+    <script src="./miniprogram/utils/dish-tracking-core.js?v=0.9.0-release2"></script>
+    <script src="./dish-tracking.js?v=0.9.0-release2"></script>
+    <script src="./miniprogram/utils/backup-core.js?v=0.9.0-release2"></script>
+    <script src="./data-backup.js?v=0.9.0-release2"></script>
+    <script src="./revenue-persistence.js?v=0.9.0-release2"></script>
+    <script src="./version-archive.js?v=0.9.0-release2"></script>
   </body>
 </html>

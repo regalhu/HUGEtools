@@ -1,6 +1,6 @@
 (function () {
   const STORAGE_KEY = "hugetools.operations-workbench.v1";
-  const today = () => new Date().toISOString().slice(0, 10);
+  const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
   const emptyState = () => ({
     meetings: [],
     logs: [],
@@ -15,19 +15,29 @@
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 
+  let readable = true;
   let state = loadState();
   let currentView = "overview";
+  let overviewRequest = 0;
+  const TASK_READ_TIMEOUT_MS = 1500;
 
   function loadState() {
     try {
-      return { ...emptyState(), ...JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") };
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+      const next = { ...emptyState(), ...saved };
+      if (!Object.keys(emptyState()).every(key => Array.isArray(next[key]))) throw new Error("记录格式损坏");
+      readable = true;
+      return next;
     } catch {
+      readable = false;
       return emptyState();
     }
   }
 
-  function saveState() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  function saveState(next) {
+    if (!readable) { window.alert("原记录读取失败，已停止保存。请先核对备份，避免覆盖旧数据。"); return false; }
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); state = next; return true; }
+    catch (_) { window.alert("保存未完成，请检查本机空间并备份记录。"); return false; }
   }
 
   function uid(prefix) {
@@ -60,52 +70,67 @@
   }
 
   async function taskSnapshot() {
-    try {
-      const tasks = await window.HugeToolsTaskStorage?.listTasks?.() || [];
-      const now = Date.now();
-      return {
-        total: tasks.length,
-        active: tasks.filter((item) => item.enabled).length,
-        overdue: tasks.filter((item) => item.enabled && item.nextDueAt && new Date(item.nextDueAt).getTime() < now).length
+    const unavailable = { total: null, active: null, overdue: null };
+    const storage = window.HugeToolsTaskStorage;
+    if (typeof storage?.listTasks !== "function") return unavailable;
+    return new Promise((resolve) => {
+      let settled = false;
+      const finish = (value) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(value);
       };
-    } catch {
-      return { total: null, active: null, overdue: null };
-    }
+      const timer = setTimeout(() => finish(unavailable), TASK_READ_TIMEOUT_MS);
+      // IndexedDB can remain blocked without rejecting. Keep this optional source
+      // bounded so the overview and daily report remain usable.
+      Promise.resolve().then(() => storage.listTasks()).then((tasks) => {
+        if (!Array.isArray(tasks) || tasks.some(item => !item || typeof item !== "object")) return finish(unavailable);
+        const now = Date.now();
+        finish({
+          total: tasks.length,
+          active: tasks.filter((item) => item.enabled).length,
+          overdue: tasks.filter((item) => item.enabled && item.nextDueAt && new Date(item.nextDueAt).getTime() < now).length
+        });
+      }).catch(() => finish(unavailable));
+    });
   }
 
-  async function incentiveSnapshot() {
+  function incentiveSnapshot() {
     try {
-      const engine = window.HugeToolsIncentiveEngine;
-      const data = await engine?.ensureState?.();
-      if (!data) return { pending: null, missed: null };
-      const dated = engine.generateRecords(data, new Date());
-      return {
-        pending: dated.records.filter((item) => item.status === "pending").length,
-        missed: dated.records.filter((item) => item.status === "missed" || item.omitted).length
-      };
-    } catch {
-      return { pending: null, missed: null };
-    }
+      const saved = localStorage.getItem("hugetools.incentiveSystem.v1");
+      if (!saved) return { pending: 0, missed: 0 };
+      const data = JSON.parse(saved);
+      if (!Array.isArray(data.records)) throw new Error("评分记录不可读");
+      return { pending: data.records.filter(item => item.status === "pending").length, missed: data.records.filter(item => item.status === "missed" || item.omitted).length };
+    } catch (_) { return { pending: null, missed: null }; }
   }
 
   async function renderOverview() {
     const target = byId("workbenchSummary");
     if (!target) return;
-    const tasks = await taskSnapshot();
-    const incentive = await incentiveSnapshot();
+    const request = ++overviewRequest;
+    const incentive = incentiveSnapshot();
     const todayKey = today();
-    const todayMeetings = state.meetings.filter((item) => item.date === todayKey).length;
-    const todayLogs = state.logs.filter((item) => item.date === todayKey).length;
-    const unresolvedTopics = state.meetings.filter((item) => !/已完成|完成/.test(item.progress || "")).length;
-    target.innerHTML = [
-      metric("今日会议", todayMeetings, todayMeetings ? "good" : "warn"),
-      metric("今日日志", todayLogs, todayLogs ? "good" : "warn"),
-      metric("待跟进议题", unresolvedTopics, unresolvedTopics ? "warn" : "good"),
-      metric("启用任务", tasks.active ?? "未读取", tasks.overdue ? "bad" : "good"),
-      metric("逾期任务", tasks.overdue ?? "未读取", tasks.overdue ? "bad" : "good"),
-      metric("待执行评分", incentive.pending ?? "未读取", incentive.missed ? "bad" : "warn")
-    ].join("");
-    byId("workbenchTodayHint").textContent = `经营日 ${dateLabel(todayKey)} · 数据仅保存在当前浏览器`;
+    const todayMeetings = readable ? state.meetings.filter((item) => item.date === todayKey).length : null;
+    const todayLogs = readable ? state.logs.filter((item) => item.date === todayKey).length : null;
+    const unresolvedTopics = readable ? state.meetings.filter((item) => !["已完成", "完成"].includes(item.progress)).length : null;
+    const paint = (tasks, loading) => {
+      const missing = loading ? "读取中" : "未读取";
+      target.innerHTML = [
+        metric("今日会议", todayMeetings ?? "未读取", todayMeetings ? "good" : "warn"),
+        metric("今日日志", todayLogs ?? "未读取", todayLogs ? "good" : "warn"),
+        metric("待跟进议题", unresolvedTopics ?? "未读取", unresolvedTopics === 0 ? "good" : "warn"),
+        metric("启用任务", tasks.active ?? missing, tasks.active === null ? "warn" : tasks.overdue ? "bad" : "good"),
+        metric("逾期任务", tasks.overdue ?? missing, tasks.overdue === null ? "warn" : tasks.overdue ? "bad" : "good"),
+        metric("待执行评分", incentive.pending ?? "未读取", incentive.missed ? "bad" : "warn")
+      ].join("");
+      const hint = byId("workbenchTodayHint");
+      if (hint) hint.textContent = (readable ? `经营日 ${dateLabel(todayKey)} · 数据仅保存在当前浏览器` : "原记录读取失败，保存已锁定，请核对备份。") + (loading ? " · 任务统计读取中" : tasks.active === null ? " · 任务存储未读取，可稍后重新打开总览" : "");
+    };
+    paint({ active: null, overdue: null }, true);
+    const tasks = await taskSnapshot();
+    if (request === overviewRequest) paint(tasks, false);
   }
 
   function metric(label, value, level) {
@@ -183,12 +208,20 @@
     const meetings = state.meetings.filter((item) => item.date === selectedDate);
     const logs = state.logs.filter((item) => item.date === selectedDate);
     const training = state.training.filter((item) => item.date === selectedDate);
+    let executionText = "执行闭环记录未读取";
+    try {
+      const core = window.HugeOperationsCore;
+      const execution = core.summarize(core.readState(localStorage.getItem(core.STORAGE_KEY)).tasks);
+      executionText = `执行闭环 ${execution.total} 项；未完成 ${execution.unfinished} 项；逾期 ${execution.overdue} 项；已完成 ${execution.complete} 项`;
+    } catch (_) { /* Preserve an explicit missing state for unreadable execution data. */ }
     const lines = [
       `胡哥餐饮工具｜每日营运简报｜${dateLabel(selectedDate)}`,
       "",
       "一、当日总览",
       `会议 ${meetings.length} 场；日志 ${logs.length} 条；培训反馈 ${training.length} 条。`,
-      `启用任务 ${tasks.active ?? "未读取"} 项；逾期任务 ${tasks.overdue ?? "未读取"} 项；待执行评分 ${incentive.pending ?? "未读取"} 项。`,
+      `当前快照（非历史回溯）：启用任务 ${tasks.active ?? "未读取"} 项；逾期任务 ${tasks.overdue ?? "未读取"} 项；待执行评分 ${incentive.pending ?? "未读取"} 项。`,
+      "",
+      `执行闭环当前快照（非历史回溯）：${executionText}。`,
       "",
       "二、会议与议题",
       ...(meetings.length ? meetings.map((item, index) => `${index + 1}. ${item.title}（${item.period}）｜议题：${item.topic || "未填写"}｜负责人：${item.owner || "未指定"}｜计划完成：${dateLabel(item.dueDate) || "未设置"}｜进度：${item.progress || "待开始"}`) : ["当日无会议记录。"]),
@@ -234,8 +267,7 @@
   function addRecord(collection, form, requiredField) {
     const payload = formData(form);
     if (!payload[requiredField]) return;
-    state[collection] = [{ id: uid(collection), ...payload }, ...state[collection]];
-    saveState();
+    if (!saveState({ ...state, [collection]: [{ id: uid(collection), ...payload }, ...state[collection]] })) return;
     form.reset();
     applyDefaultDates();
     renderAll();
@@ -243,8 +275,8 @@
 
   function deleteRecord(collection, id) {
     if (!state[collection]) return;
-    state[collection] = state[collection].filter((item) => item.id !== id);
-    saveState();
+    if (!window.confirm("确认删除这条本机记录？建议先导出备份。")) return;
+    if (!saveState({ ...state, [collection]: state[collection].filter((item) => item.id !== id) })) return;
     renderAll();
   }
 

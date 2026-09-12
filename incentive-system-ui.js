@@ -3,23 +3,73 @@
   const state = {
     data: null,
     view: "today",
-    editingTaskId: null
+    editingTaskId: null,
+    locked: false
   };
 
   const $ = (id) => document.getElementById(id);
-  const safeText = (value) => String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const safeText = (value) => String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
   async function init() {
     if (!$("incentivePanel")) return;
-    state.data = await engine().ensureState();
-    state.data = engine().generateRecords(state.data, new Date());
-    bind();
-    populateEmployeeOptions();
-    resetTaskForm();
-    render();
+    installControls();
+    try {
+      state.data = await engine().ensureState();
+      bind();
+      populateEmployeeOptions();
+      resetTaskForm();
+      render();
+    } catch (error) { showError(error); }
+  }
+
+  function installControls() {
+    if (!$("incentiveSetupActions")) {
+      const controls = document.createElement("div");
+      controls.id = "incentiveSetupActions";
+      controls.className = "advice-box";
+      controls.innerHTML = `<p id="incentiveStorageNotice" role="status">新增真实负责人和任务后，按需生成本期执行记录。模板只提供动作参考。</p><div class="button-row"><button id="incentiveLoadTemplatesBtn" class="ghost-button" type="button">载入任务模板（不生成记录）</button><button id="incentiveGenerateBtn" class="ghost-button" type="button">生成本期执行记录</button></div>`;
+      $("incentivePanel").prepend(controls);
+    }
+    if (!$("incentiveEmployeeName")) {
+      const label = document.createElement("label");
+      label.innerHTML = `新增真实负责人<input id="incentiveEmployeeName" maxlength="40" placeholder="已有负责人可直接选择；新增请填真实姓名">`;
+      $("incentiveTaskOwner").parentElement.insertAdjacentElement("afterend", label);
+    }
+  }
+
+  function showError(error) {
+    $("incentiveStorageNotice").textContent = error.message || "操作未完成，请检查输入。";
+    if (error.code === "INCENTIVE_STORAGE_LOCKED") {
+      state.locked = true;
+      $("incentivePanel").querySelectorAll("button, input, textarea, select").forEach((element) => { element.disabled = true; });
+    }
+  }
+
+  function attempt(action) {
+    if (state.locked) return null;
+    try { return action(); }
+    catch (error) { showError(error); return null; }
   }
 
   function bind() {
+    $("incentiveLoadTemplatesBtn").addEventListener("click", async () => {
+      if (state.locked) return;
+      try {
+        state.data = await engine().loadTemplates();
+        state.view = "management";
+        populateEmployeeOptions();
+        resetTaskForm();
+        render();
+        $("incentiveStorageNotice").textContent = "已载入动作模板；所有模板均停用且未指定真实负责人。请逐项编辑、确认标准后再启用。";
+      } catch (error) { showError(error); }
+    });
+    $("incentiveGenerateBtn").addEventListener("click", () => {
+      const next = attempt(() => engine().generateRecords(state.data, new Date()));
+      if (!next) return;
+      state.data = next;
+      render();
+      $("incentiveStorageNotice").textContent = "已检查本期记录；仅为已启用且有真实负责人的任务生成，已有记录不会重复生成。";
+    });
     document.querySelectorAll("[data-incentive-view]").forEach((button) => {
       button.addEventListener("click", () => {
         state.view = button.dataset.incentiveView;
@@ -42,19 +92,21 @@
       `<option value="${safeText(employee.id)}">${safeText(employee.name)} · ${safeText(employee.role)}</option>`
     )).join("");
     $("incentiveEmployeeFilter").innerHTML = `<option value="all">全部员工</option>${employeeOptions}`;
-    $("incentiveMyEmployee").innerHTML = employeeOptions;
+    $("incentiveMyEmployee").innerHTML = employeeOptions || '<option value="">暂无真实负责人</option>';
     syncOwnerOptions();
   }
 
   function syncOwnerOptions() {
     const role = $("incentiveTaskRole").value;
     const employees = state.data.employees.filter((employee) => employee.role === role);
-    $("incentiveTaskOwner").innerHTML = employees.map((employee) => (
+    $("incentiveTaskOwner").innerHTML = '<option value="">请选择真实负责人或填写姓名</option>' + employees.map((employee) => (
       `<option value="${safeText(employee.id)}">${safeText(employee.name)}</option>`
     )).join("");
   }
 
   function render() {
+    $("incentiveLoadTemplatesBtn").disabled = state.locked || !!(state.data.tasks.length || state.data.employees.length || state.data.records.length);
+    $("incentiveGenerateBtn").disabled = state.locked || !state.data.tasks.some((task) => task.active && !task.isTemplate && state.data.employees.some((employee) => employee.id === task.ownerId));
     document.querySelectorAll("[data-incentive-view]").forEach((button) => {
       button.classList.toggle("active", button.dataset.incentiveView === state.view);
     });
@@ -73,12 +125,13 @@
     const records = state.data.records;
     const pending = records.filter((record) => record.status === "pending").length;
     const missed = records.filter((record) => record.status === "missed" || record.omitted).length;
-    const avgScore = records.length ? Math.round(records.reduce((sum, record) => sum + record.score, 0) / records.length) : 0;
+    const evaluated = records.filter((record) => record.status !== "pending");
+    const avgScore = evaluated.length ? Math.round(evaluated.reduce((sum, record) => sum + record.score, 0) / evaluated.length) : null;
     const totalPoints = records.reduce((sum, record) => sum + record.points, 0);
     $("incentiveSummary").innerHTML = [
       metric("待执行记录", pending, pending ? "warn" : "good"),
       metric("遗漏记录", missed, missed ? "bad" : "good"),
-      metric("平均评分", avgScore, avgScore >= 85 ? "good" : avgScore >= 70 ? "warn" : "bad"),
+      metric("平均评分", avgScore === null ? "待评分" : avgScore, avgScore === null ? "warn" : avgScore >= 85 ? "good" : avgScore >= 70 ? "warn" : "bad"),
       metric("累计积分", totalPoints, totalPoints ? "good" : "warn")
     ].join("");
     $("incentiveTopPerformer").textContent = board[0] ? `${board[0].name} · ${board[0].points} 分` : "暂无排名";
@@ -146,8 +199,8 @@
       .sort((a, b) => new Date(b.dueAt) - new Date(a.dueAt));
     $("incentiveMyScoreSummary").innerHTML = [
       metric("我的积分", boardItem?.points || 0, "good"),
-      metric("平均评分", boardItem?.avgScore || 0, (boardItem?.avgScore || 0) >= 85 ? "good" : "warn"),
-      metric("准时率", `${boardItem?.onTimeRate || 0}%`, (boardItem?.onTimeRate || 0) >= 90 ? "good" : "warn"),
+      metric("平均评分", boardItem ? boardItem.avgScore : "待评分", (boardItem?.avgScore || 0) >= 85 ? "good" : "warn"),
+      metric("准时率", boardItem?.completed ? `${boardItem.onTimeRate}%` : "暂无已完成记录", (boardItem?.onTimeRate || 0) >= 90 ? "good" : "warn"),
       metric("激励标签", boardItem?.rankLevel || "暂无", "good")
     ].join("");
     $("incentiveMyScoreList").innerHTML = records.length ? records.map((record) => {
@@ -158,6 +211,7 @@
 
   function renderLeaderboard() {
     const board = engine().leaderboard(state.data);
+    if (!board.length) { $("incentiveLeaderboard").innerHTML = '<p class="task-empty">完成真实任务评分后显示排行榜。</p>'; return; }
     $("incentiveLeaderboard").innerHTML = board.map((item, index) => `
       <article class="leaderboard-row">
         <strong>${index + 1}</strong>
@@ -187,7 +241,7 @@
             </div>
             <dl>
               <div><dt>角色</dt><dd>${safeText(task.role)}</dd></div>
-              <div><dt>负责人</dt><dd>${safeText(employee?.name || "-")}</dd></div>
+              <div><dt>负责人</dt><dd>${safeText(employee?.name || "待指定真实负责人")}</dd></div>
               <div><dt>周期</dt><dd>${safeText(cycleLabel(task))}</dd></div>
               <div><dt>基础积分</dt><dd>${safeText(task.basePoints)}</dd></div>
             </dl>
@@ -207,26 +261,32 @@
     const id = button.dataset.saveRecord;
     const status = document.querySelector(`[data-record-status="${CSS.escape(id)}"]`).value;
     const completedInput = document.querySelector(`[data-record-completed="${CSS.escape(id)}"]`).value;
-    const qualityScore = Number(document.querySelector(`[data-record-quality="${CSS.escape(id)}"]`).value) || 0;
+    const qualityInput = document.querySelector(`[data-record-quality="${CSS.escape(id)}"]`).value;
+    const qualityScore = qualityInput.trim() === "" ? null : Number(qualityInput);
+    if (status === "completed" && (qualityScore === null || !Number.isFinite(qualityScore) || qualityScore < 0 || qualityScore > 100)) { showError(new Error("完成任务前，请填写实际质量分（0–100）。")); return; }
+    if (completedInput && !Number.isFinite(new Date(completedInput).getTime())) { showError(new Error("完成时间无效，请重新填写。")); return; }
     const omitted = document.querySelector(`[data-record-omitted="${CSS.escape(id)}"]`).checked;
     const note = document.querySelector(`[data-record-note="${CSS.escape(id)}"]`).value;
-    state.data = engine().updateRecord(state.data, id, {
+    const next = attempt(() => engine().updateRecord(state.data, id, {
       status,
       completedAt: status === "completed" ? new Date(completedInput || Date.now()).toISOString() : null,
       qualityScore,
       omitted,
       note
-    });
+    }));
+    if (!next) return;
+    state.data = next;
     render();
   }
 
   function handleTaskSubmit(event) {
     event.preventDefault();
-    state.data = engine().upsertTask(state.data, {
+    const next = attempt(() => engine().upsertTask(state.data, {
       id: state.editingTaskId || undefined,
       title: $("incentiveTaskTitle").value,
       role: $("incentiveTaskRole").value,
       ownerId: $("incentiveTaskOwner").value,
+      employeeName: $("incentiveEmployeeName").value,
       cycle: $("incentiveTaskCycle").value,
       dueTime: $("incentiveTaskDueTime").value,
       dueWeekday: Number($("incentiveTaskWeekday").value),
@@ -235,8 +295,11 @@
       description: $("incentiveTaskDescription").value,
       qualityStandard: $("incentiveTaskStandard").value,
       active: $("incentiveTaskActive").checked
-    });
-    state.data = engine().generateRecords(state.data, new Date());
+    }));
+    if (!next) return;
+    state.data = next;
+    state.data = attempt(() => engine().generateRecords(state.data, new Date())) || state.data;
+    populateEmployeeOptions();
     resetTaskForm();
     render();
   }
@@ -264,7 +327,9 @@
       renderCycleFields();
     }
     if (deleteButton) {
-      state.data = engine().deleteTask(state.data, deleteButton.dataset.deleteIncentiveTask);
+      const next = attempt(() => engine().deleteTask(state.data, deleteButton.dataset.deleteIncentiveTask));
+      if (!next) return;
+      state.data = next;
       render();
     }
   }
@@ -272,6 +337,7 @@
   function resetTaskForm() {
     state.editingTaskId = null;
     $("incentiveTaskTitle").value = "";
+    $("incentiveEmployeeName").value = "";
     $("incentiveTaskRole").value = "店长";
     syncOwnerOptions();
     $("incentiveTaskCycle").value = "daily";

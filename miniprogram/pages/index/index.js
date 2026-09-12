@@ -1,12 +1,16 @@
 const calc = require("../../utils/calc");
+const operationsCore = require("../../utils/operations-core");
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
 
 Page({
   data: {
-    version: "0.8.0-miniapp.1",
+    version: "0.9.0",
     tools: [
       { key: "operations", label: "工作台" },
+      { key: "operations-center", label: "执行闭环" },
+      { key: "dish-tracking", label: "菜品跟踪" },
+      { key: "data-backup", label: "数据备份" },
       { key: "margin", label: "毛利" },
       { key: "loss", label: "损耗" },
       { key: "yield", label: "应产率" },
@@ -202,11 +206,11 @@ Page({
     },
     healthResult: {},
     revenue: {
-      fileName: "多店营业额.xlsx",
-      storeMasterText: "门店,地域,城市,市场层级\n宝山共康,上海区域,上海,成熟市场\n金山百联,上海区域,上海,成长市场",
-      revenueText: "门店,日期,折后营业收入,到手收入,订单数\n宝山共康绿地,2026-06-05,12800,11600,310\n宝山共康绿地,2026-06-06,13600,12240,328\n金沙百联,2026-06-01,9600,8640,220",
-      budgetText: "门店,月份,到手收入预算\n宝山共康,2026-06,420000\n金山百联,2026-06,300000",
-      dishText: "门店,日期,菜品,主菜单,销售金额\n宝山共康,2026-06-05,招牌辣子鸡,是,4200\n宝山共康,2026-06-06,口水鸡,是,3100\n金山百联,2026-06-01,宫保鸡丁,是,5600"
+      fileName: "",
+      storeMasterText: "门店,地域,城市,市场层级",
+      revenueText: "门店,日期,折后营业收入,到手收入,订单数",
+      budgetText: "门店,月份,到手收入预算",
+      dishText: "门店,日期,菜品,主菜单,销售金额"
     },
     revenueResult: {},
     site: {
@@ -334,6 +338,12 @@ Page({
     this.buildWorkbenchReport();
   },
 
+  onShow() {
+    this.restoreLocalRecords();
+    this.recalculateAll();
+    this.buildWorkbenchReport();
+  },
+
   onShareAppMessage() {
     return {
       title: this.data.share.title,
@@ -351,6 +361,8 @@ Page({
 
   onToolTap(event) {
     const activeTool = event.currentTarget.dataset.tool;
+    const pages = { "operations-center": "operations/operations", "dish-tracking": "dish-tracking/dish-tracking", "data-backup": "data-backup/data-backup" };
+    if (pages[activeTool]) return wx.navigateTo({ url: "/pages/" + pages[activeTool] });
     this.setData({
       activeTool,
       isOperations: activeTool === "operations",
@@ -394,6 +406,12 @@ Page({
   restoreLocalRecords() {
     try {
       const stored = wx.getStorageSync("hugetools.operations.v1") || {};
+      if (!stored || typeof stored !== "object" || Array.isArray(stored)) throw new Error("记录格式错误");
+      const fields = ["meetingRecords", "logRecords", "resourceRecords", "trainingRecords", "taskRecords", "incentiveRecords"];
+      if (!fields.every(key => stored[key] === undefined || Array.isArray(stored[key]))) throw new Error("记录格式错误");
+      this._storageReadable = true;
+      const revenue = wx.getStorageSync("hugetools.revenue.v1");
+      if (revenue && typeof revenue === "object" && !Array.isArray(revenue)) this.setData({ revenue: { ...this.data.revenue, ...revenue } });
       this.setData({
         meetingRecords: stored.meetingRecords || [],
         logRecords: stored.logRecords || [],
@@ -403,19 +421,27 @@ Page({
         incentiveRecords: stored.incentiveRecords || []
       });
     } catch {
-      wx.showToast({ title: "本地记录读取失败", icon: "none" });
+      this._storageReadable = false;
+      wx.showToast({ title: "记录读取失败，保存已锁定", icon: "none" });
     }
   },
 
   persistLocalRecords() {
-    wx.setStorageSync("hugetools.operations.v1", {
+    if (this._storageReadable === false) { wx.showToast({ title: "读取失败，请先核对备份", icon: "none" }); this.restoreLocalRecords(); return false; }
+    try { wx.setStorageSync("hugetools.operations.v1", {
       meetingRecords: this.data.meetingRecords,
       logRecords: this.data.logRecords,
       resourceRecords: this.data.resourceRecords,
       trainingRecords: this.data.trainingRecords,
       taskRecords: this.data.taskRecords,
       incentiveRecords: this.data.incentiveRecords
-    });
+    }); return true;
+    } catch (_) { this.restoreLocalRecords(); wx.showToast({ title: "保存失败，请检查本机空间", icon: "none" }); return false; }
+  },
+
+  saveRevenueInput() {
+    try { wx.setStorageSync("hugetools.revenue.v1", this.data.revenue); wx.showToast({ title: "分析输入已保存" }); }
+    catch (_) { wx.showToast({ title: "保存失败，请检查本机空间", icon: "none" }); }
   },
 
   addMeetingRecord() {
@@ -491,10 +517,17 @@ Page({
     const logs = this.data.logRecords.filter((item) => item.date === reportDate);
     const training = this.data.trainingRecords.filter((item) => item.date === reportDate);
     const pendingTasks = this.data.taskRecords.filter((item) => item.status !== "done").length;
+    let executionText = "执行闭环记录未读取";
+    try {
+      const execution = operationsCore.summarize(operationsCore.readState(wx.getStorageSync(operationsCore.STORAGE_KEY)).tasks);
+      executionText = `执行闭环 ${execution.total} 项；未完成 ${execution.unfinished} 项；逾期 ${execution.overdue} 项；已完成 ${execution.complete} 项`;
+    } catch (_) { /* Keep unreadable source distinct from zero. */ }
     const report = [
       `胡哥餐饮工具｜每日营运简报｜${reportDate.replace(/-/g, "")}`,
       "",
-      `当日会议 ${meetings.length} 场；日志 ${logs.length} 条；培训反馈 ${training.length} 条；待完成任务 ${pendingTasks} 项。`,
+      `当日会议 ${meetings.length} 场；日志 ${logs.length} 条；培训反馈 ${training.length} 条；当前待完成任务 ${pendingTasks} 项。`,
+      "",
+      `执行闭环当前快照：${executionText}。`,
       "",
       "会议与议题：",
       ...(meetings.length ? meetings.map((item, index) => `${index + 1}. ${item.title}（${item.period}）｜${item.topic || "未填写议题"}｜负责人 ${item.owner || "未指定"}｜进度 ${item.progress}`) : ["当日无会议记录。"]),

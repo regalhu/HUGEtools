@@ -1,0 +1,55 @@
+<view class="dt-page">
+  <view class="dt-hero"><text class="dt-eyebrow">DISH TRACKING / 菜品跟踪</text><text class="dt-title">每一道菜，
+都有据可查。</text><text class="dt-subtitle">先确认数据与范围，再读销量、趋势和来源。</text><view class="dt-meta"><text>{{stats.records}} 条已确认</text><text>{{stats.batches}} 个来源批次</text><text>缺失不补零</text></view></view>
+  <view wx:if="{{loadError}}" class="dt-alert">{{loadError}}</view>
+  <view wx:if="{{notice}}" class="dt-notice">{{notice}}</view>
+  <view class="dt-card">
+    <text class="dt-eyebrow">01 / 确认事实</text><view class="dt-head"><text class="dt-h3">导入与来源核对</text><button class="dt-link" bindtap="onTemplate">复制空白表头</button></view>
+    <text class="dt-muted">粘贴 CSV 或 Excel 内容。必填字段：门店、日期、菜品、销量、销售额。日期使用 YYYY-MM-DD，数字须为非负数，退菜请单独核对。</text>
+    <text class="dt-label">来源名称 · 必填</text><input class="dt-input" value="{{source}}" maxlength="120" placeholder="填写真实表名或导出批次名称" bindinput="onSource" disabled="{{!!loadError}}" />
+    <text class="dt-label">数据内容</text><textarea class="dt-textarea" value="{{importText}}" placeholder="门店,日期,菜品,销量,销售额" bindinput="onText" maxlength="-1" disabled="{{!!loadError}}" />
+    <view class="dt-actions"><button class="dt-button" bindtap="onPreview" disabled="{{!!loadError}}">预览并校验</button><button class="dt-secondary" bindtap="onClipboard" disabled="{{!!loadError}}">读取剪贴板</button></view><text class="dt-muted dt-top">本版未接入订单分母，不计算点单率。缺失记录不要填成零。手机端每批最多 20 万字。</text>
+    <view wx:if="{{preview}}" class="dt-preview">
+      <view wx:if="{{preview.errorCount}}" class="dt-alert"><text class="dt-bold">本批未入库 · {{preview.errorCount}} 项待修正</text><text wx:for="{{preview.errors}}" wx:key="index" class="dt-error-line">{{item}}</text><text wx:if="{{preview.errorCount > 100}}">页面显示前 100 项，可复制完整清单。</text><button class="dt-link" bindtap="onCopyValidation">复制校验清单</button></view>
+      <block wx:else>
+        <text class="dt-h4">待确认 · {{preview.count}} 条</text><text class="dt-muted">来源：{{preview.source}}
+新增 {{preview.newCount}} 条 · 冲突 {{preview.conflictCount}} 条</text>
+        <view class="dt-preview-row" wx:for="{{preview.rows}}" wx:key="line"><text class="dt-bold">{{item.dish}}</text><text class="dt-muted">{{item.store}} · {{item.date}}</text><text>销量 {{item.quantityText}} · 销售额 {{item.revenueText}} 元</text></view><text wx:if="{{preview.count > 8}}" class="dt-muted">显示前 8 条；已校验全部 {{preview.count}} 条。</text>
+        <view wx:if="{{preview.conflictCount}}" class="dt-alert"><text class="dt-bold">同门店、日期、菜品已存在，需明确覆盖</text><view class="dt-conflict" wx:for="{{preview.conflicts}}" wx:key="key"><text>{{item.store}} / {{item.date}} / {{item.dish}}</text><text>原来源：{{item.source}}</text><text>销量 {{item.beforeQuantity}} → {{item.afterQuantity}}；销售额 {{item.beforeRevenue}} → {{item.afterRevenue}}</text></view><text wx:if="{{preview.conflictCount > 20}}">显示前 20 条，请复制完整冲突清单核对。</text><button class="dt-link" bindtap="onCopyValidation">复制完整冲突清单</button><checkbox-group bindchange="onReplace"><label class="dt-check"><checkbox value="replace" color="#173e34" checked="{{replace}}" /><text>我确认覆盖全部 {{preview.conflictCount}} 条冲突记录，保留旧批次</text></label></checkbox-group></view>
+        <view class="dt-actions"><button class="dt-button" bindtap="onCommit" disabled="{{preview.conflictCount > 0 && !replace}}">确认本批并入库</button><button class="dt-link" bindtap="onCancelImport">取消本批</button></view>
+      </block>
+    </view>
+  </view>
+  <view class="dt-card">
+    <text class="dt-eyebrow">02 / 确认范围</text><view class="dt-head"><text class="dt-h3">菜品跟踪</text><view class="dt-tabs"><button class="{{group === 'new' ? 'active' : ''}}" data-group="new" bindtap="onGroup">新品</button><button class="{{group === 'regular' ? 'active' : ''}}" data-group="regular" bindtap="onGroup">常规菜品</button></view></view><text class="dt-muted">两组各自保存菜品、门店和周期。修改后请保存范围。</text>
+    <view class="dt-selected"><text class="dt-bold">已选中 · {{selected.length}} 道</text><view class="dt-chips"><button class="dt-chip" wx:for="{{selected}}" wx:key="dish" data-index="{{item.index}}" bindtap="onRemoveDish">{{item.dish}} <text>×</text></button><text wx:if="{{!selected.length}}" class="dt-muted">尚未选择菜品</text></view></view>
+    <picker range="{{dishOptions}}" bindchange="onAddDish" disabled="{{!dishOptions.length}}"><view class="dt-input dt-top">{{dishOptions.length ? '+ 添加已确认菜品' : '暂无可添加菜品'}} <text class="dt-arrow">⌄</text></view></picker>
+    <text class="dt-label">统计门店 · {{cfg.stores.length}} 家</text><checkbox-group bindchange="onStores" class="dt-stores"><label wx:for="{{stores}}" wx:key="store" class="dt-check"><checkbox value="{{item.store}}" color="#173e34" checked="{{item.checked}}" /><text>{{item.store}}</text></label></checkbox-group><text wx:if="{{!stores.length}}" class="dt-muted">确认首批数据后，门店与菜品会在这里出现。</text>
+    <text class="dt-label">统计方式</text><picker range="{{['固定周期','持续统计']}}" value="{{cfg.mode === 'ongoing' ? 1 : 0}}" bindchange="onMode"><view class="dt-input">{{modeLabel}}<text class="dt-arrow">⌄</text></view></picker>
+    <view class="dt-date-grid"><view><text class="dt-label">起始日期</text><picker mode="date" value="{{cfg.startDate}}" data-field="startDate" bindchange="onDate"><view class="dt-input">{{cfg.startDate || '请选择日期'}}</view></picker></view><view><text class="dt-label">固定截止日期</text><picker mode="date" value="{{cfg.endDate}}" data-field="endDate" bindchange="onDate" disabled="{{cfg.mode === 'ongoing'}}"><view class="dt-input {{cfg.mode === 'ongoing' ? 'dt-disabled' : ''}}">{{cfg.endDate || '请选择日期'}}</view></picker></view></view>
+    <text class="dt-muted dt-top">持续统计截止于所选门店最新已确认日期；最长 366 天。切换模式保留固定截止日期。</text><button class="dt-button dt-top" bindtap="onSaveConfig" disabled="{{!!loadError}}">保存范围并分析</button><text wx:if="{{dirty}}" class="dt-dirty">范围有修改；下方仍为已保存范围</text>
+  </view>
+  <view wx:if="{{result.messages.length}}" class="dt-card"><text class="dt-eyebrow">03 / 阅读结果</text><text class="dt-h3">从真实记录开始</text><text wx:for="{{result.messages}}" wx:key="index" class="dt-muted dt-top">{{item}}</text></view>
+  <block wx:else>
+    <view class="dt-result-head"><text class="dt-eyebrow">03 / 独立菜品趋势</text><text class="dt-h3">{{group === 'new' ? '新品' : '常规菜品'}} · 已保存范围</text><text class="dt-muted dt-top">{{result.startDate}} 至 {{result.endDate}}
+{{result.dayCount}} 天 · {{result.stores.length}} 家门店{{result.mode === 'ongoing' ? ' · 持续统计截止已确认事实' : ''}}
+前期：{{result.previousStart}} 至 {{result.previousEnd}}</text><button class="dt-secondary dt-top" bindtap="onCopyReport">复制结果与来源</button></view>
+    <view class="dt-card" wx:for="{{result.dishes}}" wx:key="dish" wx:for-item="dish" wx:for-index="dishIndex">
+      <view class="dt-head"><text class="dt-h3">{{dish.dish}}</text><text class="dt-badge {{dish.complete ? '' : 'partial'}}">{{dish.complete ? '记录完整' : '覆盖不足'}}</text></view>
+      <view class="dt-metrics"><view><text class="dt-muted">已记录销量</text><text class="dt-number">{{dish.quantityText}}</text><text class="dt-small">前期已记录 {{dish.previousQuantity}}</text></view><view><text class="dt-muted">已记录销售额 / 元</text><text class="dt-number">{{dish.revenueText}}</text><text class="dt-small">前期已记录 {{dish.previousRevenue}}</text></view><view><text class="dt-muted">店日覆盖</text><text class="dt-number">{{dish.coverage}}</text><text class="dt-small">前期 {{dish.previousCoverage}}</text></view><view><text class="dt-muted">销量 / 销售额变化</text><text class="dt-number dt-rate">{{dish.quantityChange}} / {{dish.revenueChange}}</text><text class="dt-small">同店等长周期</text></view></view>
+      <view class="dt-method">{{dish.comparisonNote}} 已记录合计仅代表有记录部分。</view><text class="dt-h4 dt-top">每日销量与门店覆盖</text>
+      <scroll-view scroll-y class="dt-trend"><view class="dt-trend-row" wx:for="{{dish.days}}" wx:for-item="day" wx:key="date"><text class="dt-day">{{day.date}}</text><view class="dt-track"><view class="dt-bar {{day.complete ? '' : 'partial'}}" style="width:{{day.width}}%"></view></view><text class="dt-value">{{day.quantityText}}</text><text class="dt-cover">{{day.coverage}} 店</text></view></scroll-view>
+      <button class="dt-link dt-top" data-index="{{dishIndex}}" bindtap="onToggleDish">{{dish.expanded ? '收起' : '查看'}}店日明细与每条来源</button>
+      <block wx:if="{{dish.expanded}}"><view wx:if="{{dish.detailPages > 1}}" class="dt-pagination"><button class="dt-secondary" data-dish="{{dish.dish}}" data-step="-1" bindtap="onDetailPage" disabled="{{dish.detailPage === 1}}">上一页</button><text>明细 {{dish.detailPage}} / {{dish.detailPages}}</text><button class="dt-secondary" data-dish="{{dish.dish}}" data-step="1" bindtap="onDetailPage" disabled="{{dish.detailPage === dish.detailPages}}">下一页</button></view><scroll-view scroll-y class="dt-cell-list"><view wx:for="{{dish.detailRows}}" wx:for-item="cell" wx:key="key" class="dt-cell {{cell.recorded ? '' : 'missing'}}"><text class="dt-bold">{{cell.date}} · {{cell.store}}</text><text>销量 {{cell.quantityText}} · 销售额 {{cell.revenueText}} 元</text><text class="dt-small">来源：{{cell.source}}</text><text class="dt-id">{{cell.batchId}}</text></view></scroll-view></block>
+      <text class="dt-small dt-top">本期来源：{{dish.sources}}</text>
+    </view>
+    <view wx:if="{{result.dishPages > 1}}" class="dt-pagination dt-bottom"><button class="dt-secondary" data-step="-1" bindtap="onDishPage" disabled="{{result.dishPage === 1}}">上一页菜品</button><text>{{result.dishPage}} / {{result.dishPages}} · 共 {{result.totalDishes}} 道</text><button class="dt-secondary" data-step="1" bindtap="onDishPage" disabled="{{result.dishPage === result.dishPages}}">下一页菜品</button></view>
+  </block>
+  <view class="dt-card"><text class="dt-eyebrow">04 / 来源归档</text><text class="dt-h3">已确认批次 · {{batches.length}}</text><text class="dt-muted dt-top">覆盖只替换当前统计事实，原批次和原值均保留。记录仅保存在当前微信设备，与网页版各自保存。</text><text wx:if="{{!batches.length}}" class="dt-muted dt-top">暂无已确认批次。</text>
+    <view wx:for="{{batches}}" wx:key="id" class="dt-batch"><view data-id="{{item.id}}" bindtap="onBatch"><text class="dt-h4">{{item.source}} <text class="dt-arrow">⌄</text></text><text class="dt-muted">{{item.count}} 条 · 当前采用 {{item.active}} 条
+本批覆盖 {{item.replacedCount}} 条 · 后续被替代 {{item.superseded}} 条</text><text class="dt-id">{{item.confirmedAt}}
+{{item.id}}</text></view>
+      <view wx:if="{{activeBatch.id === item.id}}" class="dt-batch-open"><button class="dt-secondary" bindtap="onCopyBatch">复制完整来源批次</button><text wx:if="{{activeBatch.count > 100}}" class="dt-muted dt-top">显示前 100 条，可复制完整批次查看。</text><scroll-view scroll-y class="dt-cell-list"><view wx:for="{{activeBatch.rows}}" wx:key="line" wx:for-item="row" class="dt-cell"><text class="dt-bold">{{row.dish}}</text><text class="dt-muted">{{row.store}} · {{row.date}}</text><text>销量 {{row.quantityText}} · 销售额 {{row.revenueText}} 元</text></view></scroll-view><block wx:if="{{activeBatch.replacedCount}}"><text class="dt-h4 dt-top">覆盖记录核对</text><text wx:if="{{activeBatch.replacedCount > 20}}" class="dt-muted">显示前 20 条，完整记录包含于复制的批次中。</text><view wx:for="{{activeBatch.replacements}}" wx:key="key" wx:for-item="old" class="dt-cell"><text>{{old.label}}</text><text>{{old.values}}</text><text class="dt-id">原批次：{{old.source}}</text></view></block></view>
+    </view>
+  </view>
+</view>

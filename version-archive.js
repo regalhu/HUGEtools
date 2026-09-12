@@ -2,21 +2,7 @@
   const safeText = (value) => String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
   function fallbackHistory() {
-    return {
-      currentVersion: "0.8.0",
-      updatedAt: "2026-07-27",
-      iterationRule: "每次功能更新都追加版本记录，保留上一版本基线、核心变化、验证结果和风险边界。",
-      versions: [
-        {
-          version: "0.8.0",
-          date: "2026-07-27",
-          baseline: "0.7.10",
-          title: "营运工作台与经营简报合并升级",
-          changes: ["新增营运工作台。", "经营分析增加到手率与预算达成。", "Web 与小程序同步本地持久化能力。"],
-          verification: ["版本档案读取失败时，不影响工具主体使用。"]
-        }
-      ]
-    };
+    return { currentVersion: "0.9.0", updatedAt: "2026-09-12", iterationRule: "每次迭代记录功能变化、验证和发布状态。", versions: [{ version: "0.9.0", date: "2026-09-12", baseline: "0.8.0", title: "执行闭环、菜品跟踪与数据可信度升级", changes: ["会议待办与多人 PDCA 进度。", "新品与常规菜独立持续跟踪、覆盖与来源。", "本地备份恢复、经营口径统一与首页升级。"], verification: ["详细检查与发布状态见项目升级记录。"] }] };
   }
 
   function publicChangeText(change) {

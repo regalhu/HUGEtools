@@ -23,6 +23,9 @@ jobs:
       - name: JavaScript syntax check
         run: npm run check
 
+      - name: Business regression tests
+        run: npm test
+
       - name: JSON validation
         run: |
           python3 -m json.tool data/version-history.json >/dev/null

@@ -1,9 +1,9 @@
 <view class="page">
   <view class="hero">
     <view>
-      <view class="eyebrow">MVP1 · 微信小程序版</view>
+      <view class="eyebrow">HUGE TOOLS / 0.9</view>
       <view class="title">胡哥餐饮工具箱</view>
-      <view class="tagline">把日常营运、经营分析和实用测算放在一个工具箱里。</view>
+      <view class="tagline">把会议变成行动，让经营判断有据可查。</view>
     </view>
     <view class="version">{{version}}</view>
   </view>
@@ -51,7 +51,10 @@
         <view class="metric {{taskRecords.length ? 'good' : 'warn'}}"><text>本地任务</text><view>{{taskRecords.length}}</view></view>
         <view class="metric {{trainingRecords.length ? 'good' : 'warn'}}"><text>培训反馈</text><view>{{trainingRecords.length}}</view></view>
       </view>
+      <view class="focus-card"><view class="focus-kicker">从记录，到结果</view><view class="focus-title">每一件事，都有跟进。</view><view class="focus-text">会议待办 · 多人进度 · 菜品趋势</view><button data-tool="operations-center" bindtap="openTool">进入执行闭环 →</button></view>
       <view class="entry-grid">
+        <button class="entry-button" data-tool="dish-tracking" bindtap="openTool"><text>菜品跟踪</text><view>新品 / 常规菜 · 来源与覆盖</view></button>
+        <button class="entry-button" data-tool="data-backup" bindtap="openTool"><text>数据备份</text><view>导出留存 · 核对后恢复</view></button>
         <button class="entry-button" data-view="meetings" bindtap="onWorkbenchViewTap"><text>会议纪要</text><view>日期 + 上午/下午，责任人和进度</view></button>
         <button class="entry-button" data-view="logs" bindtap="onWorkbenchViewTap"><text>每日日志</text><view>完成、问题和明日重点</view></button>
         <button class="entry-button" data-tool="taskReminder" bindtap="openTool"><text>任务提醒</text><view>复用现有任务模块</view></button>
@@ -363,6 +366,7 @@
   </view>
 
   <view wx:if="{{isRevenue}}" class="panel">
+    <button class="primary wide" bindtap="saveRevenueInput">保存本次分析输入</button>
     <view class="panel-head"><view><view class="eyebrow">经营事实 · 预算 · 菜品结构</view><view class="panel-title">经营分析与老板简报</view></view></view>
     <view class="form-grid">
       <view class="field full"><text>营业额文件名</text><input value="{{revenue.fileName}}" data-section="revenue" data-field="fileName" bindinput="onInput" /></view>

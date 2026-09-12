@@ -3,18 +3,31 @@
   const DB_VERSION = 1;
   const STORE = "tasks";
   const SETTINGS_KEY = "hugetools.taskReminder.settings";
+  const OPEN_TIMEOUT_MS = 3000;
 
   let dbPromise = null;
 
   function openDb() {
     if (dbPromise) return dbPromise;
-    dbPromise = new Promise((resolve, reject) => {
+    const opening = new Promise((resolve, reject) => {
       if (!("indexedDB" in window)) {
         reject(new Error("当前浏览器不支持 IndexedDB"));
         return;
       }
-      const request = indexedDB.open(DB_NAME, DB_VERSION);
+      let settled = false;
+      let timer;
+      const fail = (error) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        reject(error);
+      };
+      let request;
+      try { request = indexedDB.open(DB_NAME, DB_VERSION); }
+      catch (error) { fail(error); return; }
+      timer = setTimeout(() => fail(new Error("任务存储读取超时，请稍后重试；原记录未变")), OPEN_TIMEOUT_MS);
       request.onupgradeneeded = () => {
+        if (settled) { request.transaction?.abort(); return; }
         const db = request.result;
         if (!db.objectStoreNames.contains(STORE)) {
           const store = db.createObjectStore(STORE, { keyPath: "id" });
@@ -24,10 +37,24 @@
           store.createIndex("updatedAt", "updatedAt", { unique: false });
         }
       };
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const db = request.result;
+        // A timed-out open request cannot be cancelled. Close its eventual handle
+        // so it does not block a newer attempt or a database version change.
+        if (settled) { db.close(); return; }
+        settled = true;
+        clearTimeout(timer);
+        const invalidate = () => { if (dbPromise === opening) dbPromise = null; };
+        db.onversionchange = () => { db.close(); invalidate(); };
+        db.onclose = invalidate;
+        resolve(db);
+      };
+      request.onerror = () => fail(request.error || new Error("任务存储无法打开，请稍后重试"));
+      request.onblocked = () => fail(new Error("任务存储被其他页面占用，请关闭相关页面后重试；原记录未变"));
     });
-    return dbPromise;
+    dbPromise = opening;
+    opening.catch(() => { if (dbPromise === opening) dbPromise = null; });
+    return opening;
   }
 
   async function withStore(mode, callback) {
@@ -73,6 +100,14 @@
     });
   }
 
+  async function replaceAll(tasks) {
+    return withStore("readwrite", (store) => {
+      store.clear();
+      tasks.forEach((task) => store.put(task));
+      return true;
+    });
+  }
+
   function readSettings() {
     try {
       return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {};
@@ -93,6 +128,7 @@
     saveTask,
     deleteTask,
     bulkSave,
+    replaceAll,
     readSettings,
     saveSettings
   };

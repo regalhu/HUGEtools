@@ -1,0 +1,67 @@
+<view class="oc-page">
+  <view class="oc-hero"><view class="oc-eyebrow">胡哥餐饮工具 · 营运闭环</view><view class="oc-hero-title">让每件事，都有回音。</view><view class="oc-subtitle">会议待办 · 多人进度 · PDCA 复盘</view><text class="oc-local">本机记录</text></view>
+  <view wx:if="{{feedback}}" class="oc-feedback {{feedbackError ? 'is-error' : ''}}">{{feedback}}</view>
+  <view class="oc-toolbar"><button class="oc-button primary" bindtap="newTask" disabled="{{readFailed}}">＋ 新建执行事项</button><button class="oc-button" bindtap="importMeetings" disabled="{{readFailed}}">导入会议未完成待办</button></view>
+  <view class="oc-toolbar-hint">保留原会议；重复导入自动去重。</view>
+
+  <view wx:if="{{editorOpen}}" class="oc-panel oc-editor">
+    <view class="oc-heading"><view>{{editorId ? '编辑与复盘' : '新建改善行动'}}</view><button class="oc-text" bindtap="closeEditor">收起</button></view>
+    <view class="oc-field"><text>事项名称 *</text><input value="{{form.title}}" data-field="title" bindinput="onFormInput" placeholder="填写本次要完成的事项" maxlength="300" /></view>
+    <view class="oc-field"><text>门店</text><input value="{{form.store}}" data-field="store" bindinput="onFormInput" placeholder="填写适用门店" maxlength="100" /></view>
+    <view class="oc-field"><text>部门 / 中心</text><input value="{{form.department}}" data-field="department" bindinput="onFormInput" placeholder="填写归属部门或中心" maxlength="100" /></view>
+    <view class="oc-field"><text>负责人（多人用顿号、逗号或换行分隔）</text><textarea value="{{form.owners}}" data-field="owners" bindinput="onFormInput" placeholder="填写实际负责人" maxlength="1000" auto-height /></view>
+    <view class="oc-hint">同名负责人会合并。编辑保留未改名人员的进度；新增人员从待开始记录。</view>
+    <view class="oc-field"><text>到期日</text><input value="{{form.dueDate}}" data-field="dueDate" bindinput="onFormInput" placeholder="YYYY-MM-DD，可留空" maxlength="10" /></view>
+    <view class="oc-field"><text>P · 问题 / 目标</text><textarea value="{{form.plan}}" data-field="plan" bindinput="onFormInput" placeholder="记录现状、问题与要达到的目标" maxlength="-1" /></view>
+    <view class="oc-field"><text>D · 执行措施</text><textarea value="{{form.do}}" data-field="do" bindinput="onFormInput" placeholder="记录措施与执行安排" maxlength="-1" /></view>
+    <view class="oc-field"><text>C · 检查结果</text><textarea value="{{form.check}}" data-field="check" bindinput="onFormInput" placeholder="记录检查证据与结果" maxlength="-1" /></view>
+    <view class="oc-field"><text>A · 标准化 / 下一步</text><textarea value="{{form.act}}" data-field="act" bindinput="onFormInput" placeholder="记录标准化动作或下一轮改善" maxlength="-1" /></view>
+    <view class="oc-source-heading"><text>会议与材料来源</text><button class="oc-text" bindtap="addSource">＋ 添加来源</button></view>
+    <view class="oc-hint">可关联多次会议；手工事项可留空。导入记录保留原引用。</view>
+    <view wx:for="{{form.sources}}" wx:key="key" class="oc-source-edit">
+      <input value="{{item.title}}" data-index="{{index}}" data-field="title" bindinput="onSourceInput" placeholder="会议 / 材料名称" maxlength="300" />
+      <input value="{{item.date}}" data-index="{{index}}" data-field="date" bindinput="onSourceInput" placeholder="来源日期 YYYY-MM-DD，可留空" maxlength="10" />
+      <textarea value="{{item.reference}}" data-index="{{index}}" data-field="reference" bindinput="onSourceInput" placeholder="议题编号、原文或引用说明" maxlength="-1" />
+      <button class="oc-text danger" data-index="{{index}}" bindtap="removeSource">移除此来源</button>
+    </view>
+    <view class="oc-actions"><button class="oc-button primary" bindtap="saveTask" disabled="{{readFailed}}">保存事项</button><button class="oc-button" bindtap="closeEditor">取消</button></view>
+  </view>
+
+  <view class="oc-panel">
+    <view class="oc-heading"><view>执行总览</view><text>{{summary.total}} 项 / 全部 {{totalTasks}} 项</text></view>
+    <view class="oc-filters">
+      <input value="{{filters.query}}" bindinput="onSearch" placeholder="搜索事项、PDCA 或会议" maxlength="100" />
+      <picker range="{{storeOptions}}" data-key="store" bindchange="onFilterPick"><view class="oc-picker">{{storeLabel}}<text>⌄</text></view></picker>
+      <picker range="{{departmentOptions}}" data-key="department" bindchange="onFilterPick"><view class="oc-picker">{{departmentLabel}}<text>⌄</text></view></picker>
+      <picker range="{{ownerOptions}}" data-key="owner" bindchange="onFilterPick"><view class="oc-picker">{{ownerLabel}}<text>⌄</text></view></picker>
+      <picker range="{{sourceOptions}}" data-key="source" bindchange="onFilterPick"><view class="oc-picker">{{sourceLabel}}<text>⌄</text></view></picker>
+      <picker range="{{statusOptions}}" data-key="status" bindchange="onFilterPick"><view class="oc-picker">{{statusLabel}}<text>⌄</text></view></picker>
+    </view>
+    <view class="oc-filter-bottom"><view class="oc-overdue-toggle"><switch checked="{{filters.overdue}}" bindchange="onOverdue" color="#163e36" /><text>只看逾期</text></view><button class="oc-text" bindtap="resetFilters">重置筛选</button></view>
+    <view class="oc-copy"><button class="oc-text" data-format="text" bindtap="copyRange" disabled="{{!summary.total}}">复制当前范围 · 文本</button><button class="oc-text" data-format="csv" bindtap="copyRange" disabled="{{!summary.total}}">复制 CSV</button></view>
+    <view class="oc-metrics"><view><text>待完成</text><view>{{summary.unfinished}}</view></view><view class="oc-overdue-number"><text>逾期</text><view>{{summary.overdue}}</view></view><view><text>已完成</text><view>{{summary.complete}}</view></view><view><text>待分配</text><view>{{summary.unassigned}}</view></view></view>
+  </view>
+
+  <view class="oc-carry">
+    <view class="oc-carry-title" bindtap="toggleCarry"><text>延续到下一次会议</text><text>{{carryOpen ? '收起' : '展开'}}</text></view>
+    <view class="oc-hint">继承当前范围未完成事项</view>
+    <block wx:if="{{carryOpen}}"><view class="oc-hint oc-carry-description">把当前筛选的 {{summary.unfinished}} 个未完成事项关联到本次会议；保留原事项、来源和各人进度。</view><input value="{{carry.title}}" data-field="title" bindinput="onCarryInput" placeholder="本次会议名称" maxlength="300" /><input value="{{carry.date}}" data-field="date" bindinput="onCarryInput" placeholder="本次会议日期 YYYY-MM-DD" maxlength="10" /><input value="{{carry.reference}}" data-field="reference" bindinput="onCarryInput" placeholder="本次议题 / 跟进说明" maxlength="1000" /><button class="oc-button" bindtap="carryForward" disabled="{{!summary.unfinished || readFailed}}">关联未完成事项</button></block>
+  </view>
+
+  <view wx:if="{{!viewTasks.length}}" class="oc-empty"><view>从一次会议，走到一次改善</view><text>{{totalTasks ? '当前筛选没有匹配事项，调整条件可查看其他记录。' : '新增执行事项，或从本机已保存的会议导入待办。每位负责人有独立进度，全部完成后事项才完成。'}}</text></view>
+  <view wx:for="{{viewTasks}}" wx:key="id" wx:for-item="task" class="oc-task {{task.state.overdue ? 'task-overdue' : ''}}">
+    <view class="oc-task-top"><view><view class="oc-eyebrow">{{task.store || '门店未填写'}} / {{task.department || '部门未填写'}}</view><view class="oc-task-title">{{task.title}}</view></view><button class="oc-text" data-id="{{task.id}}" bindtap="editTask">编辑</button></view>
+    <view class="oc-meta"><text class="oc-status {{task.state.code}}">{{task.state.label}}</text><text wx:if="{{task.state.overdue}}" class="oc-status overdue">已逾期</text><text>到期 {{task.dueDate || '未设置'}}</text><text>负责人完成 {{task.state.completed}} / {{task.state.total}}</text></view>
+    <view class="oc-progress"><view style="width: {{task.state.percent}}%;"></view></view>
+    <view wx:if="{{!task.assignees.length}}" class="oc-hint">尚未指定负责人。编辑事项后可分别跟进每个人的进度。</view>
+    <view wx:for="{{task.assignees}}" wx:key="name" wx:for-item="person" class="oc-person"><view class="oc-person-top"><text>{{person.name}}</text><picker range="{{progressOptions}}" value="{{person.progressIndex}}" data-id="{{task.id}}" data-name="{{person.name}}" bindchange="onProgress" disabled="{{readFailed}}"><view class="oc-person-picker">{{person.progressLabel}} ⌄</view></picker></view><input value="{{person.note}}" placeholder="个人进展备注" data-id="{{task.id}}" data-name="{{person.name}}" bindblur="onNote" disabled="{{readFailed}}" maxlength="1000" /></view>
+    <view class="oc-detail-toggle" data-id="{{task.id}}" bindtap="toggleDetails"><text>{{task.detailsOpen ? '收起 PDCA 与来源' : '查看 PDCA 与来源'}}</text><text>{{task.sources.length ? task.sources.length + ' 条来源' : '手工录入'}}</text></view>
+    <view wx:if="{{task.detailsOpen}}"><view class="oc-pdca"><view><text class="oc-letter">P</text><view><view class="oc-pdca-label">问题 / 目标</view><text selectable>{{task.plan || '待补充'}}</text></view></view><view><text class="oc-letter">D</text><view><view class="oc-pdca-label">执行措施</view><text selectable>{{task.do || '待补充'}}</text></view></view><view><text class="oc-letter">C</text><view><view class="oc-pdca-label">检查结果</view><text selectable>{{task.check || '待补充'}}</text></view></view><view><text class="oc-letter">A</text><view><view class="oc-pdca-label">标准化 / 下一步</view><text selectable>{{task.act || '待补充'}}</text></view></view></view><view class="oc-source-list"><view wx:for="{{task.sources}}" wx:key="key" wx:for-item="source"><view>{{source.title}}<text class="oc-source-date">{{source.date}}</text></view><text class="oc-source-reference" selectable>{{source.reference || '未填写引用说明'}}</text></view><view wx:if="{{!task.sources.length}}" class="oc-hint">本事项为手工录入，可在编辑中补充会议或材料来源。</view></view></view>
+  </view>
+
+  <view class="oc-panel oc-ranks"><view class="oc-heading"><view>执行看板</view><text>跟随筛选范围</text></view><view class="oc-hint">仅统计本机实际记录。个人完成率 = 个人已完成责任项 ÷ 个人责任项总数；部门按整体事项完成计算。逾期以到期日次日为起点，未设到期日不计入逾期。</view>
+    <view class="oc-rank-title">人员进度</view><view wx:if="{{!summary.people.length}}" class="oc-hint oc-rank-empty">当前范围暂无负责人记录。</view><block wx:else><view class="oc-rank-row oc-rank-head"><text>负责人</text><text>完成 / 总数</text><text>完成率</text><text>逾期</text></view><view wx:for="{{summary.people}}" wx:key="name" class="oc-rank-row"><text>{{item.name}}</text><text>{{item.completed}} / {{item.total}}</text><text class="oc-rate">{{item.rate}}%</text><text class="{{item.overdue ? 'danger' : ''}}">{{item.overdue}}</text></view></block>
+    <view class="oc-rank-title">部门 / 中心进度</view><view wx:if="{{!summary.departments.length}}" class="oc-hint oc-rank-empty">当前范围暂无部门记录。</view><block wx:else><view class="oc-rank-row oc-rank-head"><text>部门 / 中心</text><text>完成 / 总数</text><text>完成率</text><text>逾期</text></view><view wx:for="{{summary.departments}}" wx:key="name" class="oc-rank-row"><text>{{item.name}}</text><text>{{item.completed}} / {{item.total}}</text><text class="oc-rate">{{item.rate}}%</text><text class="{{item.overdue ? 'danger' : ''}}">{{item.overdue}}</text></view></block>
+  </view>
+  <view class="oc-footnote">数据仅保存在当前小程序，不会自动同步到网页版或其他设备。多人进度由本机维护；全部负责人完成，事项才显示已完成。已完成事项可调整个人进度重新打开。</view>
+</view>

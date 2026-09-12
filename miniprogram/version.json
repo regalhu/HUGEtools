@@ -1,14 +1,29 @@
 {
-  "webVersion": "0.8.0",
-  "miniProgramVersion": "0.8.0-miniapp.1",
-  "updatedAt": "2026-07-27",
+  "webVersion": "0.9.0",
+  "miniProgramVersion": "0.9.0",
+  "updatedAt": "2026-09-12",
   "miniprogramRoot": "miniprogram/",
-  "syncedToolCount": 15,
+  "syncedToolCount": 18,
   "unsyncedToolCount": 0,
   "tools": [
     {
       "key": "operations",
       "name": "营运工作台",
+      "status": "local-persistent-functional"
+    },
+    {
+      "key": "operations-center",
+      "name": "执行闭环",
+      "status": "local-persistent-functional"
+    },
+    {
+      "key": "dish-tracking",
+      "name": "菜品跟踪",
+      "status": "local-persistent-functional"
+    },
+    {
+      "key": "data-backup",
+      "name": "数据备份与恢复",
       "status": "local-persistent-functional"
     },
     {
@@ -83,6 +98,9 @@
     }
   ],
   "notes": [
+    "2026-09-12 新增执行闭环、菜品跟踪、数据备份；18 个入口，4 个原生页面。",
+    "网页和微信共用经营口径，保留旧本机记录，新版存储读取异常时保护原记录。",
+    "数据本机保存；多人进度不代表多人账号同步。开发预览不等于正式发布。",
     "2026-07-27 新增营运工作台：会议、日志、资料、培训和日报在微信本机持久化，并汇总现有任务与激励模块。",
     "2026-07-27 营业额分析增加折后收入、到手收入、到手率和到手收入预算；缺失数据不按 0 计算。",
     "2026-07-09 已同步 Web 端门店营业额联合分析基础能力。",

@@ -70,12 +70,7 @@
 
   function defaultState(seed = {}) {
     return {
-      employees: seed.employees || [
-        { id: "emp-store-manager", name: "店长A", role: "店长" },
-        { id: "emp-kitchen-lead", name: "后厨A", role: "后厨" },
-        { id: "emp-stock-keeper", name: "库管A", role: "库管" },
-        { id: "emp-front-lead", name: "前厅A", role: "前厅" }
-      ],
+      employees: seed.employees || [],
       tasks: (seed.tasks || []).map((task) => normalizeTask(task)),
       records: [],
       updatedAt: new Date().toISOString()
@@ -95,45 +90,69 @@
       basePoints: Math.min(Math.max(Number(task.basePoints) || 10, 1), 200),
       description: String(task.description || "").trim(),
       qualityStandard: String(task.qualityStandard || "").trim(),
-      active: task.active !== false
+      active: task.active !== false,
+      isTemplate: task.isTemplate === true
     };
   }
 
+  function storageError(message) {
+    const error = new Error(message);
+    error.code = "INCENTIVE_STORAGE_LOCKED";
+    return error;
+  }
+
+  function validState(state) {
+    if (!state || typeof state !== "object" || Array.isArray(state)) return false;
+    const validList = (rows) => Array.isArray(rows) && rows.every((row) => row && typeof row === "object" && typeof row.id === "string" && row.id.trim()) && new Set(rows.map((row) => row.id)).size === rows.length;
+    return validList(state.employees) && validList(state.tasks) && validList(state.records) &&
+      state.employees.every((row) => typeof row.name === "string" && row.name.trim() && typeof row.role === "string") &&
+      state.tasks.every((row) => typeof row.title === "string" && typeof row.role === "string" && typeof row.ownerId === "string") &&
+      state.records.every((row) => typeof row.taskId === "string" && typeof row.employeeId === "string" && ["pending", "completed", "missed"].includes(row.status) && Number.isFinite(row.score) && Number.isFinite(row.points) && Number.isFinite(new Date(row.dueAt).getTime()));
+  }
+
   function readState() {
-    try {
-      const state = JSON.parse(localStorage.getItem(STORAGE_KEY));
-      if (state?.tasks && state?.employees && state?.records) return state;
-    } catch {
-      return null;
-    }
-    return null;
+    let raw;
+    try { raw = localStorage.getItem(STORAGE_KEY); }
+    catch { throw storageError("无法读取员工激励存储，已停止写入。请检查浏览器存储权限。"); }
+    if (raw === null) return null;
+    let value;
+    try { value = JSON.parse(raw); }
+    catch { throw storageError("员工激励已保存内容损坏，已锁定写入并保留原内容。请先导出备份后修复。"); }
+    if (!validState(value)) throw storageError("员工激励已保存内容结构异常，已锁定写入并保留原内容。请先导出备份后修复。");
+    return value;
   }
 
   function saveState(state) {
+    // Recheck current storage before each mutation, including changes from another tab.
+    readState();
+    if (!validState(state)) throw storageError("员工激励内容未通过完整性检查，未覆盖已保存数据。");
     const next = { ...state, updatedAt: new Date().toISOString() };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); }
+    catch { throw storageError("员工激励保存失败，可能存储空间不足。请先导出备份再重试。"); }
     return next;
   }
 
-  async function loadTemplateState() {
-    try {
-      const response = await fetch("./data/incentive-task-templates.json?v=0.7.8", { cache: "no-store" });
-      if (!response.ok) throw new Error("template fetch failed");
-      return defaultState(await response.json());
-    } catch {
-      return defaultState();
-    }
+  async function loadTemplates() {
+    const existing = readState();
+    if (existing && (existing.tasks.length || existing.employees.length || existing.records.length)) throw new Error("已有员工激励记录，不能用模板覆盖。可在任务管理中新增任务。");
+    const response = await fetch("./data/incentive-task-templates.json?v=0.9.0", { cache: "no-store" });
+    if (!response.ok) throw new Error("任务模板暂时无法读取，请稍后重试。");
+    const source = await response.json();
+    if (!Array.isArray(source.tasks) || !source.tasks.length) throw new Error("任务模板内容为空或格式异常，未写入数据。");
+    const template = defaultState({ tasks: source.tasks.map((task) => ({ ...task, title: `【模板】${task.title}`, ownerId: "", active: false, isTemplate: true })) });
+    const latest = readState();
+    if (latest && (latest.tasks.length || latest.employees.length || latest.records.length)) throw new Error("已有新记录保存，已停止载入模板以免覆盖。");
+    return saveState(template);
   }
 
   async function ensureState() {
-    const existing = readState();
-    if (existing) return existing;
-    return saveState(await loadTemplateState());
+    return readState() || defaultState();
   }
 
   function generateRecords(state, date = new Date()) {
     const records = [...state.records];
-    state.tasks.filter((task) => task.active).forEach((task) => {
+    readState();
+    state.tasks.filter((task) => task.active && !task.isTemplate && state.employees.some((employee) => employee.id === task.ownerId && !employee.isTemplate)).forEach((task) => {
       const periodKey = periodKeyForTask(task, date);
       const id = `${task.id}-${periodKey}`;
       if (records.some((record) => record.id === id)) return;
@@ -146,12 +165,12 @@
         dueAt: dueDateForTask(task, date).toISOString(),
         completedAt: null,
         status: "pending",
-        qualityScore: 90,
+        qualityScore: null,
         omitted: false,
         note: ""
       }, task));
     });
-    return saveState({ ...state, records });
+    return records.length === state.records.length ? state : saveState({ ...state, records });
   }
 
   function scoreRecord(record, task) {
@@ -183,10 +202,20 @@
   }
 
   function upsertTask(state, input) {
-    const task = normalizeTask(input);
+    let employees = state.employees.slice();
+    let ownerId = input.ownerId;
+    const employeeName = String(input.employeeName || "").trim();
+    if (employeeName) {
+      let employee = employees.find((item) => item.name === employeeName && item.role === input.role && !item.isTemplate);
+      if (!employee) { employee = { id: makeId("employee"), name: employeeName, role: input.role }; employees.push(employee); }
+      ownerId = employee.id;
+    }
+    if (!String(input.title || "").trim()) throw new Error("请填写真实任务名称。");
+    if (!employees.some((employee) => employee.id === ownerId && employee.role === input.role && !employee.isTemplate)) throw new Error("请选择真实负责人，或填写该角色的真实员工姓名。");
+    const task = normalizeTask({ ...input, title: String(input.title).replace(/^【模板】/, ""), ownerId, isTemplate: false });
     const exists = state.tasks.some((item) => item.id === task.id);
     const tasks = exists ? state.tasks.map((item) => item.id === task.id ? task : item) : [task, ...state.tasks];
-    return saveState({ ...state, tasks });
+    return saveState({ ...state, tasks, employees });
   }
 
   function deleteTask(state, taskId) {
@@ -209,6 +238,7 @@
       return {
         ...employee,
         records: records.length,
+        evaluatedCount: evaluatedRecords.length,
         completed,
         missed,
         onTimeRate: completed ? Math.round(onTime / completed * 100) : 0,
@@ -216,7 +246,7 @@
         points,
         rankLevel: rankLevel(points, avgScore)
       };
-    }).sort((a, b) => b.points - a.points || b.avgScore - a.avgScore);
+    }).filter((row) => row.evaluatedCount > 0 && !row.isTemplate).sort((a, b) => b.points - a.points || b.avgScore - a.avgScore);
   }
 
   function rankLevel(points, avgScore) {
@@ -236,6 +266,9 @@
     STATUS_LABELS,
     dateKey,
     ensureState,
+    readState,
+    loadTemplates,
+    validState,
     saveState,
     generateRecords,
     scoreRecord,
