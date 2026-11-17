@@ -1,5 +1,6 @@
 const core = require('../../utils/backup-core');
 Page({
+  onShareAppMessage() { return { title: '胡哥餐饮工具 · 本机数据备份', path: '/pages/data-backup/data-backup' }; },
   data: { status: '记录保存在本机。建议在更换设备或清理微信前导出备份。', backupText: '', review: [], backupDate: '', canRestore: false, filePath: '', fileName: '', restoring: false },
   storedValues() {
     const storedKeys = new Set(wx.getStorageInfoSync().keys);

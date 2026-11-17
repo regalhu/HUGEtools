@@ -4,12 +4,14 @@ const blankForm = () => ({ title: "", store: "", department: "", owners: "", due
 const blankFilters = () => ({ query: "", store: "", department: "", owner: "", source: "", status: "", overdue: false });
 
 Page({
+  onShareAppMessage() { return { title: '胡哥餐饮工具 · 执行闭环', path: '/pages/operations/operations' }; },
   data: {
     feedback: "", feedbackError: false, readFailed: false, editorOpen: false, editorId: "", form: blankForm(),
     filters: blankFilters(), viewTasks: [], totalTasks: 0, summary: { total: 0, complete: 0, unfinished: 0, overdue: 0, unassigned: 0, people: [], departments: [] },
     storeOptions: ["全部门店"], departmentOptions: ["全部部门 / 中心"], ownerOptions: ["全部负责人"], sourceOptions: ["全部会议来源"],
     storeLabel: "全部门店", departmentLabel: "全部部门 / 中心", ownerLabel: "全部负责人", sourceLabel: "全部会议来源", statusLabel: "全部状态",
-    statusOptions: ["全部状态", "全部未完成", "待分配", "待开始", "进行中", "已完成"],
+    statusOptions: ["全部状态", "全部未完成", "待分配", "待开始", "进行中", "已完成", "已搁置", "已终止", "无需跟进 / 不适用"],
+    modeOptions: ["正常执行", "已搁置", "已终止", "无需跟进 / 不适用"],
     progressOptions: ["待开始", "进行中", "已完成"], carryOpen: false, carry: { title: "", date: core.today(), reference: "" }
   },
   onLoad() {
@@ -45,7 +47,7 @@ Page({
     this._filterOptions = {
       store: ["", ...distinct(tasks.map((t) => t.store))], department: ["", ...distinct(tasks.map((t) => t.department))],
       owner: ["", ...distinct(tasks.reduce((all, t) => all.concat(t.assignees.map((a) => a.name)), []))], source: ["", ...Array.from(sources.keys())],
-      status: ["", "unfinished", "unassigned", "pending", "active", "complete"]
+      status: ["", "unfinished", "unassigned", "pending", "active", "complete", "paused", "terminated", "notApplicable"]
     };
     const filters = { ...this.data.filters };
     ["store", "department", "owner", "source"].forEach((key) => { if (!this._filterOptions[key].includes(filters[key])) filters[key] = ""; });
@@ -57,8 +59,8 @@ Page({
       ownerOptions: ["全部负责人", ...this._filterOptions.owner.slice(1)], sourceOptions: ["全部会议来源", ...Array.from(sources.values()).map((s) => `${s.title}${s.date ? ` · ${s.date}` : ""}`)],
       storeLabel: filters.store || "全部门店", departmentLabel: filters.department || "全部部门 / 中心", ownerLabel: filters.owner || "全部负责人", sourceLabel: source ? `${source.title}${source.date ? ` · ${source.date}` : ""}` : "全部会议来源",
       statusLabel: this.data.statusOptions[this._filterOptions.status.indexOf(filters.status)],
-      summary: core.summarize(visible),
-      viewTasks: visible.map((task) => ({ ...task, state: core.status(task), detailsOpen: !!(this._expanded || {})[task.id], assignees: task.assignees.map((a) => ({ ...a, progressIndex: [0, 50, 100].indexOf(a.progress), progressLabel: this.data.progressOptions[[0, 50, 100].indexOf(a.progress)] })) }))
+      summary: core.summarize(visible), carryCount: visible.filter(core.needsFollowup).length,
+      viewTasks: visible.map((task) => ({ ...task, modeIndex: ["normal", "paused", "terminated", "notApplicable"].indexOf(core.executionMode(task)), modeLabel: this.data.modeOptions[["normal", "paused", "terminated", "notApplicable"].indexOf(core.executionMode(task))], state: core.status(task), detailsOpen: !!(this._expanded || {})[task.id], assignees: task.assignees.map((a) => ({ ...a, progressIndex: [0, 50, 100].indexOf(a.progress), progressLabel: this.data.progressOptions[[0, 50, 100].indexOf(a.progress)] })) }))
     });
   },
   onFilterPick(event) {
@@ -105,6 +107,14 @@ Page({
       const old = this._state.tasks.find((t) => t.id === this.data.editorId);
       const task = core.makeTask(this.data.form, old);
       if (this.persist(old ? this._state.tasks.map((t) => t.id === task.id ? task : t) : [task, ...this._state.tasks])) this.closeEditor();
+    } catch (error) { this.feedback(error.message, true); }
+  },
+  onMode(event) {
+    const task = this._state.tasks.find((t) => t.id === event.currentTarget.dataset.id);
+    if (!task) return this.feedback("事项已变化，请重新打开。", true);
+    try {
+      const updated = core.setExecutionMode(task, ["normal", "paused", "terminated", "notApplicable"][Number(event.detail.value)]);
+      this.persist(this._state.tasks.map((t) => t.id === task.id ? updated : t), "执行状态已保存；原方案、来源和个人进度保留，切回正常执行可恢复。 ");
     } catch (error) { this.feedback(error.message, true); }
   },
   onProgress(event) {

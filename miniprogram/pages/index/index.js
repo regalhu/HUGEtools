@@ -5,12 +5,13 @@ const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(
 
 Page({
   data: {
-    version: "0.9.0",
+    version: "0.10.0",
     tools: [
       { key: "operations", label: "工作台" },
       { key: "operations-center", label: "执行闭环" },
       { key: "dish-tracking", label: "菜品跟踪" },
       { key: "data-backup", label: "数据备份" },
+      { key: "membership", label: "会员复购" },
       { key: "margin", label: "毛利" },
       { key: "loss", label: "损耗" },
       { key: "yield", label: "应产率" },
@@ -329,13 +330,15 @@ Page({
     }
   },
 
-  onLoad() {
+  onLoad(options = {}) {
     if (wx.showShareMenu) {
       wx.showShareMenu({ menus: ["shareAppMessage", "shareTimeline"] });
     }
     this.restoreLocalRecords();
     this.recalculateAll();
     this.buildWorkbenchReport();
+    const tool = options.tool;
+    if (this.data.tools.some(item => item.key === tool)) this.onToolTap({ currentTarget: { dataset: { tool } } });
   },
 
   onShow() {
@@ -347,7 +350,7 @@ Page({
   onShareAppMessage() {
     return {
       title: this.data.share.title,
-      path: `${this.data.share.path}?scene=${encodeURIComponent(this.data.share.scene)}`,
+      path: `/pages/index/index?tool=${encodeURIComponent(this.data.activeTool)}`,
       imageUrl: ""
     };
   },
@@ -355,14 +358,15 @@ Page({
   onShareTimeline() {
     return {
       title: this.data.share.title,
-      query: `scene=${encodeURIComponent(this.data.share.scene)}`
+      query: `tool=${encodeURIComponent(this.data.activeTool)}`
     };
   },
 
   onToolTap(event) {
     const activeTool = event.currentTarget.dataset.tool;
-    const pages = { "operations-center": "operations/operations", "dish-tracking": "dish-tracking/dish-tracking", "data-backup": "data-backup/data-backup" };
+    const pages = { "membership": "membership/membership", "operations-center": "operations/operations", "dish-tracking": "dish-tracking/dish-tracking", "data-backup": "data-backup/data-backup" };
     if (pages[activeTool]) return wx.navigateTo({ url: "/pages/" + pages[activeTool] });
+    if (!this.data.tools.some(item => item.key === activeTool)) return;
     this.setData({
       activeTool,
       isOperations: activeTool === "operations",

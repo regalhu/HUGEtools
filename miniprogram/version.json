@@ -1,7 +1,7 @@
 {
-  "webVersion": "0.9.0",
-  "miniProgramVersion": "0.9.0",
-  "updatedAt": "2026-09-12",
+  "webVersion": "0.10.0",
+  "miniProgramVersion": "0.10.0",
+  "updatedAt": "2026-11-17",
   "miniprogramRoot": "miniprogram/",
   "syncedToolCount": 18,
   "unsyncedToolCount": 0,
@@ -95,9 +95,15 @@
       "key": "share",
       "name": "分享二维码",
       "status": "basic-functional-native-share-server-optional"
+    },
+    {
+      "key": "membership",
+      "name": "会员活动复购分析",
+      "status": "mini-program-local-analysis"
     }
   ],
   "notes": [
+    "2026-11-17：19 个小程序入口、5 个原生页面。会员复购为小程序独立新工具；输入不自动保存。",
     "2026-09-12 新增执行闭环、菜品跟踪、数据备份；18 个入口，4 个原生页面。",
     "网页和微信共用经营口径，保留旧本机记录，新版存储读取异常时保护原记录。",
     "数据本机保存；多人进度不代表多人账号同步。开发预览不等于正式发布。",
@@ -107,5 +113,6 @@
     "2026-07-09 新增分享二维码工具：小程序端支持原生转发、复制路径、复制公网链接，并可在云服务器配置微信密钥后请求小程序码。",
     "小程序不使用 document、window、DOM 或 IndexedDB；新增工具采用 WXML、WXSS 和 Page JS 改写。",
     "任务提醒和员工激励已升级为微信本机持久化；小程序关闭后重新打开仍可读取记录，但不提供后台主动通知。"
-  ]
+  ],
+  "miniProgramToolCount": 19
 }

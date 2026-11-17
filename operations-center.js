@@ -59,14 +59,16 @@
       const summary = core.summarize(tasks);
       find(".oc-count").textContent = `${tasks.length} 项 / 全部 ${state.tasks.length} 项`;
       find(".oc-metrics").innerHTML = [["待完成", summary.unfinished], ["逾期", summary.overdue], ["已完成", summary.complete], ["待分配", summary.unassigned]].map(([label, count]) => `<div><span>${label}</span><strong>${count}</strong></div>`).join("");
-      find(".oc-carry-count").textContent = summary.unfinished;
-      find('[data-action="carry"]').disabled = !summary.unfinished || readFailed;
+      const carryCount = tasks.filter(core.needsFollowup).length;
+      find(".oc-carry-count").textContent = carryCount;
+      find('[data-action="carry"]').disabled = !carryCount || readFailed;
       root.querySelectorAll('[data-action^="export"]').forEach((button) => { button.disabled = !tasks.length; });
       find(".oc-task-list").innerHTML = tasks.length ? tasks.map((task) => {
         const s = core.status(task);
         return `<article class="oc-task ${s.overdue ? "oc-task-overdue" : ""}">
           <div class="oc-task-top"><div><div class="oc-eyebrow">${esc(task.store || "门店未填写")} <span> / </span> ${esc(task.department || "部门未填写")}</div><h3>${esc(task.title)}</h3></div><button class="oc-text-button" type="button" data-action="edit" data-id="${esc(task.id)}">编辑</button></div>
           <div class="oc-task-meta"><span class="oc-status ${s.code}">${s.label}</span>${s.overdue ? '<span class="oc-status overdue">已逾期</span>' : ""}<span>到期 ${esc(task.dueDate || "未设置")}</span><span>负责人完成 ${s.completed} / ${s.total}</span></div>
+          <label>执行状态 <select data-mode="${esc(task.id)}" ${readFailed ? "disabled" : ""}>${[["normal", "正常执行"], ["paused", "已搁置"], ["terminated", "已终止"], ["notApplicable", "无需跟进 / 不适用"]].map(([value, label]) => `<option value="${value}" ${core.executionMode(task) === value ? "selected" : ""}>${label}</option>`).join("")}</select></label>
           <div class="oc-progress-track"><i style="width:${s.percent}%"></i></div>
           <div class="oc-assignees">${task.assignees.length ? task.assignees.map((a) => `<div class="oc-assignee"><strong>${esc(a.name)}</strong><label class="oc-sr-only" for="oc-progress-${esc(task.id)}-${task.assignees.indexOf(a)}">${esc(a.name)}的进度</label><select id="oc-progress-${esc(task.id)}-${task.assignees.indexOf(a)}" data-progress="${esc(task.id)}" data-owner="${esc(a.name)}" ${readFailed ? "disabled" : ""}>${[[0, "待开始"], [50, "进行中"], [100, "已完成"]].map(([v, label]) => `<option value="${v}" ${a.progress === v ? "selected" : ""}>${label}</option>`).join("")}</select><input aria-label="${esc(a.name)}的进展备注" value="${esc(a.note)}" placeholder="个人进展备注" data-note="${esc(task.id)}" data-owner="${esc(a.name)}" ${readFailed ? "disabled" : ""}></div>`).join("") : '<p class="oc-hint">尚未指定负责人。编辑事项后可分别跟进每个人的进度。</p>'}</div>
           <details class="oc-details"><summary>查看 PDCA 与来源 <span>${task.sources.length ? `${task.sources.length} 条来源` : "手工录入"}</span></summary><div class="oc-pdca">${[["P", "问题 / 目标", task.plan], ["D", "执行措施", task.do], ["C", "检查结果", task.check], ["A", "标准化 / 下一步", task.act]].map(([letter, label, value]) => `<section><b>${letter}</b><div><h4>${label}</h4><p>${esc(value || "待补充")}</p></div></section>`).join("")}</div><div class="oc-sources">${task.sources.length ? task.sources.map((s) => `<div><strong>${esc(s.title)}</strong><span>${esc(s.date)}</span><p>${esc(s.reference || "未填写引用说明")}</p></div>`).join("") : '<p class="oc-hint">本事项为手工录入，可在编辑中补充会议或材料来源。</p>'}</div></details>
@@ -109,11 +111,11 @@
       <div class="oc-feedback" role="status" aria-live="polite" hidden></div>
       <div class="oc-toolbar"><button type="button" class="oc-button oc-primary" data-action="new" ${readFailed ? "disabled" : ""}>＋ 新建执行事项</button><button type="button" class="oc-button" data-action="import" ${readFailed ? "disabled" : ""}>导入会议未完成待办</button><span class="oc-hint">保留原会议；重复导入自动去重。</span></div>
       <div class="oc-editor-host"></div>
-      <section class="oc-filter-panel"><div class="oc-section-heading"><h3>执行总览</h3><span class="oc-count"></span></div><div class="oc-filters"><input type="search" data-filter="query" placeholder="搜索事项、PDCA 或会议" aria-label="搜索事项"><select data-filter="store" aria-label="筛选门店"></select><select data-filter="department" aria-label="筛选部门"></select><select data-filter="owner" aria-label="筛选负责人"></select><select data-filter="source" aria-label="筛选会议"></select><select data-filter="status" aria-label="筛选整体状态"><option value="">全部状态</option><option value="unfinished">全部未完成</option><option value="unassigned">待分配</option><option value="pending">待开始</option><option value="active">进行中</option><option value="complete">已完成</option></select></div><div class="oc-filter-bottom"><label class="oc-check"><input type="checkbox" data-filter="overdue">只看逾期</label><button type="button" class="oc-text-button" data-action="reset">重置筛选</button><div class="oc-export-actions"><button type="button" class="oc-text-button" data-action="export-text">导出当前范围 · 文本</button><button type="button" class="oc-text-button" data-action="export-csv">CSV</button></div></div><div class="oc-metrics"></div></section>
+      <section class="oc-filter-panel"><div class="oc-section-heading"><h3>执行总览</h3><span class="oc-count"></span></div><div class="oc-filters"><input type="search" data-filter="query" placeholder="搜索事项、PDCA 或会议" aria-label="搜索事项"><select data-filter="store" aria-label="筛选门店"></select><select data-filter="department" aria-label="筛选部门"></select><select data-filter="owner" aria-label="筛选负责人"></select><select data-filter="source" aria-label="筛选会议"></select><select data-filter="status" aria-label="筛选整体状态"><option value="">全部状态</option><option value="unfinished">全部未完成</option><option value="unassigned">待分配</option><option value="pending">待开始</option><option value="active">进行中</option><option value="complete">已完成</option><option value="paused">已搁置</option><option value="terminated">已终止</option><option value="notApplicable">无需跟进 / 不适用</option></select></div><div class="oc-filter-bottom"><label class="oc-check"><input type="checkbox" data-filter="overdue">只看逾期</label><button type="button" class="oc-text-button" data-action="reset">重置筛选</button><div class="oc-export-actions"><button type="button" class="oc-text-button" data-action="export-text">导出当前范围 · 文本</button><button type="button" class="oc-text-button" data-action="export-csv">CSV</button></div></div><div class="oc-metrics"></div></section>
       <details class="oc-carry-panel"><summary>延续到下一次会议 <span>继承当前范围未完成事项</span></summary><p class="oc-hint">把当前筛选的 <strong class="oc-carry-count">0</strong> 个未完成事项关联到本次会议；保留原事项、来源和各人进度。</p><div class="oc-carry-fields"><input name="carryTitle" aria-label="本次会议名称" placeholder="本次会议名称"><input name="carryDate" aria-label="本次会议日期" type="date" value="${core.today()}"><input name="carryReference" aria-label="本次会议引用" placeholder="本次议题 / 跟进说明"><button type="button" class="oc-button" data-action="carry">关联未完成事项</button></div></details>
       <div class="oc-task-list"></div>
-      <section class="oc-rank-panel"><div class="oc-section-heading"><h3>执行看板</h3><span>跟随上方筛选范围</span></div><p class="oc-hint">仅统计本机实际记录。个人完成率 = 个人已完成责任项 ÷ 个人责任项总数；部门按整体事项完成计算。逾期以到期日次日为起点，未设到期日不计入逾期。</p><div class="oc-rank-columns"><section><h4>人员进度</h4><div class="oc-people"></div></section><section><h4>部门 / 中心进度</h4><div class="oc-departments"></div></section></div></section>
-      <p class="oc-footnote">数据仅保存在当前浏览器，不会自动同步到小程序或其他设备。多人进度由本机维护；全部负责人完成，事项才显示已完成。已完成事项可调整个人进度重新打开。</p>`;
+      <section class="oc-rank-panel"><div class="oc-section-heading"><h3>执行看板</h3><span>跟随上方筛选范围</span></div><p class="oc-hint">仅统计本机实际记录。不适用事项排除完成分母、逾期和会议跟进；搁置、终止不算完成，终止不再延续会议。切回正常执行保留原个人进度。个人完成率 = 正常执行且已完成责任项 ÷ 适用责任项总数；部门按整体事项完成计算。逾期以到期日次日为起点，未设到期日不计入逾期。</p><div class="oc-rank-columns"><section><h4>人员进度</h4><div class="oc-people"></div></section><section><h4>部门 / 中心进度</h4><div class="oc-departments"></div></section></div></section>
+      <p class="oc-footnote">数据仅保存在当前浏览器，不会自动同步到小程序或其他设备。多人进度由本机维护；正常执行时全部负责人完成，事项才显示已完成。已完成事项可调整个人进度重新打开。</p>`;
     root.addEventListener("input", (event) => {
       if (event.target.dataset.filter === "query") { filters.query = event.target.value; renderContent(); }
     });
@@ -122,6 +124,15 @@
       if (target.dataset.filter) {
         filters[target.dataset.filter] = target.type === "checkbox" ? target.checked : target.value;
         renderContent();
+      }
+      if (target.dataset.mode) {
+        const task = state.tasks.find((t) => t.id === target.dataset.mode);
+        if (!task) return message("事项已变化，请重新打开。", true);
+        try {
+          const updated = core.setExecutionMode(task, target.value);
+          if (!persist(state.tasks.map((t) => t.id === task.id ? updated : t), "状态已保存，原方案与个人进度保留。不适用排除完成分母；搁置、终止不算完成。")) renderContent();
+        } catch (error) { message(error.message, true); }
+        return;
       }
       const taskId = target.dataset.progress || target.dataset.note;
       if (taskId) {

@@ -1,7 +1,7 @@
 <view class="page">
   <view class="hero">
     <view>
-      <view class="eyebrow">HUGE TOOLS / 0.9</view>
+      <view class="eyebrow">HUGE TOOLS / 0.10</view>
       <view class="title">胡哥餐饮工具箱</view>
       <view class="tagline">把会议变成行动，让经营判断有据可查。</view>
     </view>
@@ -53,6 +53,7 @@
       </view>
       <view class="focus-card"><view class="focus-kicker">从记录，到结果</view><view class="focus-title">每一件事，都有跟进。</view><view class="focus-text">会议待办 · 多人进度 · 菜品趋势</view><button data-tool="operations-center" bindtap="openTool">进入执行闭环 →</button></view>
       <view class="entry-grid">
+        <button class="entry-button" data-tool="membership" bindtap="openTool"><text>会员复购</text><view>7 / 14 日队列 · 零消费保留</view></button>
         <button class="entry-button" data-tool="dish-tracking" bindtap="openTool"><text>菜品跟踪</text><view>新品 / 常规菜 · 来源与覆盖</view></button>
         <button class="entry-button" data-tool="data-backup" bindtap="openTool"><text>数据备份</text><view>导出留存 · 核对后恢复</view></button>
         <button class="entry-button" data-view="meetings" bindtap="onWorkbenchViewTap"><text>会议纪要</text><view>日期 + 上午/下午，责任人和进度</view></button>

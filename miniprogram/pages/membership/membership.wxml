@@ -1,0 +1,19 @@
+<view class="page">
+  <view class="hero"><view class="kicker">胡哥餐饮工具 · 本机分析</view><view class="title">会员活动复购</view><view class="note">按开卡次日起 7 / 14 日成熟队列分析。请使用匿名编号，不输入姓名、手机号或卡号。不上传、不自动保存，离开页面前请复制结果。</view></view>
+  <view class="card"><view class="heading">1. 顾客与有效订单</view><view class="note">首行须保留以下表头，支持英文逗号或制表符。顾客表必须包括零消费顾客；只填有效餐饮订单，预先排除取消、全额退款及售卡单。部分退款请填核实后的净实付。同一顾客只采用首次开卡日。</view>
+    <view class="label">匿名顾客ID,开卡日期</view><textarea maxlength="-1" value="{{membersText}}" data-field="membersText" bindinput="onInput" placeholder="匿名顾客ID,开卡日期" />
+    <view class="label">订单ID,匿名顾客ID,消费日期,实付金额</view><textarea maxlength="-1" value="{{ordersText}}" data-field="ordersText" bindinput="onInput" placeholder="订单ID,匿名顾客ID,消费日期,实付金额" />
+    <view class="note">没有订单时仅保留订单表头。订单ID应全局唯一；相同重复行去重，冲突阻止计算。</view><button bindtap="loadTemplate">载入虚构示例</button>
+  </view>
+  <view class="card"><view class="heading">2. 完整覆盖区间</view><view class="note">声明此期间所有所列顾客的有效订单均已导入。没有记录只有在确认完整后才代表零消费，工具无法自动核验源系统是否漏数。</view>
+    <view class="label">起日（YYYY-MM-DD）</view><input value="{{coverageStart}}" data-field="coverageStart" bindinput="onInput" placeholder="例如 2026-01-01" />
+    <view class="label">截止日（YYYY-MM-DD）</view><input value="{{coverageEnd}}" data-field="coverageEnd" bindinput="onInput" placeholder="例如 2026-01-31" />
+    <checkbox-group bindchange="onConfirm"><label class="check"><checkbox value="complete" checked="{{confirmed}}" color="#214e40" />已核对完整区间与顾客名单，包含零消费顾客</label></checkbox-group><button class="primary" bindtap="calculate">核验并分析</button>
+  </view>
+  <view wx:if="{{error}}" class="status">{{error}}</view>
+  <view wx:if="{{result}}">
+    <view class="card"><view class="heading">核验结果</view><view class="note">去重顾客 {{result.totalMembers}} 人 · 有效订单 {{result.totalOrders}} 笔</view><view class="note">已去重：顾客 {{result.duplicateMembers}} 行，订单 {{result.duplicateOrders}} 行</view></view>
+    <view class="card" wx:for="{{result.windows}}" wx:key="days"><view class="heading">开卡后 {{item.days}} 日</view><view class="metric">{{item.rateText}}</view><view class="note">复购 {{item.numerator}} 人 ÷ 成熟且覆盖完整 {{item.denominator}} 人</view><view class="row">零消费顾客：{{item.zeroConsumers}} 人</view><view class="row">未满观察窗：{{item.immature}} 人 · 覆盖不足：{{item.missingCoverage}} 人</view><view class="row">窗口内 {{item.orders}} 笔订单 / {{item.consumerDays}} 个顾客消费日</view><view class="row">窗口内实付：¥{{item.amount}}</view></view>
+    <view class="note">7 日与 14 日分别核验成熟度，人数可不同。开卡当日不计入回访；同日两单计两笔订单、一个顾客消费日。有至少一笔有效订单即计为回访，含经核验的 0 元订单。本结果不证明活动带来因果增量，也不是利润或 ROI。</view><button class="primary" bindtap="copyResult">复制分析摘要</button>
+  </view><button open-type="share">分享此工具（不含输入数据）</button>
+</view>

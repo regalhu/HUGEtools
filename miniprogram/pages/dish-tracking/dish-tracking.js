@@ -1,6 +1,7 @@
 const C = require('../../utils/dish-tracking-core');
 
 Page({
+  onShareAppMessage() { return { title: '胡哥餐饮工具 · 菜品跟踪', path: '/pages/dish-tracking/dish-tracking' }; },
   data: { source: '', importText: '', group: 'new', notice: '', loadError: '', preview: null, replace: false, stats: { records: 0, batches: 0 }, cfg: {}, selected: [], dishOptions: [], stores: [], result: { messages: [], dishes: [] }, batches: [], activeBatch: null, dirty: false },
   onLoad() { this._expanded = {}; this._detailPages = {}; this._dishPage = 0; this.loadSaved(); },
   onShow() {

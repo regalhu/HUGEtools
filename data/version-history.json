@@ -1,18 +1,39 @@
 {
   "product": "胡哥餐饮工具箱",
-  "currentVersion": "0.9.0",
+  "currentVersion": "0.10.0",
   "miniProgram": {
-    "webVersion": "0.9.0",
-    "miniProgramVersion": "0.9.0",
+    "webVersion": "0.10.0",
+    "miniProgramVersion": "0.10.0",
     "syncedToolCount": 18,
     "unsyncedToolCount": 0,
     "miniprogramRoot": "miniprogram/",
-    "updatedAt": "2026-09-12",
-    "note": "微信开发者工具编译 miniprogram/ 目录；本记录用于区分 Web 端版本、小程序端同步进度与分享能力边界。"
+    "updatedAt": "2026-11-17",
+    "note": "微信开发者工具编译 miniprogram/ 目录；本记录用于区分 Web 端版本、小程序端同步进度与分享能力边界。",
+    "miniProgramToolCount": 19
   },
-  "updatedAt": "2026-09-12",
+  "updatedAt": "2026-11-17",
   "iterationRule": "每次功能更新都追加版本记录，保留上一版本基线、核心变化、验证结果和风险边界，便于后续按版本对比迭代。",
   "versions": [
+    {
+      "version": "0.10.0",
+      "date": "2026-11-17",
+      "baseline": "0.9.0",
+      "title": "会员复购分析与执行状态升级",
+      "changes": [
+        "新增会员活动 7/14 日成熟队列复购分析，包含零消费、覆盖确认、订单去重和未成熟说明。",
+        "执行闭环新增搁置、终止、不适用状态；切换保留方案与进度，不适用排除完成分母。",
+        "分享保留所选工具路径，独立页面支持无输入数据转发。"
+      ],
+      "verification": [
+        "114 项自动测试、48 个 JavaScript 文件语法及 5 个原生页面结构检查通过。",
+        "微信开发者工具与发布验证见本轮更新记录。"
+      ],
+      "riskBoundary": [
+        "不接入或迁移集团内部数据、账号、凭据。",
+        "会员输入不上传、不自动保存，完整性由用户确认。",
+        "开发版本上传不等于微信审核通过或正式发布。"
+      ]
+    },
     {
       "version": "0.9.0",
       "date": "2026-09-12",

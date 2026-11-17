@@ -35,6 +35,22 @@
       return true;
     });
   }
+  const EXECUTION_MODES = ["normal", "paused", "terminated", "notApplicable"];
+  function executionMode(task) {
+    const value = task.executionMode;
+    if (value == null || value === "") return "normal";
+    const legacy = { "已搁置未超时": "paused", "已搁置已超时": "paused", "已搁置": "paused", "已终止": "terminated", "无需此级": "notApplicable", "不适用": "notApplicable" };
+    const mode = legacy[value] || value;
+    if (!EXECUTION_MODES.includes(mode)) throw new Error("执行状态无法识别，原记录已保留。");
+    return mode;
+  }
+  function setExecutionMode(task, mode, now) {
+    const normalized = executionMode({ executionMode: mode });
+    return { ...task, executionMode: normalized, updatedAt: now || new Date().toISOString() };
+  }
+  function needsFollowup(task) {
+    return !["complete", "terminated", "notApplicable"].includes(status(task).code);
+  }
   function makeTask(input, previous, now) {
     input = input || {};
     previous = previous || {};
@@ -52,6 +68,7 @@
     });
     return {
       id: previous.id || input.id || uid("task"), title, store: clean(input.store), department: clean(input.department),
+      executionMode: executionMode({ executionMode: input.executionMode === undefined ? previous.executionMode : input.executionMode }),
       assignees, dueDate, plan: clean(input.plan), do: clean(input.do), check: clean(input.check), act: clean(input.act),
       sources: normalizeSources(input.sources), importKeys: Array.from(new Set([...(previous.importKeys || []), ...(input.importKeys || [])].map(clean).filter(Boolean))),
       createdAt: previous.createdAt || timestamp, updatedAt: timestamp
@@ -60,11 +77,12 @@
   function status(task, date) {
     const owners = task.assignees || [];
     const completed = owners.filter((a) => a.progress === 100).length;
-    const code = !owners.length ? "unassigned" : completed === owners.length ? "complete" : owners.some((a) => a.progress > 0) ? "active" : "pending";
+    const mode = executionMode(task);
+    const code = mode !== "normal" ? mode : !owners.length ? "unassigned" : completed === owners.length ? "complete" : owners.some((a) => a.progress > 0) ? "active" : "pending";
     return {
-      code, label: { unassigned: "待分配", complete: "已完成", active: "进行中", pending: "待开始" }[code],
+      code, label: { unassigned: "待分配", complete: "已完成", active: "进行中", pending: "待开始", paused: "已搁置", terminated: "已终止", notApplicable: "无需跟进 / 不适用" }[code],
       completed, total: owners.length, percent: owners.length ? Math.round(completed / owners.length * 100) : 0,
-      overdue: !!(task.dueDate && isDate(task.dueDate) && task.dueDate < (date || today()) && code !== "complete")
+      overdue: !!(task.dueDate && isDate(task.dueDate) && task.dueDate < (date || today()) && !["complete", "terminated", "notApplicable"].includes(code))
     };
   }
   function setProgress(task, name, progress, note, now) {
@@ -81,6 +99,7 @@
     state.tasks.forEach((task) => {
       if (!task || typeof task.id !== "string" || !task.id || typeof task.title !== "string" || !clean(task.title) || ids.has(task.id) || !Array.isArray(task.assignees) || !Array.isArray(task.sources) || !Array.isArray(task.importKeys)) throw new Error("营运闭环记录不完整，原数据已保留，请先备份并检查。");
       if (["store", "department", "dueDate", "plan", "do", "check", "act", "createdAt", "updatedAt"].some((key) => typeof task[key] !== "string") || task.importKeys.some((key) => typeof key !== "string" || !key)) throw new Error("营运闭环字段格式异常，原数据已保留。");
+      executionMode(task);
       ids.add(task.id);
       const names = new Set();
       task.assignees.forEach((a) => {
@@ -106,24 +125,25 @@
       const state = status(task, date);
       return (!f.store || task.store === f.store) && (!f.department || task.department === f.department) &&
         (!f.owner || task.assignees.some((a) => a.name === f.owner)) && (!f.source || task.sources.some((s) => s.key === f.source)) &&
-        (!f.status || (f.status === "unfinished" ? state.code !== "complete" : state.code === f.status)) &&
+        (!f.status || (f.status === "unfinished" ? !["complete", "notApplicable"].includes(state.code) : state.code === f.status)) &&
         (!f.overdue || state.overdue) && (!query || [task.title, task.plan, task.do, task.check, task.act, task.store, task.department, ...task.sources.map((s) => s.title)].join(" ").toLocaleLowerCase().includes(query));
     });
   }
   function summarize(tasks, date) {
     const people = new Map();
     const departments = new Map();
-    let complete = 0, overdue = 0, unassigned = 0;
+    let complete = 0, overdue = 0, unassigned = 0, excluded = 0;
     tasks.forEach((task) => {
       const s = status(task, date);
+      if (s.code === "notApplicable") { excluded++; return; }
       if (s.code === "complete") complete++;
       if (s.overdue) overdue++;
       if (s.code === "unassigned") unassigned++;
       task.assignees.forEach((a) => {
         const row = people.get(a.name) || { name: a.name, total: 0, completed: 0, overdue: 0 };
         row.total++;
-        if (a.progress === 100) row.completed++;
-        if (s.overdue && a.progress !== 100) row.overdue++;
+        if (a.progress === 100 && executionMode(task) === "normal") row.completed++;
+        if (s.overdue && (a.progress !== 100 || executionMode(task) !== "normal")) row.overdue++;
         people.set(a.name, row);
       });
       const name = task.department || "未填写部门";
@@ -134,7 +154,7 @@
       departments.set(name, row);
     });
     const ranked = (rows) => Array.from(rows.values()).map((r) => ({ ...r, rate: Math.round(r.completed / r.total * 100) })).sort((a, b) => b.rate - a.rate || b.completed - a.completed || a.name.localeCompare(b.name, "zh"));
-    return { total: tasks.length, complete, unfinished: tasks.length - complete, overdue, unassigned, people: ranked(people), departments: ranked(departments) };
+    return { total: tasks.length, complete, unfinished: tasks.length - complete - excluded, overdue, unassigned, people: ranked(people), departments: ranked(departments) };
   }
   function meetingKey(meeting, platform) {
     return `meeting:${platform}:${clean(meeting.id) || JSON.stringify([meeting.date, meeting.period, meeting.title, meeting.topic, meeting.owner, meeting.dueDate])}`;
@@ -165,7 +185,7 @@
     const selected = new Set(selectedIds);
     let linked = 0;
     const result = tasks.map((task) => {
-      if (!selected.has(task.id) || status(task).code === "complete") return task;
+      if (!selected.has(task.id) || !needsFollowup(task)) return task;
       const s = normalized[0];
       if (task.sources.some((x) => x.key === s.key || (x.title === s.title && x.date === s.date && x.reference === s.reference))) return task;
       linked++;
@@ -178,7 +198,7 @@
   function exportText(tasks, date) {
     const reportDate = date || today();
     const summary = summarize(tasks, reportDate);
-    return [`胡哥餐饮工具｜营运闭环`, `导出日期：${reportDate}；当前筛选范围 ${tasks.length} 项；已完成 ${summary.complete} 项；逾期 ${summary.overdue} 项。`, "数据来自本机记录；个人完成率 = 已完成人员责任项 / 该人员责任项总数。", ...tasks.map((task, index) => {
+    return [`胡哥餐饮工具｜营运闭环`, `导出日期：${reportDate}；当前筛选范围 ${tasks.length} 项；已完成 ${summary.complete} 项；逾期 ${summary.overdue} 项。`, "数据来自本机记录；个人完成率 = 正常执行且已完成责任项 / 适用责任项总数；不适用排除分母，搁置与终止不算完成。", ...tasks.map((task, index) => {
       const s = status(task, reportDate);
       return `\n${index + 1}. ${task.title}\n门店：${task.store || "未填写"}｜部门/中心：${task.department || "未填写"}\n状态：${s.label}${s.overdue ? " · 逾期" : ""}｜到期日：${task.dueDate || "未设置"}\n负责人：${task.assignees.map((a) => `${a.name} ${progressLabel(a.progress)}${a.note ? `（${a.note}）` : ""}`).join("；") || "待分配"}\nP 问题/目标：${task.plan || "未填写"}\nD 执行措施：${task.do || "未填写"}\nC 检查结果：${task.check || "未填写"}\nA 标准化：${task.act || "未填写"}\n来源：${sourceLabel(task)}`;
     })].join("\n");
@@ -196,5 +216,5 @@
     });
     return "\uFEFF" + rows.map((row) => row.map(cell).join(",")).join("\r\n");
   }
-  return { STORAGE_KEY, uid, today, isDate, splitOwners, makeTask, status, setProgress, readState, saveState, filterTasks, summarize, importMeetings, carryForward, exportText, exportCsv };
+  return { STORAGE_KEY, uid, today, isDate, splitOwners, makeTask, status, setProgress, executionMode, setExecutionMode, needsFollowup, readState, saveState, filterTasks, summarize, importMeetings, carryForward, exportText, exportCsv };
 });

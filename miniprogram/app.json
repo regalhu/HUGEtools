@@ -3,7 +3,8 @@
     "pages/index/index",
     "pages/operations/operations",
     "pages/dish-tracking/dish-tracking",
-    "pages/data-backup/data-backup"
+    "pages/data-backup/data-backup",
+    "pages/membership/membership"
   ],
   "window": {
     "navigationBarTitleText": "胡哥餐饮工具箱",
