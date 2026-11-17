@@ -5,7 +5,7 @@ const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(
 
 Page({
   data: {
-    version: "0.10.0",
+    version: "3.0.0",
     tools: [
       { key: "operations", label: "工作台" },
       { key: "operations-center", label: "执行闭环" },
@@ -339,6 +339,7 @@ Page({
     this.buildWorkbenchReport();
     const tool = options.tool;
     if (this.data.tools.some(item => item.key === tool)) this.onToolTap({ currentTarget: { dataset: { tool } } });
+    if (tool === "operations" && this.data.workbenchViews.some(item => item.key === options.view)) this.onWorkbenchViewTap({ currentTarget: { dataset: { view: options.view } } });
   },
 
   onShow() {

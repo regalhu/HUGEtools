@@ -2,5 +2,8 @@
   "navigationBarTitleText": "营运闭环",
   "navigationBarBackgroundColor": "#163e36",
   "navigationBarTextStyle": "white",
-  "backgroundColor": "#f6f5ee"
+  "backgroundColor": "#f6f5ee",
+  "usingComponents": {
+    "home-return": "/components/home-return/home-return"
+  }
 }

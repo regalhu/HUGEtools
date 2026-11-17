@@ -1,9 +1,9 @@
 {
   "product": "胡哥餐饮工具箱",
-  "currentVersion": "0.10.0",
+  "currentVersion": "3.0.0",
   "miniProgram": {
-    "webVersion": "0.10.0",
-    "miniProgramVersion": "0.10.0",
+    "webVersion": "3.0.0",
+    "miniProgramVersion": "3.0.0",
     "syncedToolCount": 18,
     "unsyncedToolCount": 0,
     "miniprogramRoot": "miniprogram/",
@@ -14,6 +14,24 @@
   "updatedAt": "2026-11-17",
   "iterationRule": "每次功能更新都追加版本记录，保留上一版本基线、核心变化、验证结果和风险边界，便于后续按版本对比迭代。",
   "versions": [
+    {
+      "version": "3.0.0",
+      "date": "2026-11-17",
+      "baseline": "0.10.0",
+      "title": "全工具首页与统一导航",
+      "changes": [
+        "新增独立全工具首页，分组展示 19 个工具及工作台快捷入口。",
+        "Apple 风格留白、圆角卡片与轻量层次，保留品牌识别。",
+        "所有工具增加左上角全部工具返回，深链接无返回栈也可回首页。"
+      ],
+      "verification": [
+        "最终本机回归、微信开发者工具预览、上传和服务器状态见本轮更新记录。"
+      ],
+      "riskBoundary": [
+        "未修改本机业务存储键或迁移经营数据。",
+        "开发版上传、提交审核、审核通过、正式发布为不同阶段，按实际回执记录。"
+      ]
+    },
     {
       "version": "0.10.0",
       "date": "2026-11-17",

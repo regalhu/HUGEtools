@@ -1,5 +1,6 @@
 {
   "pages": [
+    "pages/home/home",
     "pages/index/index",
     "pages/operations/operations",
     "pages/dish-tracking/dish-tracking",
@@ -8,9 +9,9 @@
   ],
   "window": {
     "navigationBarTitleText": "胡哥餐饮工具箱",
-    "navigationBarBackgroundColor": "#f5f7f4",
+    "navigationBarBackgroundColor": "#f5f5f7",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#f5f7f4"
+    "backgroundColor": "#f5f5f7"
   },
   "sitemapLocation": "sitemap.json",
   "style": "v2",

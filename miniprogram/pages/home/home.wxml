@@ -1,0 +1,18 @@
+<view class="home">
+  <view class="brand-row">
+    <view class="brand"><image wx:if="{{hasLogo}}" class="brand-logo" src="{{logoPath}}" mode="aspectFit" binderror="onLogoError"/><view><view class="brand-name">胡哥餐饮工具</view><view class="brand-en">HUGE TOOLS</view></view></view>
+    <text class="version">{{version}}</text>
+  </view>
+  <view class="hero"><view class="eyebrow">专为餐饮人而作</view><view class="headline">经营有方。<view class="headline-muted">工具，就在手边。</view></view><view class="hero-caption">从日常执行到经营判断，<text class="nowrap">{{toolCount}} 个工具，一处抵达。</text></view></view>
+  <view class="search-box"><text class="search-icon">⌕</text><input class="search-input" value="{{query}}" bindinput="onSearch" placeholder="搜索工具，例如：毛利、排班、复购" placeholder-class="search-placeholder" confirm-type="search" maxlength="60"/><button wx:if="{{query}}" class="clear" bindtap="clearSearch" aria-label="清除搜索">×</button></view>
+  <view class="privacy"><text class="privacy-dot"></text><text>本机处理 · 无需登录 · 不上传经营数据</text></view>
+  <view wx:if="{{error}}" class="error" role="alert">{{error}}</view>
+  <view wx:if="{{query}}" class="search-summary">找到 {{resultCount}} 个工具</view>
+  <view wx:if="{{!resultCount}}" class="empty"><view class="empty-title">暂时没有匹配的工具</view><view>试试“收入”“任务”或“成本”。</view><button bindtap="clearSearch">查看全部工具</button></view>
+  <view class="section" wx:for="{{groups}}" wx:key="id" wx:for-item="group">
+    <view class="section-heading"><view><view class="section-title">{{group.title}}</view><view class="section-subtitle">{{group.subtitle}}</view></view><text class="section-count">{{group.tools.length}}</text></view>
+    <view class="tool-grid"><button class="tool-card group-{{group.id}}" wx:for="{{group.tools}}" wx:key="key" wx:for-item="tool" data-key="{{tool.key}}" bindtap="openTool" hover-class="card-pressed" aria-label="{{tool.title}}，{{tool.description}}"><view class="card-top"><text class="tool-icon">{{tool.icon}}</text><text class="card-arrow">↗</text></view><view class="tool-title">{{tool.title}}</view><view class="tool-description">{{tool.description}}</view></button></view>
+  </view>
+  <view wx:if="{{!query}}" class="quick-section"><view class="section-title">工作台快捷入口</view><view class="section-subtitle">少一步操作，多一点从容。</view><view class="quick-list"><button wx:for="{{quick}}" wx:key="key" class="quick-item" data-key="{{item.key}}" bindtap="openTool"><text>{{item.title}}</text><text class="quick-arrow">›</text></button></view></view>
+  <view class="footer"><view class="footer-brand">HUGE TOOLS</view><view>把复杂留给工具，把时间留给生意。</view><view class="footer-note">记录仅保存在本机，重要内容请及时备份。</view></view>
+</view>

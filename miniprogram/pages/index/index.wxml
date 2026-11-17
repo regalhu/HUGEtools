@@ -1,7 +1,8 @@
+<home-return />
 <view class="page">
   <view class="hero">
     <view>
-      <view class="eyebrow">HUGE TOOLS / 0.10</view>
+      <view class="eyebrow">HUGE TOOLS / 3.0</view>
       <view class="title">胡哥餐饮工具箱</view>
       <view class="tagline">把会议变成行动，让经营判断有据可查。</view>
     </view>
@@ -10,17 +11,7 @@
 
   <view class="risk-banner">本小程序不接入平台账号、不抓取订单、不上传门店经营数据；工作台记录仅保存在当前微信本机。</view>
 
-  <scroll-view class="tool-tabs" scroll-x enhanced show-scrollbar="false">
-    <view class="tabs-inner">
-      <button
-        wx:for="{{tools}}"
-        wx:key="key"
-        class="tool-tab {{activeTool === item.key ? 'active' : ''}}"
-        data-tool="{{item.key}}"
-        bindtap="onToolTap"
-      >{{item.label}}</button>
-    </view>
-  </scroll-view>
+
 
   <view wx:if="{{isOperations}}" class="panel">
     <view class="panel-head">

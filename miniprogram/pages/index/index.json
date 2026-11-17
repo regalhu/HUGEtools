@@ -1,3 +1,6 @@
 {
-  "navigationBarTitleText": "胡哥餐饮工具箱"
+  "navigationBarTitleText": "胡哥餐饮工具箱",
+  "usingComponents": {
+    "home-return": "/components/home-return/home-return"
+  }
 }

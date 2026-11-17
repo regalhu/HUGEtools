@@ -1,0 +1,1 @@
+<view class="home-bar"><button class="home-button" bindtap="goHome" aria-label="返回全部工具首页"><text class="back-arrow">‹</text><text>全部工具</text></button></view>

@@ -1,3 +1,4 @@
+<home-return />
 <view class="backup-page">
   <view class="hero"><view class="kicker">DATA / 本机留存</view><view class="title">让记录，留得住。</view><view class="subtitle">工作台、执行闭环、菜品跟踪与已保存的营业额输入，统一备份。</view></view>
   <view class="card"><view class="step">01 / 导出</view><view class="heading">保存当前记录</view><view class="note">临时测算输入不在备份范围。微信与网页备份各自在同一端恢复。若原内容损坏，会生成原始诊断副本供排查；诊断副本不能直接恢复。</view><button class="primary" bindtap="exportBackup">生成备份文件</button><button bindtap="exportRaw">导出原始诊断副本</button><view wx:if="{{filePath}}"><view class="note">{{fileName}}</view><button bindtap="shareBackup">保存/转发当前文件</button><button bindtap="copyBackup">复制当前文件文本</button></view></view>

@@ -1,3 +1,4 @@
+<home-return />
 <view class="dt-page">
   <view class="dt-hero"><text class="dt-eyebrow">DISH TRACKING / 菜品跟踪</text><text class="dt-title">每一道菜，
 都有据可查。</text><text class="dt-subtitle">先确认数据与范围，再读销量、趋势和来源。</text><view class="dt-meta"><text>{{stats.records}} 条已确认</text><text>{{stats.batches}} 个来源批次</text><text>缺失不补零</text></view></view>

@@ -1,1 +1,6 @@
-{"navigationBarTitleText":"会员活动复购"}
+{
+  "navigationBarTitleText": "会员活动复购",
+  "usingComponents": {
+    "home-return": "/components/home-return/home-return"
+  }
+}

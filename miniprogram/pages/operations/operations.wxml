@@ -1,3 +1,4 @@
+<home-return />
 <view class="oc-page">
   <view class="oc-hero"><view class="oc-eyebrow">胡哥餐饮工具 · 营运闭环</view><view class="oc-hero-title">让每件事，都有回音。</view><view class="oc-subtitle">会议待办 · 多人进度 · PDCA 复盘</view><text class="oc-local">本机记录</text></view>
   <view wx:if="{{feedback}}" class="oc-feedback {{feedbackError ? 'is-error' : ''}}">{{feedback}}</view>
